@@ -1,0 +1,595 @@
+---@type AdoreInit
+local Adore = require ""
+
+local StringBuffer = require "_G.string.buffer"
+local ffi = require "_G.ffi"
+
+local ClassDB = Adore.Common("ClassDB")
+local nativefs = Adore.Libraries("NativeFS")
+local Properties = require(Adore.PATH.."properties")
+
+---@class ObjectSaver
+local ObjectSaver = {}
+
+-- http://stackoverflow.com/questions/9137415
+---@param str string
+---@return string
+local function fromhex(str)
+	return (str:gsub('..', function (cc)
+		return string.char(tonumber(cc, 16))
+	end))
+end
+
+---@param str string
+---@return string
+local function tohex(str)
+	return (str:gsub('.', function (c)
+		return string.format('%02X', string.byte(c))
+	end))
+end
+
+local STRING_MAGIC_NUMBER = fromhex("AD0430B7") -- "AdoreObj"
+
+---@type string.buffer
+local tbuffer = StringBuffer.new()
+
+---Passed into a pcall; decodes a buffer
+---@param buf string.buffer
+---@return boolean ok
+---@return string | table | number | nil objOrErr
+local function safeDecode(buf)
+	return pcall(StringBuffer.decode, buf)
+end
+
+---@param obj Object
+---@param property Property
+---@param propertyName string
+---@param fromClass Object
+---@param header table
+---@param body table
+local function femvInsertCallback(obj, property, propertyName, fromClass, header, body, resources)
+	local value = property:get(obj, propertyName)
+	if property.isHeader then
+		-- Any header property goes into the header, even if it's not modified
+		local serialized = property:serialize(obj, propertyName, value, resources)
+		header[propertyName] = serialized
+	elseif not property:isDefault(value) then
+		-- All modified values go into the body
+		local serialized = property:serialize(obj, propertyName, value, resources)
+		body[propertyName] = serialized
+	end
+end
+
+---Gets the table of modified values that can be used to load this Object's properties again later.
+---@param object Object
+---@param resources any[]
+---@return table header
+---@return table body
+---@return any[] resources
+function ObjectSaver.getPropertyPairs(object, resources)
+	-- The data that will get encoded
+	local header = {}
+	local body = {}
+	-- We don't use `:forEachModifiedProperty() because we want to insert all values into the header,
+	-- even if they are unmodified.
+	object:getClassDBEntry():forEachProperty(object, true, femvInsertCallback, header, body, resources)
+	return header, body, resources
+end
+
+---Creates an Object from the serialized table. There is an optional `requestedClassName` parameter that only returns an
+---Object that either matches the class name exactly or inherits from it.
+---@generic T: Object
+---@param binaryBuffer string.buffer
+---@param header table # The serialized header of the Object
+---@param body table # The serialized body of the Object
+---@param requestedClassName `T` # The optional class (name) to expect; should be a string
+---@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
+---@return string? err
+---@return T? result
+---@return {[string]: any}? deferredProperties # A map of property names to their values; can be deserialized later once ready
+---@overload fun(binaryBuffer: string.buffer, header: table, body: table): Object?, string?
+function ObjectSaver.deserializeObject(binaryBuffer, header, body, requestedClassName, canInherit)
+	if not requestedClassName then
+		requestedClassName = "Object"
+	end
+
+	if not header.CLASS_NAME then
+		-- There's no CLASS_NAME field in the header
+		return "Missing class name in header", nil
+	end
+
+	---@type Object
+	local TargetClass = ClassDB.ClassNameToClass[header.CLASS_NAME]
+	if not TargetClass then
+		-- The table has a class that doesn't exist
+		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME), nil
+	end
+
+	if requestedClassName then
+		-- Check if the class name matches/inherits the parameters
+		if canInherit == nil then canInherit = false end
+		local RequestedClass = ClassDB.ClassNameToClass[requestedClassName]
+
+		if not RequestedClass then
+			-- The passed parameters request a class that doesn't exist
+			return ("Requested object class '%s' does not exist"):format(header.CLASS_NAME), nil
+		end
+
+		if canInherit then
+			if not TargetClass:is(RequestedClass) then
+				return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
+			end
+		else
+			if header.CLASS_NAME ~= requestedClassName then
+				return ("Serialized object '%s' does not match class name '%s'"):format(header.CLASS_NAME, requestedClassName), nil
+			end
+		end
+	end
+
+	local entry = TargetClass:getClassDBEntry()
+
+	if not entry:canDeserialize() then
+		return ("Requested object class '%s' cannot be deserialized"):format(header.CLASS_NAME), nil
+	end
+
+	local obj = TargetClass()
+
+
+	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
+	local deferredData = nil
+
+	for i = 1, 2 do
+		local t = (i == 1 and header) or body
+		for propertyName, value in pairs(t) do
+			local property = entry:getProperty(propertyName)
+			if property and not property.IS_BINARY and not property.isConstant then
+				if not property.DEFER_MODE then
+					-- Not deferred, deserialize immediately
+					-- (It won't rely on resources)
+					property:deserialize(obj, propertyName, value)
+				else
+					-- Deserialize later outside of this function
+					if not deferredData then deferredData = {} end
+					deferredData[propertyName] = value
+				end
+			end
+		end
+	end
+
+	-- Deserialize any remaining binary data
+	entry:forEachBinaryProperty(obj, true, function(obj, property, propertyName, fromClass, ...)
+		local t = (property.isHeader and header) or body
+		if not property.DEFER_MODE then
+			-- Not deferred, deserialize the binary data immediately
+			property:unpackBuffer(obj, propertyName, t[propertyName], binaryBuffer)
+		else
+			-- Deferred binary data resides in the resource blob at the end
+			-- The value that is stored is the reference created by the property
+			if not deferredData then deferredData = {} end
+			deferredData[propertyName] = t[propertyName]
+		end
+	end)
+
+	obj:_afterDeserialized(binaryBuffer, header, body)
+	return nil, obj, deferredData
+end
+
+---Deserializes the resource list from the end of a `string.buffer`
+---* It should get called **after** deserializing a block of serialized Object(s).
+---* It returns `nil` as the second return value and the error as the third value if there was an issue decoding.
+---@param buffer string.buffer
+---@return string? err
+---@return any[]? resources
+function ObjectSaver.deserializeResources(buffer)
+	-- Decode the resource list
+	local ok, resources = safeDecode(buffer)
+
+	if not ok then
+		-- Return the error
+		---@cast resources string
+		return resources, nil
+	end
+
+	-- Read the binary data from the end of the buffer
+	if resources then
+		local resType = type(resources)
+		if resType == "table" then
+			for i = 1, #resources do
+				local reference = resources[i]
+				---@type Property
+				local property = Properties[reference.TYPE]
+				if property and property.IS_BINARY then
+					property.unpackBufferResource(buffer, reference, resources)
+				end
+			end
+
+			-- Return the buffer and resource list
+			return nil, resources
+		else
+			-- Return the error
+			return ("Decoded resource list was of incorrect type '%s'"):format(resType)
+		end
+	end
+
+	-- Resource list doesn't exist; return nothing for it
+	return "Resource list does not exist", nil
+end
+
+---Creates an Object from a string.buffer. There is an optional `requestedClassName` parameter that only returns an
+---Object that either matches the class name exactly or inherits from it.
+---
+---NOTE: Do not include the magic number at the start of the buffer. That is only used for files.
+---@generic T: Object
+---@param buffer string.buffer
+---@param requestedClassName `T`
+---@param canInherit boolean?
+---@return string? err
+---@return T? object
+---@return {[string]: any}? deferredProperties
+---@overload fun(binaryBuffer: string.buffer): string?, Object?, {[string]: any}?
+function ObjectSaver.deserializeFromBuffer(buffer, requestedClassName, canInherit)
+	---@type table # The header of the Object
+	local headerTable
+	do
+		-- Skip the length of the header, as we can read the header into a variable without knowing the length
+		buffer:skip(4)
+		local success, headerOrErr = safeDecode(buffer)
+		if not success then
+			-- Errored while decoding
+			---@cast headerOrErr string
+			return headerOrErr, nil, nil
+		end
+
+		if type(headerOrErr) ~= "table" then
+			-- Wrong type
+			return ("Expected header of type 'table', got '%s'"):format(type(headerOrErr)), nil
+		end
+
+		-- All good
+		headerTable = headerOrErr
+	end
+
+	---@type table # The body of the Object
+	local bodyTable
+	do
+		-- Skip the length of the body just like the header
+		buffer:skip(4)
+		local success, bodyOrErr = safeDecode(buffer)
+		if not success then
+			-- Errored while decoding
+			---@cast bodyOrErr string
+			return bodyOrErr, nil, nil
+		end
+
+		if type(bodyOrErr) ~= "table" then
+			-- Wrong type
+			return ("Expected body of type 'table', got '%s'"):format(type(bodyOrErr)), nil
+		end
+
+		-- All good
+		bodyTable = bodyOrErr
+	end
+
+	return ObjectSaver.deserializeObject(buffer, headerTable, bodyTable, requestedClassName, canInherit)
+end
+
+---Serializes an Object at the end of a string.buffer, which can be deserialized later to load the Object again.
+---Returns the string.buffer that was passed as a parameter.
+---@param object Object
+---@param buffer string.buffer
+---@param resources any[]? # Should be initialized outside
+---@return any[] resources
+function ObjectSaver.serializeObject(object, buffer, resources)
+	if not resources then resources = {} end
+
+	local entry = object:getClassDBEntry()
+	if not entry:canSerialize() then
+		return resources
+	end
+
+	local header, body = ObjectSaver.getPropertyPairs(object, resources)
+
+	do
+		-- Insert the length of the header, and then the header
+		local encodedHeader = StringBuffer.encode(header)
+		buffer:put(fromhex(string.format("%08X", #encodedHeader)))
+		buffer:put(encodedHeader)
+	end
+
+	do
+		-- Insert the length of the body, and then the body
+		local encodedBody = StringBuffer.encode(body)
+		buffer:put(fromhex(string.format("%08X", #encodedBody)))
+		buffer:put(encodedBody)
+	end
+
+	-- Put any binary data into the buffer
+	entry:forEachBinaryProperty(object, true, function(obj, property, propertyName, fromClass, ...)
+		-- TODO: Should binary data equal to the default value be serialized?
+		if not property.DEFER_MODE then
+			-- Deferred binary data will get packed in the resource section (at the end)
+			-- These properties are NOT deferred, though, so we can pack it
+			property:packBuffer(obj, propertyName, buffer, resources)
+		end
+	end)
+	object:_afterSerialized(buffer, header, body)
+
+	return resources
+end
+
+local EMPTY_ARR = {}
+
+---Serializes the resource list and puts it at the end of a string.buffer.
+---It should get called **after** serializing all other Objects.
+---@param buffer string.buffer
+---@param resources any[]?
+function ObjectSaver.serializeResources(buffer, resources)
+	-- Encode the resource list
+	buffer:encode(resources or EMPTY_ARR)
+
+	-- Add the binary data to the end of the buffer
+	if resources then
+		for i = 1, #resources do
+			local reference = resources[i]
+			---@type Property
+			local property = Properties[reference.TYPE]
+			if property and property.IS_BINARY then
+				property.packBufferResource(buffer, reference, resources)
+			end
+		end
+	end
+end
+
+---Sets the deferred properties that were deserialized.
+---Call this when the conditions required for every deferred property has been fulfilled (ex. all children have been
+---instanced for NodePaths) and when resources have been deserialized.
+---@param obj Object
+---@param deferredProperties {[string]: any}?
+---@param parsedResources any[]?
+function ObjectSaver.setDeferredProperties(obj, deferredProperties, parsedResources)
+	if deferredProperties then
+		local objEntry = obj:getClassDBEntry()
+		for propertyName, value in pairs(deferredProperties) do
+			local property = objEntry:getProperty(propertyName, true)
+
+			if property and property.DEFER_MODE then
+				property:deserialize(obj, propertyName, value, parsedResources)
+			end
+		end
+	end
+end
+
+---Saves this Object` into a `love.File`. For `nativefs` files, see `ObjectSaver.saveToNativeFilePath`
+---@param file love.File
+---@param object Object
+---@return string? error
+function ObjectSaver.saveToFile(file, object)
+	if not file:isOpen() then
+		-- Open the file if it isn't already
+		local ok, err = file:open("w")
+		if not ok then
+			return err
+		end
+	else
+		-- Check if the file is able to be written to
+		local mode = file:getMode()
+		if mode ~= "w" or mode ~= "a" then
+			return ("File is opened in non-write mode: '%s'"):format(mode)
+		end
+	end
+
+	-- Put in the magic number
+	file:write(STRING_MAGIC_NUMBER)
+
+	-- Reset the temporary buffer and put the serialized Object into it
+	tbuffer:reset()
+	local resources = ObjectSaver.serializeObject(object, tbuffer)
+	ObjectSaver.serializeResources(tbuffer, resources)
+
+	-- Write the contents of the buffer into the file (by creating a new string)
+	while #tbuffer > 0 do
+		local contents = tbuffer:get()
+		local success, err = file:write(contents)
+		if not success then
+			file:close()
+			return err
+		end
+	end
+
+	-- Reset the temporary buffer again and close the file
+	tbuffer:reset()
+	file:close()
+end
+
+---Saves this `Object` to a relative file path. It creates a `love.File` and passes it into `ObjectSaver.saveToFile`.
+---
+---This function uses more memory than `ObjectSaver.saveToNativeFilePath` when FFI is available.
+---@param path string
+---@param object Object
+---@return string? error
+function ObjectSaver.saveToFilePath(path, object)
+	local file = love.filesystem.newFile(path, "w")
+	-- TODO: Open file first?
+	local err = ObjectSaver.saveToFile(file, object)
+	file:release()
+	return err
+end
+
+---Saves this `Object` to a *GLOBAL* file path. It creates a nativefs file and passes the buffer's memory directly.
+---
+---This function uses less memory than `ObjectSaver.saveToFilePath`, but may perform oddly on certain platforms.
+---On restricted platforms, it's more predictable to use the other functions, as they use the normal love.filesystem.
+---@param path string
+---@param object Object
+---@return string? error
+function ObjectSaver.saveToNativeFilePath(path, object)
+	-- Create the native file, and return if there's an issue
+	---@type love.File
+	local file = nativefs.newFile(path)
+	do
+		local ok, err = file:open("w")
+		if not ok then
+			return err
+		end
+	end
+
+	-- Put in the magic number
+	file:write(STRING_MAGIC_NUMBER)
+
+	-- Reset the temporary buffer and put the serialized Object into it
+	tbuffer:reset()
+	local resources = ObjectSaver.serializeObject(object, tbuffer)
+	ObjectSaver.serializeResources(tbuffer, resources)
+
+	-- Write the contents of the buffer into the file
+	while #tbuffer > 0 do
+		local ref, len = tbuffer:ref()
+		tbuffer:skip(len)
+		local success, err = file:writecdata(ref, len)
+		if not success then
+			file:close()
+			return err
+		end
+	end
+
+	-- Reset the temporary buffer again and close the file
+	tbuffer:reset()
+	file:close()
+	file:release()
+end
+
+---Opens and returns the loaded Object from the File object
+---@generic T: Object
+---@param file love.File
+---@param requestedClassName `T` # The optional class to expect
+---@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
+---@return string? err
+---@return T? result
+---@overload fun(file: love.File): string?, Object?
+function ObjectSaver.loadFromFile(file, requestedClassName, canInherit)
+	if not file:isOpen() then
+		-- Open the file if it isn't already
+		local ok, err = file:open("w")
+		if not ok then
+			return err, nil
+		end
+	else
+		-- Check if the file is able to be read from
+		local mode = file:getMode()
+		if mode ~= "r" then
+			return ("File is opened in non-read mode: '%s'"):format(mode), nil
+		end
+	end
+
+	-- Check the magic number
+	do
+		local contents, _ = file:read(#STRING_MAGIC_NUMBER)
+		if contents ~= STRING_MAGIC_NUMBER then
+			-- Magic number match, exit
+			file:close()
+			return ("Invalid Adore Object (magic number does not match) (%s ~= %s)"):format(contents, STRING_MAGIC_NUMBER), nil
+		end
+	end
+
+	---@type table # The header of the Object
+	local headerTable
+	do
+		-- Get the length of the header, and read it into the variable
+		local lengthHex = file:read(4)
+		local length = tonumber(tohex(lengthHex), 16)
+		local headerBytes, readLength = file:read("data", length)
+		---@cast headerBytes love.FileData
+
+		tbuffer:putcdata(ffi.cast("uint8_t*", headerBytes:getFFIPointer()), readLength)
+		local success, headerOrErr = safeDecode(tbuffer)
+		if not success then
+			-- Errored while decoding
+			file:close()
+			return nil, headerOrErr
+		end
+
+		if type(headerOrErr) ~= "table" then
+			-- Wrong type
+			file:close()
+			return ("Expected header of type 'table', got '%s'"):format(type(headerOrErr)), nil
+		end
+
+		-- All good
+		headerTable = headerOrErr
+	end
+
+	---@type table # The body of the Object
+	local bodyTable
+	do
+		-- Get the length of the body, and read it into the variable
+		local lengthHex = file:read(4)
+		local length = tonumber(tohex(lengthHex), 16)
+		local bodyBytes, readLength = file:read("data", length)
+		---@cast bodyBytes love.FileData
+
+		tbuffer:putcdata(ffi.cast("uint8_t*", bodyBytes:getFFIPointer()), readLength)
+		local success, bodyOrErr = safeDecode(tbuffer)
+		if not success then
+			-- Errored while decoding
+			---@cast bodyOrErr string
+			file:close()
+			return bodyOrErr, nil
+		end
+
+		if type(bodyOrErr) ~= "table" then
+			-- Wrong type
+			file:close()
+			return ("Expected body of type 'table', got '%s'"):format(type(bodyOrErr)), nil
+		end
+
+		-- All good
+		bodyTable = bodyOrErr
+	end
+
+	-- Put the rest of the file into a buffer
+	local container, containerSize = file:read("data")
+	---@cast container love.FileData
+	local containerPointer = ffi.cast("uint8_t*", container:getFFIPointer())
+	tbuffer:putcdata(containerPointer, containerSize)
+
+	local err, obj, deferredProperties = ObjectSaver.deserializeObject(tbuffer, headerTable, bodyTable, requestedClassName, canInherit)
+	if err then
+		-- Errored while deserializing Object
+		tbuffer:reset()
+		return err, nil
+	end
+	---@cast obj Object
+
+	-- No error, now deserialize its resources
+	local err, resources = ObjectSaver.deserializeResources(tbuffer)
+	tbuffer:reset()
+
+	if err then
+		print(("[ObjectSaver.fromFile] Error while deserializing resources: %s"):format(err))
+	end
+
+	ObjectSaver.setDeferredProperties(obj, deferredProperties, resources)
+
+	return err, obj
+end
+
+---Opens and returns the ObjectSaver from the file path. Will create a File object.
+---@generic T: Object
+---@param path string
+---@param requestedClassName `T` # The optional class to expect
+---@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
+---@return string? err
+---@return T? result
+---@overload fun(path: string): string?, Object?
+function ObjectSaver.loadFromFilePath(path, requestedClassName, canInherit)
+	local file, err = love.filesystem.newFile(path, "r")
+	if not file then
+		return err, nil
+	end
+
+	local err, obj = ObjectSaver.loadFromFile(file, requestedClassName, canInherit)
+	file:release()
+	return err, obj
+end
+
+return ObjectSaver
