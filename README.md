@@ -1,5 +1,6 @@
 <div align="center">
 <h1>Adore</h1>
+<img width="680" height="310" alt="adore-header-1" src="https://github.com/user-attachments/assets/91fd9c25-f64b-4fc2-a636-f2facc76c79d" />
 </div>
 
 > [!WARNING]
