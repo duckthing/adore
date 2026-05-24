@@ -1,0 +1,6 @@
+[submodule "lib/expression"]
+	path = lib/expression
+	url = https://github.com/duckthing/expression.git
+[submodule "lib/runtimeatlas"]
+	path = lib/runtimeatlas
+	url = https://github.com/EngineerSmith/Runtime-TextureAtlas
