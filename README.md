@@ -85,7 +85,7 @@ When ran for one second, this should print to the console that you are missing a
 >[!WARNING]
 >Do not set `love.update` or `love.draw`. Adore sets those with `root:addMissingCallbacks()`.
 
-Scenes are functions. Write your own in here:
+Scenes are functions. Write your own in here.
 ```lua
 local Adore = require "adore"
 local Nodes = Adore.Nodes
@@ -173,7 +173,8 @@ function Player:new(...)
 	self.speed = 10
 end
 
-function Player:update(dt)
+function Player:physicsUpdate(dt)
+	-- :getVector() will normalize the input automatically
 	local x, y = inputContext:getVector("move")
 	--...
 	if inputContext:isJustPressed("interact") then
@@ -196,8 +197,7 @@ Having experience with Godot will be very useful, but Adore has more differences
 sumneko's Lua Language Server may help; almost every part of Adore is annotated and documented.
 
 > [!NOTE]
-> The wiki (which I haven't set up at this time) should go over deeper concepts. It will be a link on this page
-> eventually.
+> The [wiki](https://github.com/duckthing/adore/wiki) will eventually have more information.
 
 ## Contributing
 Feel free to open issues and pull requests. New features should be discussed in the issues before making a pull request.
