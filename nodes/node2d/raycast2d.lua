@@ -156,11 +156,6 @@ function Raycast2d:update(dt)
 	self:_raycastPerform(world, ax, ay, bx, by)
 end
 
-function Raycast2d:draw()
-	love.graphics.setColor(0, 0.2, 0.8)
-	love.graphics.rectangle("fill", 0, -1, self._distance, 2)
-end
-
 function Raycast2d:forceDestroy(...)
 	Raycast2d.super.forceDestroy(self, ...)
 	self.bodyEntered:release()
