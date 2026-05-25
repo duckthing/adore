@@ -56,8 +56,10 @@ local resourcePaths = {
 		MainLoopContext = "data.context.mainloopcontext",
 	---@type Viewport
 	Viewport = "data.viewport",
+	---@type Tween
+	Tween = "data.tween",
 	---@type Animation
-	Animation = "common.animation",
+	Animation = "data.animation",
 	---@type NinePatch
 	NinePatch = "data.ninepatch",
 }

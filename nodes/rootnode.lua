@@ -7,11 +7,11 @@ local Common = Adore.Common
 local Node = Nodes("Node")
 local Control = Nodes("Control")
 local Timer = Nodes("TimerNode")
-local Tween = Common("Tween")
+local Tween = Resources("Tween")
 local Viewport = Resources("Viewport")
 local CoreUIContext = Resources("CoreUIContext")
 local MainLoopContext = Resources("MainLoopContext")
-local Loader = Common("Adore.Loader")
+local Loader = Adore.Loader
 
 local min, max = math.min, math.max
 

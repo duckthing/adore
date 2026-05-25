@@ -2,15 +2,15 @@
 local Adore = require ""
 
 ---@type Tweener.Property
-local PropertyTweener = require "common.tween.propertytweener"
+local PropertyTweener = require "data.tween.propertytweener"
 ---@type Tweener.Interval
-local IntervalTweener = require "common.tween.intervaltweener"
+local IntervalTweener = require "data.tween.intervaltweener"
 ---@type Tweener.Callback
-local CallbackTweener = require "common.tween.callbacktweener"
+local CallbackTweener = require "data.tween.callbacktweener"
 ---@type Tweener.Method
-local MethodTweener = require "common.tween.methodtweener"
+local MethodTweener = require "data.tween.methodtweener"
 ---@type Tweener.Argument
-local ArgTweener = require "common.tween.argtweener"
+local ArgTweener = require "data.tween.argtweener"
 
 local Flux = Adore.Libraries("Flux")
 

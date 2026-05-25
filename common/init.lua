@@ -10,8 +10,6 @@ do
 local commonPaths = {
 	Color = "common.color",
 	VecMath = "common.vecmath",
-	---@type Tween
-	Tween = "common.tween",
 	---@type Signal
 	Signal = "common.signal",
 	---@type ObjectSaver
