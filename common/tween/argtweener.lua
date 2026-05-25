@@ -1,4 +1,4 @@
-local Properties = require "properties"
+local Properties = require "data.properties"
 
 ---@class Tweener.Argument: Tweener
 local ArgTweener = {}

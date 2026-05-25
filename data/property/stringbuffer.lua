@@ -1,4 +1,4 @@
-local Property = require "property"
+local Property = require "data.property"
 local StringBuffer = require "_G.string.buffer"
 
 ---@class Property.StringBuffer: Property

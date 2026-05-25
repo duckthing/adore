@@ -1,4 +1,4 @@
-local Number = require "property.number"
+local Number = require "data.property.number"
 local floor = math.floor
 
 ---@class Property.Integer: Property.Number

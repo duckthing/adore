@@ -1,9 +1,9 @@
 ---@type AdoreInit
 local Adore = require ""
-local Property = require "property"
+local Property = require "data.property"
 local Vec2 = Adore.Common("Vec2")
 ---@type Property.Number
-local NumberProperty = require "property.number"
+local NumberProperty = require "data.property.number"
 
 ---@class Property.Vec2: Property
 local Vec2P = Property:extend()

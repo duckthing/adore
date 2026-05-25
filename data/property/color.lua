@@ -1,6 +1,6 @@
-local Property = require "property"
+local Property = require "data.property"
 ---@type Property.Number
-local NumberProperty = require "property.number"
+local NumberProperty = require "data.property.number"
 
 -- Color is values used for Love2D graphics (ex. .setColor())
 -- It is in a range of 0..1 with 3/4 components
