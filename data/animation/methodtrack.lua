@@ -1,7 +1,7 @@
 ---@type AnimationTrack
-local AnimationTrack = require "common.animation.animationtrack"
+local AnimationTrack = require "data.animation.animationtrack"
 ---@type MethodTrack.Seeker
-local MTrackSeeker = require "common.animation.methodtrackseeker"
+local MTrackSeeker = require "data.animation.methodtrackseeker"
 local sort = table.sort
 local min, max = math.min, math.max
 

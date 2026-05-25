@@ -2,9 +2,9 @@
 local Adore = require ""
 local SimpleObject = Adore.Libraries("SimpleObject")
 ---@type PropertyTrack
-local PropertyTrack = require "common.animation.propertytrack"
+local PropertyTrack = require "data.animation.propertytrack"
 ---@type MethodTrack
-local MethodTrack = require "common.animation.methodtrack"
+local MethodTrack = require "data.animation.methodtrack"
 
 ---@alias Animation.TrackOptions
 ---| {type: "property", nodePath: NodePath, propertyName: string, keyframes: PropertyTrack.KeyFrame[]?, valueMode: PropertyTrack.ValueMode}
