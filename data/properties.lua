@@ -1,5 +1,5 @@
 ---@type Property
-local Property = require "property"
+local Property = require "data.property"
 
 ---@alias PropertyType
 ---| "any"
@@ -16,35 +16,35 @@ local Property = require "property"
 
 local stringBuffer
 if pcall(require, "_G.string.buffer") then
-	stringBuffer = require "property.stringbuffer"
+	stringBuffer = require "data.property.stringbuffer"
 end
 
 ---@type {[PropertyType]: Property}
 local Properties = {
 	---@type Property.Any
-	any = require "property.any",
+	any = require "data.property.any",
 
 	---@type Property.Number
-	number = require "property.number",
+	number = require "data.property.number",
 	---@type Property.Integer
-	integer = require "property.integer",
+	integer = require "data.property.integer",
 	---@type Property.String
-	string = require "property.string",
+	string = require "data.property.string",
 	---@type Property.Boolean
-	boolean = require "property.boolean",
+	boolean = require "data.property.boolean",
 	---@type Property.Table
-	["table"] = require "property.table",
+	["table"] = require "data.property.table",
 	---@type Property.StringBuffer
 	["string.buffer"] = stringBuffer,
 
 	---@type Property.Vec2
-	Vec2 = require "property.vec2",
+	Vec2 = require "data.property.vec2",
 	---@type Property.Color
-	Color = require "property.color",
+	Color = require "data.property.color",
 	---@type Property.Signal
-	Signal = require "property.signal",
+	Signal = require "data.property.signal",
 	---@type Property.NodeRef
-	NodeRef = require "property.noderef",
+	NodeRef = require "data.property.noderef",
 }
 
 local PropertiesMT = {

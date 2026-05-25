@@ -1,7 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 ---@type {[string]: Property}
-local Properties = require "properties"
+local Properties = require "data.properties"
 local Structures = Adore.Common("Structures")
 local Set = Structures.Set
 local tclear = Structures.tableClear

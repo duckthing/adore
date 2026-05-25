@@ -80,7 +80,7 @@ To fix, run this in your project root: git submodule update --init --recursive
 end
 
 local Nodes = require(PKG_NAME..".nodes")
-local Resources = require(PKG_NAME..".resources")
+local Resources = require(PKG_NAME..".data")
 local Common = require(PKG_NAME..".common")
 
 allLazyLoaders.Nodes, allLazyLoaders.Resources, allLazyLoaders.Common =

@@ -1,4 +1,4 @@
-local Property = require "property"
+local Property = require "data.property"
 
 ---@class Property.NodeRef: Property
 local NodeRef = Property:extend()
