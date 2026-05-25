@@ -4,7 +4,6 @@ local Property = require "property"
 local Any = Property:extend()
 Any.TYPE = "any"
 
-local t = type(1)
 local serializable = {
 	boolean = true,
 	number = true,
