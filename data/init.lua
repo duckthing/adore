@@ -1,6 +1,6 @@
 ---@diagnostic disable: assign-type-mismatch
 local PKG_NAME = ...
-local ADORE_PATH = PKG_NAME:match("^(.*)%.resources")
+local ADORE_PATH = PKG_NAME:match("^(.*)%.data")
 
 local LazyRequire = require(ADORE_PATH..".lazyrequire")
 
