@@ -15,7 +15,7 @@ local commonPaths = {
 	---@type ObjectSaver
 	ObjectSaver = "objectsaver",
 	---@type ClassDB
-	ClassDB = "data.classdb",
+	ClassDB = "common.classdb",
 	---@type Vec2
 	Vec2 = "common.vec2",
 	---@type Rect2
