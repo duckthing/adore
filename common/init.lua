@@ -13,7 +13,7 @@ local commonPaths = {
 	---@type Signal
 	Signal = "common.signal",
 	---@type ObjectSaver
-	ObjectSaver = "objectsaver",
+	ObjectSaver = "common.objectsaver",
 	---@type ClassDB
 	ClassDB = "common.classdb",
 	---@type Vec2
