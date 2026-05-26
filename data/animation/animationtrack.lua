@@ -69,7 +69,7 @@ function AnimationTrack:getNextKeyframe(time, startingIndex)
 	return nil, nil
 end
 
----Returns the KeyFrame that occurs just before `time` (from `startingIndex`, or 1) 
+---Returns the KeyFrame that occurs just before `time` (from `startingIndex`, or 1)
 ---@param time number
 ---@param startingIndex number? # Looks at this KeyFrame index and forward; skips the first few indices
 ---@return AnimationTrack.KeyFrame? keyframe

@@ -54,7 +54,9 @@ Viewport.CLASS_NAME = "Viewport"
 ---@field pixelScale number?
 ---@field scaleMode Viewport.Options.ScaleMode?
 ---@field aspect Viewport.Options.Aspect?
----@field allowPostProcessing boolean? # Whether there can be post-processing **at all**. Needs `applyPostProcessing` to actually do post-processing.
+---Whether there can be post-processing **at all**, and if internal objects for it should be created or released.
+---Needs `applyPostProcessing` to actually do post-processing.
+---@field allowPostProcessing boolean?
 ---@field applyPostProcessing boolean? # If post-processing is allowed, should it be applied right now?
 ---@field includeStencil boolean?
 ---@field canvasSettings Viewport.Options.CanvasSettings?
@@ -157,7 +159,9 @@ function Viewport:new(options)
 
 
 	---======== SHADERS
-	---@type boolean # Whether there can be post-processing **at all**. Needs `applyPostProcessing` to actually do post-processing.
+	---Whether there can be post-processing **at all**, and if internal objects for it should be created or released.
+	---Needs `applyPostProcessing` to actually do post-processing.
+	---@type boolean
 	self._allowPostProcessing = options.allowPostProcessing or false
 	---@type boolean # If post-processing is allowed, should it be applied right now?
 	self.applyPostProcessing = options.applyPostProcessing
