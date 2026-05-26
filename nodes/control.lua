@@ -81,10 +81,10 @@ function Control:new()
 	Control.super.new(self)
 
 	---@type number, number, number, number # The percentage of the parent's spacing this Control should take
-	self._anchor_left, self._anchor_top, self._anchor_right, self._anchor_bottom
+	self._anchorLeft, self._anchorTop, self._anchorRight, self._anchorBottom
 		= 0, 0, 0, 0
 	---@type number, number, number, number # The percentage of the parent's spacing this Control should take
-	self._offset_left, self._offset_top, self._offset_right, self._offset_bottom
+	self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 		= 0, 0, 0, 0
 	---@type Vec2 # Where the pivot is relatively located, in pixels
 	self._pivot = Vec2(0, 0)
@@ -136,7 +136,7 @@ end
 ---@param bottom number
 ---@return T
 function Control:setAnchors(left, top, right, bottom)
-	self._anchor_left, self._anchor_top, self._anchor_right, self._anchor_bottom
+	self._anchorLeft, self._anchorTop, self._anchorRight, self._anchorBottom
 		= left, top, right, bottom
 	self:deferRefreshSelf()
 	return self
@@ -151,7 +151,7 @@ end
 ---@param bottom number
 ---@return T
 function Control:setOffsets(left, top, right, bottom)
-	self._offset_left, self._offset_top, self._offset_right, self._offset_bottom
+	self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 		= left, top, right, bottom
 	self:deferRefreshSelf()
 	return self
@@ -173,9 +173,9 @@ function Control:setAnchorsAndOffsets(
 	aleft, atop, aright, abottom,
 	oleft, otop, oright, obottom
 )
-	self._anchor_left, self._anchor_top, self._anchor_right, self._anchor_bottom
+	self._anchorLeft, self._anchorTop, self._anchorRight, self._anchorBottom
 		= aleft, atop, aright, abottom
-	self._offset_left, self._offset_top, self._offset_right, self._offset_bottom
+	self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 		= oleft, otop, oright, obottom
 	self:deferRefreshSelf()
 	return self
@@ -185,21 +185,21 @@ end
 ---| fun(self, value: number): self
 
 ---@type Control.RectSetter
-function Control:setAnchorLeft(value) self._anchor_left = value; self:deferRefreshSelf(); return self end
+function Control:setAnchorLeft(value) self._anchorLeft = value; self:deferRefreshSelf(); return self end
 ---@type Control.RectSetter
-function Control:setAnchorRight(value) self._anchor_right = value; self:deferRefreshSelf(); return self end
+function Control:setAnchorRight(value) self._anchorRight = value; self:deferRefreshSelf(); return self end
 ---@type Control.RectSetter
-function Control:setAnchorTop(value) self._anchor_top = value; self:deferRefreshSelf(); return self end
+function Control:setAnchorTop(value) self._anchorTop = value; self:deferRefreshSelf(); return self end
 ---@type Control.RectSetter
-function Control:setAnchorBottom(value) self._anchor_bottom = value; self:deferRefreshSelf(); return self end
+function Control:setAnchorBottom(value) self._anchorBottom = value; self:deferRefreshSelf(); return self end
 ---@type Control.RectSetter
-function Control:setOffsetLeft(value) self._offset_left = value; self:deferRefreshSelf(); return self end
+function Control:setOffsetLeft(value) self._offsetLeft = value; self:deferRefreshSelf(); return self end
 ---@type Control.RectSetter
-function Control:setOffsetRight(value) self._offset_right = value; self:deferRefreshSelf(); return self end
+function Control:setOffsetRight(value) self._offsetRight = value; self:deferRefreshSelf(); return self end
 ---@type Control.RectSetter
-function Control:setOffsetTop(value) self._offset_top = value; self:deferRefreshSelf(); return self end
+function Control:setOffsetTop(value) self._offsetTop = value; self:deferRefreshSelf(); return self end
 ---@type Control.RectSetter
-function Control:setOffsetBottom(value) self._offset_bottom = value; self:deferRefreshSelf(); return self end
+function Control:setOffsetBottom(value) self._offsetBottom = value; self:deferRefreshSelf(); return self end
 
 ---Sets the pivot of this Control
 ---@param x number
@@ -491,7 +491,7 @@ end
 ---@return number right
 ---@return number bottom
 function Control:getAnchors()
-	return self._anchor_left, self._anchor_top, self._anchor_right, self._anchor_bottom
+	return self._anchorLeft, self._anchorTop, self._anchorRight, self._anchorBottom
 end
 
 ---Returns all the anchor values
@@ -500,7 +500,7 @@ end
 ---@return number right
 ---@return number bottom
 function Control:getOffsets()
-	return self._offset_left, self._offset_top, self._offset_right, self._offset_bottom
+	return self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 end
 
 ---Sets the position of this Control, relative to the top-left corner
@@ -508,14 +508,14 @@ end
 ---@param gy integer
 function Control:setPosition(gx, gy)
 	local diffX, diffY =
-		gx - self._offset_left,
-		gy - self._offset_top
+		gx - self._offsetLeft,
+		gy - self._offsetTop
 
-	self._offset_left, self._offset_right, self._offset_top, self._offset_bottom =
-		self._offset_left + diffX,
-		self._offset_right + diffX,
-		self._offset_top + diffY,
-		self._offset_bottom + diffY
+	self._offsetLeft, self._offsetRight, self._offsetTop, self._offsetBottom =
+		self._offsetLeft + diffX,
+		self._offsetRight + diffX,
+		self._offsetTop + diffY,
+		self._offsetBottom + diffY
 	self:deferRefreshSelf()
 end
 
@@ -523,11 +523,11 @@ end
 ---@param x integer
 ---@param y integer
 function Control:translate(x, y)
-	self._offset_left, self._offset_right, self._offset_top, self._offset_bottom =
-		self._offset_left + x,
-		self._offset_right + x,
-		self._offset_top + y,
-		self._offset_bottom + y
+	self._offsetLeft, self._offsetRight, self._offsetTop, self._offsetBottom =
+		self._offsetLeft + x,
+		self._offsetRight + x,
+		self._offsetTop + y,
+		self._offsetBottom + y
 	self:deferRefreshSelf()
 end
 
@@ -555,9 +555,9 @@ end
 ---@return integer h
 function Control:_getRectFromParentSize(w, h)
 	local aLeft, aTop, aRight, aBottom =
-		self._anchor_left, self._anchor_top, self._anchor_right, self._anchor_bottom
+		self._anchorLeft, self._anchorTop, self._anchorRight, self._anchorBottom
 	local oLeft, oTop, oRight, oBottom =
-		self._offset_left, self._offset_top, self._offset_right, self._offset_bottom
+		self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 
 	local canonLeft, canonTop =
 		w * aLeft + oLeft,
@@ -603,7 +603,7 @@ end
 ---@return number h
 function Control:_getOffsetSize()
 	local oLeft, oTop, oRight, oBottom =
-		self._offset_left, self._offset_top, self._offset_right, self._offset_bottom
+		self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 	return math.abs(oRight - oLeft), math.abs(oBottom - oTop)
 end
 
@@ -1112,14 +1112,14 @@ function Control:setVisible(visible)
 end
 
 function Control._addDefinition(entry)
-	entry:newNumber("_anchor_left", 0, nil, nil, nil, "setAnchorLeft")
-	entry:newNumber("_anchor_right", 0, nil, nil, nil, "setAnchorRight")
-	entry:newNumber("_anchor_top", 0, nil, nil, nil, "setAnchorTop")
-	entry:newNumber("_anchor_bottom", 0, nil, nil, nil, "setAnchorBottom")
-	entry:newInteger("_offset_left", 0, nil, nil, nil, "setOffsetLeft")
-	entry:newInteger("_offset_right", 0, nil, nil, nil, "setOffsetRight")
-	entry:newInteger("_offset_top", 0, nil, nil, nil, "setOffsetTop")
-	entry:newInteger("_offset_bottom", 0, nil, nil, nil, "setOffsetBottom")
+	entry:newNumber("_anchorLeft", 0, nil, nil, nil, "setAnchorLeft")
+	entry:newNumber("_anchorRight", 0, nil, nil, nil, "setAnchorRight")
+	entry:newNumber("_anchorTop", 0, nil, nil, nil, "setAnchorTop")
+	entry:newNumber("_anchorBottom", 0, nil, nil, nil, "setAnchorBottom")
+	entry:newInteger("_offsetLeft", 0, nil, nil, nil, "setOffsetLeft")
+	entry:newInteger("_offsetRight", 0, nil, nil, nil, "setOffsetRight")
+	entry:newInteger("_offsetTop", 0, nil, nil, nil, "setOffsetTop")
+	entry:newInteger("_offsetBottom", 0, nil, nil, nil, "setOffsetBottom")
 	entry:newVec2("_pivot", nil, "setPivotVec")
 	entry:newNumber("_rotation", 0, nil, nil, nil, "setRotation")
 	entry:newVec2("_scale", nil, "setScaleVec")
