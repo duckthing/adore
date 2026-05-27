@@ -83,14 +83,16 @@ end
 ---@param header table # The serialized header of the Object
 ---@param body table # The serialized body of the Object
 ---@param requestedClassName `T` # The optional class (name) to expect; should be a string
----@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
+---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
 ---@return string? err
 ---@return T? result
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; can be deserialized later once ready
 ---@overload fun(binaryBuffer: string.buffer, header: table, body: table): Object?, string?
 function ObjectSaver.deserializeObject(binaryBuffer, header, body, requestedClassName, canInherit)
 	if not requestedClassName then
+		-- No class name, allow converting into any Object
 		requestedClassName = "Object"
+		canInherit = true
 	end
 
 	if not header.CLASS_NAME then
@@ -105,24 +107,23 @@ function ObjectSaver.deserializeObject(binaryBuffer, header, body, requestedClas
 		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME), nil
 	end
 
-	if requestedClassName then
-		-- Check if the class name matches/inherits the parameters
-		if canInherit == nil then canInherit = false end
-		local RequestedClass = ClassDB.ClassNameToClass[requestedClassName]
+	-- Check if the class name matches/inherits the parameters
+	local RequestedClass = ClassDB.ClassNameToClass[requestedClassName]
 
-		if not RequestedClass then
-			-- The passed parameters request a class that doesn't exist
-			return ("Requested object class '%s' does not exist"):format(header.CLASS_NAME), nil
+	if not RequestedClass then
+		-- The passed parameters request a class that doesn't exist
+		return ("Requested object class '%s' does not exist"):format(header.CLASS_NAME), nil
+	end
+
+	if canInherit then
+		-- Check if the requested class is inheriting from the target class
+		if not TargetClass:is(RequestedClass) then
+			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
 		end
-
-		if canInherit then
-			if not TargetClass:is(RequestedClass) then
-				return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
-			end
-		else
-			if header.CLASS_NAME ~= requestedClassName then
-				return ("Serialized object '%s' does not match class name '%s'"):format(header.CLASS_NAME, requestedClassName), nil
-			end
+	else
+		-- Check if the requested class matches the target class
+		if header.CLASS_NAME ~= requestedClassName then
+			return ("Serialized object '%s' does not match class name '%s'"):format(header.CLASS_NAME, requestedClassName), nil
 		end
 	end
 
@@ -132,17 +133,19 @@ function ObjectSaver.deserializeObject(binaryBuffer, header, body, requestedClas
 		return ("Requested object class '%s' cannot be deserialized"):format(header.CLASS_NAME), nil
 	end
 
+	---@type Object # The object where all the properties will get set
 	local obj = TargetClass()
-
 
 	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
 	local deferredData = nil
 
+	-- Set the properties
 	for i = 1, 2 do
 		local t = (i == 1 and header) or body
 		for propertyName, value in pairs(t) do
 			local property = entry:getProperty(propertyName)
 			if property and not property.IS_BINARY and not property.isConstant then
+				-- Property, not a binary blob, not constant
 				if not property.DEFER_MODE then
 					-- Not deferred, deserialize immediately
 					-- (It won't rely on resources)
@@ -280,6 +283,7 @@ end
 ---@param resources any[]? # Should be initialized outside
 ---@return any[] resources
 function ObjectSaver.serializeObject(object, buffer, resources)
+	-- TODO: Better error handling
 	if not resources then resources = {} end
 
 	local entry = object:getClassDBEntry()
