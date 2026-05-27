@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]--
 
-local ffi, bit = require('_G.ffi'), require('_G.bit')
+local ffi, bit = require('ffi'), require('bit')
 local C = ffi.C
 
 local fopen, getcwd, chdir, unlink, mkdir, rmdir

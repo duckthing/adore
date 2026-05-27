@@ -62,7 +62,7 @@ local LazyRequireMT = {
 		local val = require(path)
 		rawset(self, k, val)
 
-		-- Change the `require` global back, if `keepOriginal` is false
+		-- Change the `require` global back
 		require = oldRequire
 
 		return val

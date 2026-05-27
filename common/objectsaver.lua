@@ -6,7 +6,7 @@ local ffi = require "_G.ffi"
 
 local ClassDB = Adore.Common("ClassDB")
 local nativefs = Adore.Libraries("NativeFS")
-local Properties = require(Adore.PATH.."data.properties")
+local Properties = require "data.properties"
 
 ---@class ObjectSaver
 local ObjectSaver = {}
