@@ -2,7 +2,7 @@
 local Adore = require ""
 
 local StringBuffer = require "_G.string.buffer"
-local ffi = require "_G.ffi"
+local ffi = Adore.Common("ffilib")
 
 local ClassDB = Adore.Common("ClassDB")
 local nativefs = Adore.Libraries("NativeFS")
