@@ -1,6 +1,6 @@
 <div align="center">
 <h1>Adore</h1>
-<img width="680" height="310" alt="adore-header-1" src="https://github.com/user-attachments/assets/91fd9c25-f64b-4fc2-a636-f2facc76c79d" />
+<img width="664" height="305" alt="adore-header-2" src="https://github.com/user-attachments/assets/95432403-e1b5-400d-a548-1ee37e417eed" />
 </div>
 
 > [!WARNING]
@@ -8,8 +8,9 @@
 > refactors, hidden problems, and missing features that need to be added, so try at your own risk.
 
 Adore is a library to combine the productivity and comfort of Godot with the flexibility of Love2D. It was initially
-created to have a common UI framework between all of my projects, and has grown over time. Currently built for
-Love2D v11.5.
+created to have a common UI framework between all of my projects, and has grown over time.
+
+Currently built for Love2D **11.5**, with target platforms of **Windows**, **Linux**, and **web**.
 
 ## Features
 * 2D
