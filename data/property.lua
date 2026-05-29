@@ -8,6 +8,8 @@ local SimpleObject = Adore.Libraries("SimpleObject")
 local Property = SimpleObject:extend()
 ---@type ClassDB
 Property.ClassDB = nil
+---@type ObjectSaver
+Property.ObjectSaver = nil
 
 Property.TYPE = "Property"
 Property.IS_BINARY = false
@@ -130,7 +132,7 @@ function Property:getSharedMatch(obj, propertyName, value, resources)
 	end
 
 	-- No match, return the new reference
-	return nil, self:getReference(obj, propertyName, value)
+	return nil, self:getReference(obj, propertyName, value, resources)
 end
 
 ---Creates a reference from the given values;
@@ -138,8 +140,9 @@ end
 ---@param obj Object
 ---@param propertyName string
 ---@param value any
+---@param resources any[]
 ---@return table
-function Property:getReference(obj, propertyName, value)
+function Property:getReference(obj, propertyName, value, resources)
 	return {
 		TYPE = self.TYPE,
 		value = value,

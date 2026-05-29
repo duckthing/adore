@@ -30,7 +30,7 @@ local function packInto(buffer, node, resources)
 	if not node._adorePersist then return end
 
 	buffer:encode(STRING_TO_CONTROL.BEGIN_NODE)
-	ObjectSaver.serializeObject(node, buffer, resources)
+	ObjectSaver.serializeObjectToBuffer(node, buffer, resources)
 
 	if #node.children ~= 0 then
 		local index = 1
@@ -60,7 +60,7 @@ function PackedScene:pack(node)
 	self.buffer:reset()
 	local resources = {}
 	packInto(self.buffer, node, resources)
-	ObjectSaver.serializeResources(self.buffer, resources)
+	ObjectSaver.serializeResourcesToBuffer(self.buffer, resources)
 end
 
 local instantiateTree
@@ -106,19 +106,25 @@ end
 
 ---Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
 ---@param parent Node?
+---@param consumeBuffer boolean? # [Default: `false`] Whether the buffer should be destroyed afterwards
 ---@return Node? instanced
-function PackedScene:instantiate(parent)
+function PackedScene:instantiate(parent, consumeBuffer)
 	if #self.buffer == 0 then
 		print("[Adore.PackedScene:instantiate] Tree is empty; nothing to instantiate")
 	else
 		---@type {[Node]: {[string]: any}}
 		local deferredData = {}
+		local buffer = self.buffer
+		if not consumeBuffer then
+			buffer = StringBuffer.new()
+			buffer:put(self.buffer:tostring())
+		end
 
-		local instanced = instantiateTree(parent, self.buffer, deferredData)
-		local err, resources = ObjectSaver.deserializeResources(self.buffer)
+		local instanced = instantiateTree(parent, buffer, deferredData)
+		local err, resources = ObjectSaver.deserializeResourcesFromBuffer(buffer)
 
 		if err then
-			print(("[Adore.PackedScene.instantiate] Error while deserializing resources: %s"):format(err))
+			print(("[Adore.PackedScene:instantiate] Error while deserializing resources: %s"):format(err))
 		end
 
 		-- Set all deferred properties; they are usually deferred if they depend on a tree structure (like Signals)
@@ -136,8 +142,8 @@ end
 ---@return SceneFunction
 function PackedScene:asFunction()
 	local func = self.instantiate
-	return function(...)
-		return func(self, ...)
+	return function(parent)
+		return func(self, parent, true)
 	end
 end
 

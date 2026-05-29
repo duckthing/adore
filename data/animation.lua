@@ -1,6 +1,6 @@
 ---@type AdoreInit
 local Adore = require ""
-local SimpleObject = Adore.Libraries("SimpleObject")
+local Object = Adore.Resources("Object")
 ---@type PropertyTrack
 local PropertyTrack = require "data.animation.propertytrack"
 ---@type MethodTrack
@@ -10,18 +10,14 @@ local MethodTrack = require "data.animation.methodtrack"
 ---| {type: "property", nodePath: NodePath, propertyName: string, keyframes: PropertyTrack.KeyFrame[]?, valueMode: PropertyTrack.ValueMode}
 ---| {type: "method", nodePath: NodePath, keyframes: MethodTrack.KeyFrame[]?}
 
----@class Animation: SimpleObject
+---@class Animation: Object
 ---@overload fun(duration: number, loop: boolean, tracks: Animation.TrackOptions[]?): Animation
-local Animation = SimpleObject:extend()
+local Animation = Object:extend()
 Animation.CLASS_NAME = "Animation"
 
 ---@alias Animation.TrackType
 ---| "property"
 ---| "method"
-
----@class Animation.Library
----@field name string
----@field animations {[string]: Animation}
 
 ---@param duration number
 ---@param loop boolean
@@ -58,6 +54,11 @@ end
 function Animation:setLoop(loop)
 	self.loop = loop
 	return self
+end
+
+function Animation._addDefinition(entry)
+	entry:newBoolean("look", false, "setLoop")
+	entry:newNumber("duration", 0, 0)
 end
 
 return Animation

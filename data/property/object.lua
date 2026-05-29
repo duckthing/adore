@@ -1,8 +1,6 @@
----@type AdoreInit
-local Adore = require ""
+---@type Property
 local Property = require "data.property"
-local StringBuffer = require "_G.string.buffer"
-local ObjectSaver = Adore.Common("ObjectSaver")
+local ObjectSaver = Property.ObjectSaver
 
 ---@class Property.Object: Property
 local Object = Property:extend()
@@ -28,7 +26,7 @@ end
 
 function Object.packBufferResource(buffer, reference, resources)
 	local value = reference.value
-	ObjectSaver.serializeObject(value, buffer, resources)
+	Property.ObjectSaver.serializeObjectToBuffer(value, buffer, resources)
 end
 
 function Object.unpackBufferResource(buffer, reference, resources)
@@ -64,6 +62,42 @@ function Object:deserialize(obj, propertyName, value, resources)
 	end
 
 	self:set(obj, propertyName, parsedObject)
+end
+
+---Gets the address string of the table
+---@param t table
+---@return string
+local function getAddr(t)
+	local oldMT = getmetatable(t)
+	setmetatable(t, nil)
+	local addr = tostring(t)
+	setmetatable(t, oldMT)
+	return addr
+end
+
+function Object:getSharedMatch(obj, propertyName, value, resources)
+	local ownType = self.TYPE
+	local ownValueAddr = getAddr(value)
+	for i = 1, #resources do
+		local resReference = resources[i]
+		if resReference.TYPE == ownType and value == resReference.value then
+			-- Found match, do nothing
+			return i, resReference
+		end
+	end
+
+	-- No match, return the new reference
+	return nil, self:getReference(obj, propertyName, value, resources)
+end
+
+function Object:getReference(obj, propertyName, value, resources)
+	local header, body = Property.ObjectSaver.getPropertyPairs(value, resources)
+	return setmetatable({
+		TYPE = self.TYPE,
+		header = header,
+		body = body,
+	}, {__index = {value = value}}
+	)
 end
 
 return Object

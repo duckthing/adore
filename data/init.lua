@@ -60,6 +60,8 @@ local resourcePaths = {
 	Tween = "data.tween",
 	---@type Animation
 	Animation = "data.animation",
+	---@type Animation.Library
+	["Animation.Library"] = "data.animation.animationlibrary",
 	---@type NinePatch
 	NinePatch = "data.ninepatch",
 }

@@ -45,12 +45,14 @@ local Properties = {
 	Signal = require "data.property.signal",
 	---@type Property.NodeRef
 	NodeRef = require "data.property.noderef",
+	---@type Property.Object
+	Object = require "data.property.object",
 }
 
 local PropertiesMT = {
 	__index = {
-		setClassDB = function(self)
-			Property.ClassDB = self
+		setClassDB = function(ClassDB)
+			Property.ClassDB = ClassDB
 		end
 	}
 }

@@ -253,6 +253,14 @@ function ClassDBEntry:newStringBuffer(name)
 	return self
 end
 
+---Adds a Property.Object
+---@param name string
+---@param baseClass string?
+function ClassDBEntry:newObject(name, baseClass)
+	self:insertProperty(Properties.Object(self._class, name, baseClass))
+	return self
+end
+
 ---Adds a Property.Vec2
 ---@param name string
 ---@param defaultValue Vec2?
@@ -510,5 +518,7 @@ function ClassDBEntry:forEachBinaryProperty(object, recursive, forEach, ...)
 
 	tclear(alreadyUsedProperties)
 end
+
+function ClassDBEntry._setClassDB(ClassDB) Properties.setClassDB(ClassDB) end
 
 return ClassDBEntry

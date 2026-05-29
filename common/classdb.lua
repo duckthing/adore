@@ -2,6 +2,7 @@
 local ClassDB = {}
 ---@type ClassDB.Entry
 local ClassDBEntry = require "data.classdbentry"
+ClassDBEntry._setClassDB(ClassDB)
 
 ---@class ClassDB.Info
 ---@field super Object?
