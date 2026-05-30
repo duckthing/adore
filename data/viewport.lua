@@ -823,7 +823,7 @@ function Viewport:update(dt)
 						end
 					end
 
-					simFunc(world, physicsStepSignal, dt)
+					simFunc(world, physicsStepSignal, targetStep)
 				end
 
 				-- Rollover the remaining time to the next frame
