@@ -47,6 +47,8 @@ local Properties = {
 	NodeRef = require "data.property.noderef",
 	---@type Property.Object
 	Object = require "data.property.object",
+	---@type Property.LoveObject
+	LoveObject = require "data.property.loveobject",
 }
 
 local PropertiesMT = {

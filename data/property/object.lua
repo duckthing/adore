@@ -1,6 +1,5 @@
 ---@type Property
 local Property = require "data.property"
-local ObjectSaver = Property.ObjectSaver
 
 ---@class Property.Object: Property
 local Object = Property:extend()
@@ -8,11 +7,13 @@ Object.TYPE = "Object"
 Object.IS_BINARY = true
 Object.DEFER_MODE = "shared"
 
-function Object:new(class, property, baseClass)
+function Object:new(class, property, baseClass, setter)
 	Object.super.new(self, class, property)
 
 	---@type string
 	self.baseClass = baseClass or "Object"
+
+	if setter then self:withSetter(setter) end
 end
 
 function Object:newValue()
@@ -30,7 +31,7 @@ function Object.packBufferResource(buffer, reference, resources)
 end
 
 function Object.unpackBufferResource(buffer, reference, resources)
-	local err, obj, deferredProperties = ObjectSaver.deserializeFromBuffer(buffer)
+	local err, obj, deferredProperties = Property.ObjectSaver.deserializeFromBuffer(buffer)
 	reference.value = obj
 	reference.deferredProperties = deferredProperties
 end
@@ -58,7 +59,7 @@ function Object:deserialize(obj, propertyName, value, resources)
 	if deferred then
 		-- Set any deferred properties, and remove it so later `:deserialize()` calls don't do it again
 		reference.deferredProperties = nil
-		ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
+		Property.ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
 	end
 
 	self:set(obj, propertyName, parsedObject)

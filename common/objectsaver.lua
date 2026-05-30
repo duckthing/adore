@@ -166,6 +166,18 @@ local function dump(o)
 	end
 end
 
+local function entireDump(o)
+	if type(o) == 'table' then
+		local s = '{ '
+		for k,v in pairs(o) do
+			if type(k) ~= 'number' then k = '"'..k..'"' end
+			s = s .. '['..k..'] = ' .. entireDump(v) .. ','
+		end
+		return s .. '} '
+	else
+		return tostring(o)
+	end
+end
 
 ---Serializes the resource list and puts it at the end of a string.buffer.
 ---It should get called **after** serializing all other Objects.
@@ -173,7 +185,7 @@ end
 ---@param resources any[]?
 function ObjectSaver.serializeResourcesToBuffer(buffer, resources)
 	-- Encode the resource list
-	print(dump(resources))
+	print(entireDump(resources))
 	buffer:encode(resources or EMPTY_ARR)
 
 	-- Add the binary data to the end of the buffer

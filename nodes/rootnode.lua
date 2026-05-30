@@ -290,7 +290,8 @@ function Root:changeSceneTo(constructor)
 	elseif type(constructor) == "table" and constructor.IS_NODE then
 		-- We got a Node?
 		---@cast constructor Node
-		self:addChild(constructor)
+		local node = constructor
+		constructor = function() return node end
 		return
 	end
 

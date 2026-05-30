@@ -98,8 +98,11 @@ function Physical2d:onBodyAdded(body)
 	body:setTransform(self:getWorldPositionAndRotation())
 end
 
-function Physical2d:onViewportAdded(newViewport)
-	Physical2d.super.onViewportAdded(self, newViewport)
+function Physical2d:_createBody()
+	---@type Viewport
+	---@diagnostic disable-next-line: assign-type-mismatch
+	local newViewport = self:getViewport()
+
 	local world = newViewport._physicsWorld
 	local newBody = love.physics.newBody(
 		world,
@@ -115,23 +118,46 @@ function Physical2d:onViewportAdded(newViewport)
 	self:onBodyAdded(newBody)
 end
 
-function Physical2d:onViewportRemoved(oldViewport)
-	Physical2d.super.onViewportRemoved(self, oldViewport)
+function Physical2d:_releaseBody()
 	local body = self.body
-	self.body = nil
+	if body then
+		self.body = nil
 
-	-- Remove this body from the list
-	local list = bodyList[body:getWorld()]
-	for i = #list, 1, -1 do
-		if list[i] == self then
-			table.remove(list, i)
-			break
+		-- Remove this body from the list
+		local list = bodyList[body:getWorld()]
+		for i = #list, 1, -1 do
+			if list[i] == self then
+				table.remove(list, i)
+				break
+			end
+		end
+
+		if body then
+			body:destroy()
+			body:release()
 		end
 	end
+end
 
-	if body then
-		body:destroy()
-		body:release()
+function Physical2d:onViewportAdded(newViewport)
+	Physical2d.super.onViewportAdded(self, newViewport)
+	if self._inTree then
+		self:_createBody()
+	end
+end
+
+function Physical2d:onViewportRemoved(oldViewport)
+	Physical2d.super.onViewportRemoved(self, oldViewport)
+	self:_releaseBody()
+end
+
+function Physical2d:_eAncestorTreeStatusUpdated(...)
+	Physical2d.super._eAncestorTreeStatusUpdated(self, ...)
+	if not self._inTree then
+		self:_releaseBody()
+	elseif not self.body then
+		-- In the tree, no body
+		self:_createBody()
 	end
 end
 

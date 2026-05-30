@@ -6,7 +6,7 @@ local Object = Adore.Resources("Object")
 ---@field name string
 ---@field animations {[string]: Animation}
 local AnimLibrary = Object:extend()
-AnimLibrary.CLASS_NAME = "AnimationLibrary"
+AnimLibrary.CLASS_NAME = "Animation.Library"
 
 ---@param name string?
 ---@param animations {[string]: Animation}?

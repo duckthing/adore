@@ -256,8 +256,17 @@ end
 ---Adds a Property.Object
 ---@param name string
 ---@param baseClass string?
-function ClassDBEntry:newObject(name, baseClass)
-	self:insertProperty(Properties.Object(self._class, name, baseClass))
+---@param setter string?
+function ClassDBEntry:newObject(name, baseClass, setter)
+	self:insertProperty(Properties.Object(self._class, name, baseClass, setter))
+	return self
+end
+
+---Adds a Property.LoveObject
+---@param name string
+---@param setter string?
+function ClassDBEntry:newLoveObject(name, setter)
+	self:insertProperty(Properties.LoveObject(self._class, name, nil, setter))
 	return self
 end
 

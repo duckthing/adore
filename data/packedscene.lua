@@ -104,12 +104,18 @@ function instantiateTree(ontoParent, buffer, allDeferredProperties)
 	end
 end
 
+---Returns `true` if this PackedScene is empty
+---@return boolean
+function PackedScene:isEmpty()
+	return #self.buffer == 0
+end
+
 ---Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
 ---@param parent Node?
 ---@param consumeBuffer boolean? # [Default: `false`] Whether the buffer should be destroyed afterwards
 ---@return Node? instanced
 function PackedScene:instantiate(parent, consumeBuffer)
-	if #self.buffer == 0 then
+	if self:isEmpty() then
 		print("[Adore.PackedScene:instantiate] Tree is empty; nothing to instantiate")
 	else
 		---@type {[Node]: {[string]: any}}
@@ -120,7 +126,7 @@ function PackedScene:instantiate(parent, consumeBuffer)
 			buffer:put(self.buffer:tostring())
 		end
 
-		local instanced = instantiateTree(parent, buffer, deferredData)
+		local instanced = instantiateTree(nil, buffer, deferredData)
 		local err, resources = ObjectSaver.deserializeResourcesFromBuffer(buffer)
 
 		if err then
@@ -134,6 +140,9 @@ function PackedScene:instantiate(parent, consumeBuffer)
 			end
 		end
 
+		if parent and instanced then
+			parent:addChild(instanced)
+		end
 		return instanced
 	end
 end

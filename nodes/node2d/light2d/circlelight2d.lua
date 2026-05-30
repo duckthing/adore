@@ -5,6 +5,7 @@ local Light2d = Adore.Nodes("Light2d")
 ---@class CircleLight2d: Light2d
 ---@overload fun(x: number?, y: number?, radius: number?): CircleLight2d
 local CircleLight2d = Light2d:extend()
+CircleLight2d.CLASS_NAME = "CircleLight2d"
 
 function CircleLight2d:new(x, y, radius)
 	CircleLight2d.super.new(self, x, y)
