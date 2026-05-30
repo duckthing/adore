@@ -37,4 +37,3 @@ function NodeRefP:onInput()
 end
 
 return NodeRefP
-

@@ -11,6 +11,7 @@ local Previewers = {
 	Vec2 = require(ADORE_PATH..".toolbox.ui.inspector.previewer.vec2previewer"),
 	Color = require(ADORE_PATH..".toolbox.ui.inspector.previewer.colorpreviewer"),
 	NodeRef = require(ADORE_PATH..".toolbox.ui.inspector.previewer.noderefpreviewer"),
+	Object = require(ADORE_PATH..".toolbox.ui.inspector.previewer.noderefpreviewer"),
 }
 
 return Previewers
