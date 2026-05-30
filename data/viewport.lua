@@ -996,10 +996,33 @@ function Viewport:_setPhysicsWorld(world)
 	self._physicsWorld = world
 	Physical2d.addWorldList(world)
 	world:setCallbacks(Physical2d.getWorldCallbacks())
+	self:_onOptionsChanged()
 end
 
 function Viewport._addDefinition(entry)
+	entry:newObject("_parentViewport", "Viewport")
+	entry:newInteger("_canvasW", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newInteger("_canvasH", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newInteger("_windowW", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newInteger("_windowH", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newNumber("_pixelScale", 0, 0, nil, nil, "%_onOptionsChanged")
+	entry:newString("_scaleMode", "resize", "%_onOptionsChanged")
+	entry:newBoolean("_includeStencil", false, "%_onOptionsChanged")
+	entry:newTable("_canvasSettings", nil, "%_onOptionsChanged")
+	entry:newNodeRef("_activeCamera", "Camera", "%_onOptionsChanged")
+	entry:newBoolean("_allowPostProcessing", false, "%_onOptionsChanged")
+	entry:newBoolean("applyPostProcessing", nil, "%_onOptionsChanged")
+	entry:newColor("_ambientLight", nil, nil, "%_onOptionsChanged")
 	entry:newLoveObject("_physicsWorld", "_setPhysicsWorld")
+	entry:newNumber("targetPhysicsStep", nil, 0, nil, nil, "%_onOptionsChanged")
+	entry:newNumber("maxPhysicsSteps", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newString("multiplyPhysicsSteps", "decrease", nil, nil, "%_onOptionsChanged")
+	entry:newBoolean("shouldDrawPhysics", false, "%_onOptionsChanged")
+end
+
+function Viewport:_afterDeserialized()
+	self:_onOptionsChanged()
+	print("yeag")
 end
 
 return Viewport

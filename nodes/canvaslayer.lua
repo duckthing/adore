@@ -213,11 +213,11 @@ function CanvasLayer:getViewport()
 	return self._viewport or CanvasLayer.super.getViewport(self)
 end
 
+---Used for deserialization
+---@param newViewport any
 function CanvasLayer:_setViewport(newViewport)
-	print("WOAH", newViewport)
 	if newViewport ~= self._viewport then
 		self._viewport = newViewport
-		print('set new viewport', newViewport, newViewport._physicsWorld)
 		self:shallowEmit("_eAncestorViewportChanged", self._viewport)
 	end
 end

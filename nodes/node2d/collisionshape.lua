@@ -58,7 +58,8 @@ function CollisionShape:_addFixture()
 	if parent and parent:is(Physical2d) then
 		---@cast parent Physical2d
 		self:_destroyFixture()
-		if parent.body and not parent.body:isDestroyed() then
+		local pBody = parent.body
+		if pBody and not pBody:isDestroyed() then
 			local shape = self._shape
 			if shape then
 				self._fixture = parent:_addShape(shape, self._density)

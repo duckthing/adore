@@ -311,7 +311,8 @@ function Root:changeSceneTo(constructor)
 	self:resume()
 
 	local result = constructor(self)
-	if result and not result.parent then self:addChild(result) end
+	print('added')
+	if result and result.parent ~= self then self:addChild(result) end
 end
 
 ---Sends an event to a Context, and returns `true` if any of them handled it.

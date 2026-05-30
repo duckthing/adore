@@ -206,15 +206,33 @@ end
 ---@param obj Object
 ---@param property string # Unused, using setter instead
 ---@param value number
-local function useSetter(self, obj, property, value)
+local function useNormalSetter(self, obj, property, value)
 	obj[self.setter](obj, self:sanitize(value))
 end
+
+---Sets the value and then calls the method
+---@param self Property.Boolean
+---@param obj Object
+---@param property string # Unused, using setter instead
+---@param value number
+local function usePostSetter(self, obj, property, value)
+	obj[property] = self:sanitize(value)
+	obj[self.setter](obj)
+end
+
 
 ---Uses this setter method (name) when attempting to set this property
 ---@param setterName string
 function Property:withSetter(setterName)
-	self.setter = setterName
-	self.set = useSetter
+	if setterName:match("^%%") then
+		-- Use post setter
+		self.setter = setterName:match("^%%(.*)")
+		self.set = usePostSetter
+	else
+		-- Not special
+		self.setter = setterName
+		self.set = useNormalSetter
+	end
 end
 
 ---Makes this Property unpokable

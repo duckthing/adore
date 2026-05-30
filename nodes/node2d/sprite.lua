@@ -9,11 +9,13 @@ local min, max, floor = math.min, math.max, math.floor
 local Sprite = Node2d:extend()
 Sprite.CLASS_NAME = "Sprite"
 
+local TexCol = Adore.Loader.getCollection("TextureLoader")
+
 function Sprite:new(x, y, texture, rows, columns)
 	Sprite.super.new(self, x, y)
 
 	---@type TextureSource?
-	self._texture = texture
+	self._texture = texture or TexCol:get("assets/background.png")
 	---@type love.Quad
 	self._quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 
