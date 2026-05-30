@@ -15,7 +15,7 @@ function Sprite:new(x, y, texture, rows, columns)
 	Sprite.super.new(self, x, y)
 
 	---@type TextureSource?
-	self._texture = texture or TexCol:get("assets/background.png")
+	self._texture = texture
 	---@type love.Quad
 	self._quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 
