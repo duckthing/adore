@@ -161,12 +161,6 @@ function CanvasLayer:drawLayer()
 		self:_drawChildren()
 		self:_afterDraw()
 	else
-		local pCanvas = love.graphics.getCanvas()
-		if pCanvas then
-			viewport:fitInto(pCanvas:getDimensions())
-		else
-			viewport:fitInto(love.graphics.getDimensions())
-		end
 		viewport:push()
 		-- These lines are commented, since the Viewport applies its own transform
 		-- self:_beforeDraw()
@@ -192,6 +186,17 @@ function CanvasLayer:onAddedToTree()
 	-- Add it to layers that will be drawn
 	layers[#layers+1] = self
 	table.sort(layers, sortLayers)
+
+	-- When initialized, fits this CanvasLayer's Viewport into the parent Viewport
+	local viewport = self._viewport
+	if viewport then
+		local pCanvas = CanvasLayer.super.getViewport(self)
+		if pCanvas then
+			viewport:fitInto(pCanvas:getDimensions())
+		else
+			viewport:fitInto(love.graphics.getDimensions())
+		end
+	end
 end
 
 function CanvasLayer:onRemovedFromTree()
