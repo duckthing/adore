@@ -54,13 +54,11 @@ function LObject:deserialize(obj, propertyName, value, resources)
 
 	local val = resources[value]
 	local instanced = val.instanced
-	print("deserializing", propertyName, val)
 
 	if not instanced then
 		-- Create it if it doesn't exist
 		instanced = createObjectMap[val.loveType](val.params)
 		val.instanced = instanced
-		print("instanced", val.loveType, instanced, #val.params)
 	end
 
 	self:set(obj, propertyName, instanced)

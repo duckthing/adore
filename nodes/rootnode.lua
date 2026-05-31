@@ -311,7 +311,6 @@ function Root:changeSceneTo(constructor)
 	self:resume()
 
 	local result = constructor(self)
-	print('added')
 	if result and result.parent ~= self then self:addChild(result) end
 end
 

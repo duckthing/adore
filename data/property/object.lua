@@ -1,11 +1,38 @@
+---@type AdoreInit
+local Adore = require ""
 ---@type Property
 local Property = require "data.property"
+local Structures = Adore.Common("Structures")
+local tclear = Structures.tableClear
 
 ---@class Property.Object: Property
 local Object = Property:extend()
 Object.TYPE = "Object"
 Object.IS_BINARY = true
 Object.DEFER_MODE = "shared"
+
+---@type {[Object]: true?} # Cleared after usage
+local visited = {}
+
+---@param self Property.Object
+---@param object Object
+---@param resources any[]
+local function insertRecursiveResources(self, object, resources)
+	-- If there's a reference to another object, we should include it
+	visited[object] = true
+	object:getClassDBEntry():forEachModifiedValue(object, true, function(obj, property, propertyName, value, ...)
+		if property.DEFER_MODE and value.CLASS_NAME and not visited[value] then
+			-- It's an object
+			visited[value] = true
+			local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
+			if not index then
+				-- Not found in resources, insert it and go through its properties for other Objects
+				resources[#resources+1] = ref
+				insertRecursiveResources(self, value, resources)
+			end
+		end
+	end)
+end
 
 function Object:new(class, property, baseClass, setter)
 	Object.super.new(self, class, property)
@@ -42,6 +69,9 @@ function Object:serialize(obj, propertyName, value, resources)
 	if not index then
 		index = #resources + 1
 		resources[index] = ref
+
+		insertRecursiveResources(self, value, resources)
+		tclear(visited)
 	end
 	return index
 end
@@ -53,32 +83,24 @@ function Object:deserialize(obj, propertyName, value, resources)
 	-- (which tends to be the ID to a resource)
 
 	local reference = resources[value]
-	local parsedObject = reference.value
-	local deferred = reference.deferredProperties
+	if reference then
+		local parsedObject = reference.value
+		local deferred = reference.deferredProperties
 
-	if deferred then
-		-- Set any deferred properties, and remove it so later `:deserialize()` calls don't do it again
-		reference.deferredProperties = nil
-		Property.ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
+		if deferred then
+			-- Set any deferred properties, and remove it so later `:deserialize()` calls don't do it again
+			reference.deferredProperties = nil
+			Property.ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
+		end
+
+		self:set(obj, propertyName, parsedObject)
+	else
+		print(("[ObjectProperty] Can't deserialize '%s' due to invalid resource index '%d' (max is '%d')"):format(propertyName, value, #resources))
 	end
-
-	self:set(obj, propertyName, parsedObject)
-end
-
----Gets the address string of the table
----@param t table
----@return string
-local function getAddr(t)
-	local oldMT = getmetatable(t)
-	setmetatable(t, nil)
-	local addr = tostring(t)
-	setmetatable(t, oldMT)
-	return addr
 end
 
 function Object:getSharedMatch(obj, propertyName, value, resources)
 	local ownType = self.TYPE
-	local ownValueAddr = getAddr(value)
 	for i = 1, #resources do
 		local resReference = resources[i]
 		if resReference.TYPE == ownType and value == resReference.value then
