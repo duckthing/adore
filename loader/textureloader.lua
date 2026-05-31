@@ -87,7 +87,11 @@ function TextureLoader:handler(path, ...)
 end
 
 function TextureLoader:get(path, ...)
-	return TextureLoader.super.get(self, path, ...) or genericHandle("get", path, ...)
+	local id = self.pathToId[path]
+	if id then
+		return self.assets[id], id
+	end
+	return genericHandle("get", path, ...)
 end
 
 ---@param collection Adore.AssetCollection
