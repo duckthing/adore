@@ -49,4 +49,8 @@ function CircleLight2d:draw()
 	love.graphics.circle("fill", mx, my, radius)
 end
 
+function CircleLight2d._addDefinition(entry)
+	entry:newNumber("lightRadius", 0, 0, nil, nil, "setRadius")
+end
+
 return CircleLight2d

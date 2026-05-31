@@ -152,7 +152,7 @@ end
 function PackedScene:asFunction()
 	local func = self.instantiate
 	return function(parent)
-		return func(self, nil, true)
+		return func(self, parent, true)
 	end
 end
 

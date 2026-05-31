@@ -1003,8 +1003,8 @@ end
 ---@param lightModel LightModel
 function Viewport:_setLightModel(lightModel)
 	self._lightModel = lightModel
-	lightModel:_viewportOptionsChanged()
 	self:_onOptionsChanged()
+	lightModel:_viewportOptionsChanged()
 end
 
 function Viewport._addDefinition(entry)

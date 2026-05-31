@@ -214,12 +214,10 @@ function CanvasLayer:getViewport()
 end
 
 ---Used for deserialization
----@param newViewport any
+---@param newViewport Viewport
 function CanvasLayer:_setViewport(newViewport)
-	if newViewport ~= self._viewport then
-		self._viewport = newViewport
-		self:shallowEmit("_eAncestorViewportChanged", self._viewport)
-	end
+	self._viewport = newViewport
+	self:shallowEmit("_eAncestorViewportChanged", self._viewport)
 end
 
 function CanvasLayer:update(dt)
@@ -239,6 +237,7 @@ end
 function CanvasLayer._addDefinition(entry)
 	entry:newInteger("_layerIndex", 2, nil, nil, nil, "setIndex")
 	entry:newObject("_viewport", "Viewport", "_setViewport")
+	entry:newBoolean("_ownsViewport", false)
 end
 CanvasLayer:getClassDBEntry()
 

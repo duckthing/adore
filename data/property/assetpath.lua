@@ -38,7 +38,6 @@ function AssetP:deserialize(obj, propertyName, deserializedValue, resources)
 		local asset = collection:get(deserializedValue)
 		if asset then
 			self:set(obj, propertyName, asset)
-		else
 		end
 	end
 end
