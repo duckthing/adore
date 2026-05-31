@@ -166,7 +166,7 @@ end
 ---@param deserializedValue any
 ---@param resources any[]?
 function Property:deserialize(obj, propertyName, deserializedValue, resources)
-	self:set(obj, propertyName, self:sanitize(deserializedValue))
+	self:set(obj, propertyName, deserializedValue)
 end
 
 ---Reads binary data from a string.buffer and sets it in an Object (performed while deserializing).

@@ -310,6 +310,17 @@ function ClassDBEntry:newNodeRef(name, baseClass, setter)
 	return self
 end
 
+---Adds a Property.AssetPath
+---@param name string
+---@param collectionName string # The collection this asset will be from
+---@param defaultValue string?
+---@param setter string?
+---@return self
+function ClassDBEntry:newAssetPath(name, collectionName, defaultValue, setter)
+	self:insertProperty(Properties.AssetPath(self._class, name, collectionName, defaultValue, setter))
+	return self
+end
+
 ---Gets the last inserted Property by this ClassDB.Entry.
 ---This only works AFTER inserting a property:
 ---`entry:addProperty(...):getInsertedProperty()`

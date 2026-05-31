@@ -178,7 +178,7 @@ function Sprite:draw()
 end
 
 function Sprite._addDefinition(entry)
-	entry:newAny("_texture", nil, "setTexture")
+	entry:newAssetPath("_texture", "TextureLoader", nil, "setTexture")
 	entry:newInteger("_frame", 1, 1, nil, nil, "setFrame")
 	entry:newInteger("_columns", 1, 1, nil, nil, "setColumns")
 	entry:newInteger("_rows", 1, 1, nil, nil, "setRows")

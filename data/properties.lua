@@ -45,6 +45,8 @@ local Properties = {
 	Signal = require "data.property.signal",
 	---@type Property.NodeRef
 	NodeRef = require "data.property.noderef",
+	---@type Property.AssetPath
+	AssetPath = require "data.property.assetpath",
 	---@type Property.Object
 	Object = require "data.property.object",
 	---@type Property.LoveObject
