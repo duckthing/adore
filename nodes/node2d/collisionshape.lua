@@ -31,8 +31,7 @@ end
 function CollisionShape:setShape(shape)
 	local oldShape = self._shape
 	if oldShape ~= shape then
-		self._shape = oldShape
-		self:_destroyFixture()
+		self._shape = shape
 		self:_addFixture()
 	end
 end
@@ -93,7 +92,7 @@ end
 
 function CollisionShape._addDefinition(entry)
 	entry:newNumber("_density", 1, 0, nil, nil, "setDensity")
-	entry:newAny("_shape", nil, "setShape")
+	entry:newLoveObject("_shape", "setShape")
 end
 CollisionShape:getClassDBEntry()
 

@@ -77,7 +77,7 @@ function LObject:getReference(obj, propertyName, value, resources)
 	})
 end
 
-getParamMap["World"] = function(obj)
+getParamMap.World = function(obj)
 	---@cast obj love.World
 	local xg, yg = obj:getGravity()
 	return {
@@ -87,8 +87,33 @@ getParamMap["World"] = function(obj)
 	}
 end
 
-createObjectMap["World"] = function(params)
+createObjectMap.World = function(params)
 	return love.physics.newWorld(params.xg, params.yg, params.sleep)
+end
+
+getParamMap.PolygonShape = function(obj)
+	---@cast obj love.PolygonShape
+	return {
+		points = {obj:getPoints()}
+	}
+end
+
+createObjectMap.PolygonShape = function(params)
+	return love.physics.newPolygonShape(unpack(params.points))
+end
+
+getParamMap.CircleShape = function(obj)
+	---@cast obj love.CircleShape
+	local x, y = obj:getPoint()
+	return {
+		x = x,
+		y = y,
+		radius = obj:getRadius()
+	}
+end
+
+createObjectMap.CircleShape = function(params)
+	return love.physics.newCircleShape(params.x, params.y, params.radius)
 end
 
 return LObject
