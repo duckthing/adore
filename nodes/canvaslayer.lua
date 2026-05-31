@@ -161,7 +161,12 @@ function CanvasLayer:drawLayer()
 		self:_drawChildren()
 		self:_afterDraw()
 	else
-		-- viewport:fitInto(love.graphics.getCanvas():getDimensions())
+		local pCanvas = love.graphics.getCanvas()
+		if pCanvas then
+			viewport:fitInto(pCanvas:getDimensions())
+		else
+			viewport:fitInto(love.graphics.getDimensions())
+		end
 		viewport:push()
 		-- These lines are commented, since the Viewport applies its own transform
 		-- self:_beforeDraw()
