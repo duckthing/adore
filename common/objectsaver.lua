@@ -199,7 +199,7 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 
 	-- TODO ERROR: FIX THIS
 	---@type Object
-	local TargetClass = ClassDB.ClassNameToClass[header.CLASS_NAME] or Adore.Nodes(header.CLASS_NAME)
+	local TargetClass = ClassDB.ClassNameToClass[header.CLASS_NAME] or Adore.Any(header.CLASS_NAME)
 	if not TargetClass then
 		-- The table has a class that doesn't exist
 		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME), nil
