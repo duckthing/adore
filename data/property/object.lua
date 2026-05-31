@@ -14,24 +14,33 @@ Object.DEFER_MODE = "shared"
 ---@type {[Object]: true?} # Cleared after usage
 local visited = {}
 
+local insertRecursiveResources
+---@param obj Object
+---@param property Property
+---@param propertyName string
+---@param value any
+---@param self Property.Object
+---@param resources any[]
+local function femvInsertResourcesCallback(obj, property, propertyName, value, self, resources)
+	if property.DEFER_MODE and value.CLASS_NAME and not visited[value] then
+		-- It's an object
+		visited[value] = true
+		local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
+		if not index then
+			-- Not found in resources, insert it and go through its properties for other Objects
+			resources[#resources+1] = ref
+			insertRecursiveResources(self, value, resources)
+		end
+	end
+end
+
 ---@param self Property.Object
 ---@param object Object
 ---@param resources any[]
-local function insertRecursiveResources(self, object, resources)
+function insertRecursiveResources(self, object, resources)
 	-- If there's a reference to another object, we should include it
 	visited[object] = true
-	object:getClassDBEntry():forEachModifiedValue(object, true, function(obj, property, propertyName, value, ...)
-		if property.DEFER_MODE and value.CLASS_NAME and not visited[value] then
-			-- It's an object
-			visited[value] = true
-			local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
-			if not index then
-				-- Not found in resources, insert it and go through its properties for other Objects
-				resources[#resources+1] = ref
-				insertRecursiveResources(self, value, resources)
-			end
-		end
-	end)
+	object:getClassDBEntry():forEachModifiedValue(object, true, femvInsertResourcesCallback, self, resources)
 end
 
 function Object:new(class, property, baseClass, setter)
