@@ -21,8 +21,9 @@ end
 ---@return self
 function CircleLight2d:setRadius(newRadius)
 	if self.lightRadius ~= newRadius then
+		-- TODO: Fix disappearing when not completely offscreen
 		self.lightRadius = newRadius
-		self._localContentRect:iSetComponents(-newRadius * 5, -newRadius * 5, newRadius * 10, newRadius * 10)
+		self._localContentRect:iSetComponents(-newRadius, -newRadius, newRadius * 2, newRadius * 2)
 	end
 	return self
 end
@@ -35,7 +36,6 @@ function CircleLight2d:draw()
 	local radius = self.lightRadius
 
 	love.graphics.setColor(1, 1, 1, 0.2)
-	love.graphics.scale(5, 5)
 
 	love.graphics.circle("fill", mx, my, radius)
 
