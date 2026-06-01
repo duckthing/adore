@@ -17,6 +17,14 @@ local BOLD_FONT, _ = fontCollection:get("")
 
 local BOLD_SIZE = 16
 
+local function getAddr(t)
+	local mt = getmetatable(t)
+	setmetatable(t, nil)
+	local addr = tostring(t):match("(0x.*)")
+	setmetatable(t, mt)
+	return addr
+end
+
 ---@param toolbox Toolbox
 ---@param sceneTree Toolbox.SceneTree
 function Inspector:new(toolbox, sceneTree)
@@ -70,7 +78,7 @@ function Inspector:onNodeSelectionChanged(node)
 	-- Node exists, create the properties
 	local entry = node:getClassDBEntry()
 	local lastClass = nil
-	self.nameLabel:setText(tostring(node))
+	self.nameLabel:setText(tostring(node)..(" (%s)"):format(getAddr(node)))
 
 	entry:forEachProperty(node, true, function(obj, property, propertyName, fromClass, ...)
 		if fromClass ~= lastClass then
