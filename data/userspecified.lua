@@ -8,7 +8,7 @@ local LazyRequire = require(ADORE_PATH..".lazyrequire")
 local User
 do
 local internalPaths = {}
-User = LazyRequire(internalPaths)
+User = LazyRequire(internalPaths, true)
 end
 
 return User
