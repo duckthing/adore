@@ -92,7 +92,7 @@ end
 
 function CollisionShape._addDefinition(entry)
 	entry:newNumber("_density", 1, 0, nil, nil, "setDensity")
-	entry:newLoveObject("_shape", "setShape")
+	entry:newLoveObject("_shape", "Shape", "setShape")
 end
 CollisionShape:getClassDBEntry()
 

@@ -10,8 +10,12 @@ local getParamMap = {}
 ---@type {[string]: (fun(params: table): love.Object)} # A map of Love2D types to a function that recreates the object from its parameters
 local createObjectMap = {}
 
-function LObject:new(class, property, defaultValue, setter)
+function LObject:new(class, property, baseClass, defaultValue, setter)
 	LObject.super.new(self, class, property, defaultValue or class[property])
+
+	---@type string
+	self.baseClass = baseClass or "Object"
+
 	if setter then self:withSetter(setter) end
 end
 
@@ -24,11 +28,11 @@ function LObject:add(a, b)
 end
 
 function LObject:sanitize(val)
-	return (self:isValid(val) and val) or {}
+	return (self:isValid(val) and val) or nil
 end
 
 function LObject:isValid(val)
-	return type(val) == "userdata"
+	return type(val) == "userdata" and val:typeOf(self.baseClass)
 end
 
 function LObject:serialize(obj, propertyName, value, resources)
