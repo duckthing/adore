@@ -39,7 +39,10 @@ Property.visible = true
 ---@param defaultValue any
 function Property:new(class, propertyName, defaultValue)
 	---@type any # The default value of this Property
-	self.defaultValue = defaultValue or class[propertyName] or self:newValue()
+	self.defaultValue = defaultValue
+	if defaultValue == nil then
+		self.defaultValue = class[propertyName] or self:newValue()
+	end
 	self.propertyName = propertyName
 	---@type Property? # If this Property is a subproperty, the super property is what this one is a part of
 	self.superProperty = nil
