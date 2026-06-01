@@ -229,7 +229,7 @@ function lightModeScreenShadow(self, dst)
 	viewport._lightShash:each(bounds.x, bounds.y, bounds.w, bounds.h, lmssAddLightsToArr, lightsWithShadows, lightsNoShadows)
 
 	-- Make a Rect2 that contains the viewport dimensions and expands towards the light origins
-	lightRect:iSetRect(viewport._boundingBox)
+	lightRect:iCopyRect(viewport._boundingBox)
 	for i = 2, lightsWithShadows[1] do
 		-- TODO: Decide if the lightRect should get expands towards the middle point or furthest corner
 		local light = lightsWithShadows[i]

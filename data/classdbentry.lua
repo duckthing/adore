@@ -280,6 +280,16 @@ function ClassDBEntry:newVec2(name, defaultValue, setter)
 	return self
 end
 
+---Adds a Property.Rect2
+---@param name string
+---@param defaultValue Rect2?
+---@param setter string?
+---@return self
+function ClassDBEntry:newRect2(name, defaultValue, setter)
+	self:insertProperty(Properties.Rect2(self._class, name, defaultValue, setter))
+	return self
+end
+
 ---Adds a Property.Color
 ---@param name string
 ---@param defaultValue integer[]?

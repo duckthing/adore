@@ -39,6 +39,8 @@ local Properties = {
 
 	---@type Property.Vec2
 	Vec2 = require "data.property.vec2",
+	---@type Property.Rect2
+	Rect2 = require "data.property.rect2",
 	---@type Property.Color
 	Color = require "data.property.color",
 	---@type Property.Signal

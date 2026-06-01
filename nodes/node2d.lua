@@ -106,7 +106,7 @@ end
 ---* This Node2d moves in global space
 function Node2d:_onGlobalBoundsChanged()
 	-- TODO: Rename, is not called when changed, is called when *currently* changing
-	self._globalContentRect:iSetRect(self._localContentRect):iTransformBox(self._globalTransform)
+	self._globalContentRect:iCopyRect(self._localContentRect):iTransformBox(self._globalTransform)
 end
 
 ---Called whenever this Node2d's global transform changes/moves AT ALL. (Not from an emit)
