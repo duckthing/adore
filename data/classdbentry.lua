@@ -19,6 +19,8 @@ local ClassDBEntryMT = {
 	__index = ClassDBEntry,
 }
 
+ClassDBEntry.Adore = Adore
+
 ---Creates a new ClassDB.Entry, adds the definitions from the class, and returns it.
 ---You shouldn't call this, as it should be created automatically inside ClassDB.
 ---@param class Object # The **class** object, not its name

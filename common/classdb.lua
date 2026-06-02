@@ -77,8 +77,8 @@ end
 ---@param targetClass string | Object
 function ClassDB.doesClassInherit(baseClass, targetClass)
 	-- Converts from class object to class name
-	if type(baseClass) == "string" then baseClass = classNameToClass[baseClass] end
-	if type(targetClass) == "string" then targetClass = classNameToClass[targetClass] end
+	if type(baseClass) == "string" then baseClass = ClassDBEntry.Adore.Any(baseClass) end
+	if type(targetClass) == "string" then targetClass = ClassDBEntry.Adore.Any(targetClass) end
 
 	return targetClass:is(baseClass)
 end

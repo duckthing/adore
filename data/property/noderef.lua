@@ -1,3 +1,4 @@
+---@type Property
 local Property = require "data.property"
 
 ---@class Property.NodeRef: Property
