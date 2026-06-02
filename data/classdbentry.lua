@@ -487,9 +487,6 @@ function ClassDBEntry:forEachPropertyCheck(object, recursive, checkFunc, forEach
 	end
 end
 
----@type table # Used for later methods
-local dictionary = {}
-
 ---Runs a function for each Property in this Object.
 ---@param object Object
 ---@param recursive boolean
@@ -500,7 +497,8 @@ function ClassDBEntry:forEachProperty(object, recursive, forEach, ...)
 
 	---@type ClassDB.Info
 	local currInfo = self._info
-	local alreadyUsedProperties = dictionary
+	-- Should use a new table, this method may be recursively called
+	local alreadyUsedProperties = {}
 	repeat
 		local class = currInfo.class
 		---@cast class Object
@@ -530,7 +528,8 @@ function ClassDBEntry:forEachBinaryProperty(object, recursive, forEach, ...)
 
 	---@type ClassDB.Info
 	local currInfo = self._info
-	local alreadyUsedProperties = dictionary
+	-- Should use a new table, this method may be recursively called
+	local alreadyUsedProperties = {}
 	repeat
 		local class = currInfo.class
 		---@cast class Object

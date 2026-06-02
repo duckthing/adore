@@ -8,7 +8,6 @@ local tclear = Structures.tableClear
 ---@class Property.Object: Property
 local Object = Property:extend()
 Object.TYPE = "Object"
-Object.IS_BINARY = true
 Object.DEFER_MODE = "shared"
 
 ---@type {[Object]: true?} # Cleared after usage
@@ -24,12 +23,13 @@ local insertRecursiveResources
 local function femvInsertResourcesCallback(obj, property, propertyName, value, self, resources)
 	if property.DEFER_MODE and value.CLASS_NAME and not visited[value] then
 		-- It's an object
-		visited[value] = true
 		local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
 		if not index then
-			-- Not found in resources, insert it and go through its properties for other Objects
-			resources[#resources+1] = ref
+			index = #resources + 1
+			local tempRef = {TYPE = self.TYPE, value = value}
+			resources[index] = tempRef
 			insertRecursiveResources(self, value, resources)
+			resources[index] = self:getReference(obj, propertyName, value, resources)
 		end
 	end
 end
@@ -61,25 +61,16 @@ function Object:sanitize(val)
 	return val
 end
 
-function Object.packBufferResource(buffer, reference, resources)
-	local value = reference.value
-	Property.ObjectSaver.serializeObjectToBuffer(value, buffer, resources)
-end
-
-function Object.unpackBufferResource(buffer, reference, resources)
-	local err, obj, deferredProperties = Property.ObjectSaver.deserializeFromBuffer(buffer)
-	reference.value = obj
-	reference.deferredProperties = deferredProperties
-end
-
 function Object:serialize(obj, propertyName, value, resources)
 	-- TODO: Search Objects for shared resources too
 	local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
 	if not index then
 		index = #resources + 1
-		resources[index] = ref
-
+		local tempRef = {TYPE = self.TYPE, value = value}
+		resources[index] = tempRef
 		insertRecursiveResources(self, value, resources)
+		resources[index] = self:getReference(obj, propertyName, value, resources)
+
 		tclear(visited)
 	end
 	return index
@@ -94,11 +85,18 @@ function Object:deserialize(obj, propertyName, value, resources)
 	local reference = resources[value]
 	if reference then
 		local parsedObject = reference.value
-		local deferred = reference.deferredProperties
+		local deferred
+		if not parsedObject then
+			local err
+			err, parsedObject, deferred = Property.ObjectSaver.deserializeObjectFromArray(reference.header, reference.body)
+			if err then
+				error(err)
+			end
+			reference.value = parsedObject
+		end
 
 		if deferred then
 			-- Set any deferred properties, and remove it so later `:deserialize()` calls don't do it again
-			reference.deferredProperties = nil
 			Property.ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
 		end
 
@@ -118,12 +116,12 @@ function Object:getSharedMatch(obj, propertyName, value, resources)
 		end
 	end
 
-	-- No match, return the new reference
-	return nil, self:getReference(obj, propertyName, value, resources)
+	-- No match, DON'T return a new reference
+	return nil, nil
 end
 
 function Object:getReference(obj, propertyName, value, resources)
-	local header, body = Property.ObjectSaver.getPropertyPairs(value, resources)
+	local header, body = Property.ObjectSaver.getPropertyPairs(value, resources, true)
 	return setmetatable({
 		TYPE = self.TYPE,
 		header = header,

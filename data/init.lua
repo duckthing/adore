@@ -42,6 +42,8 @@ local resourcePaths = {
 		["DrawRequest.NinePatchRect"] = "data.drawrequest.drawninepatchrect",
 	---@type PackedScene
 	PackedScene = "data.packedscene",
+	---@type TableScene
+	TableScene = "data.tablescene",
 	---@type SceneFactory
 	SceneFactory = "data.scenefactory",
 	---@type Context

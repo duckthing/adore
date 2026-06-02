@@ -1008,7 +1008,6 @@ function Viewport:_setLightModel(lightModel)
 end
 
 function Viewport._addDefinition(entry)
-	entry:newObject("_parentViewport", "Viewport")
 	entry:newInteger("_canvasW", 1, 1, nil, nil, "%_onOptionsChanged")
 	entry:newInteger("_canvasH", 1, 1, nil, nil, "%_onOptionsChanged")
 	entry:newInteger("_windowW", 1, 1, nil, nil, "%_onOptionsChanged")
