@@ -823,7 +823,7 @@ function Viewport:update(dt)
 						end
 					end
 
-					simFunc(world, physicsStepSignal, dt)
+					simFunc(world, physicsStepSignal, targetStep)
 				end
 
 				-- Rollover the remaining time to the next frame
@@ -988,6 +988,45 @@ function Viewport:release()
 	end
 
 	self.physicsStepped:release()
+end
+
+---Sets the love.World from a deserialized object
+---@param world love.World
+function Viewport:_setPhysicsWorld(world)
+	self._physicsWorld = world
+	Physical2d.addWorldList(world)
+	world:setCallbacks(Physical2d.getWorldCallbacks())
+	self:_onOptionsChanged()
+end
+
+---Called when deserializing LightModel
+---@param lightModel LightModel
+function Viewport:_setLightModel(lightModel)
+	self._lightModel = lightModel
+	self:_onOptionsChanged()
+	lightModel:_viewportOptionsChanged()
+end
+
+function Viewport._addDefinition(entry)
+	entry:newInteger("_canvasW", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newInteger("_canvasH", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newInteger("_windowW", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newInteger("_windowH", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newNumber("_pixelScale", 0, 0, nil, nil, "%_onOptionsChanged")
+	entry:newString("_scaleMode", "resize", "%_onOptionsChanged")
+	entry:newBoolean("_includeStencil", false, "%_onOptionsChanged")
+	entry:newTable("_canvasSettings", nil, "%_onOptionsChanged")
+	entry:newNodeRef("_activeCamera", "Camera", "%_onOptionsChanged")
+	entry:newBoolean("_allowPostProcessing", false, "%_onOptionsChanged")
+	entry:newBoolean("applyPostProcessing", nil, "%_onOptionsChanged")
+	entry:newColor("_ambientLight", nil, nil, "%_onOptionsChanged")
+	entry:newObject("_lightModel", "LightModel", "_setLightModel")
+	entry:newLoveObject("_physicsWorld", "World", "_setPhysicsWorld")
+	entry:newBoolean("_ownsWorld", false)
+	entry:newNumber("targetPhysicsStep", nil, 0, nil, nil, "%_onOptionsChanged")
+	entry:newNumber("maxPhysicsSteps", 1, 1, nil, nil, "%_onOptionsChanged")
+	entry:newString("multiplyPhysicsSteps", "decrease", nil, nil, "%_onOptionsChanged")
+	entry:newBoolean("shouldDrawPhysics", false, "%_onOptionsChanged")
 end
 
 return Viewport

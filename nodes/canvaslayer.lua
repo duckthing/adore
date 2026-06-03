@@ -161,7 +161,6 @@ function CanvasLayer:drawLayer()
 		self:_drawChildren()
 		self:_afterDraw()
 	else
-		-- viewport:fitInto(love.graphics.getCanvas():getDimensions())
 		viewport:push()
 		-- These lines are commented, since the Viewport applies its own transform
 		-- self:_beforeDraw()
@@ -187,6 +186,17 @@ function CanvasLayer:onAddedToTree()
 	-- Add it to layers that will be drawn
 	layers[#layers+1] = self
 	table.sort(layers, sortLayers)
+
+	-- When initialized, fits this CanvasLayer's Viewport into the parent Viewport
+	local viewport = self._viewport
+	if viewport then
+		local pCanvas = CanvasLayer.super.getViewport(self)
+		if pCanvas then
+			viewport:fitInto(pCanvas:getDimensions())
+		else
+			viewport:fitInto(love.graphics.getDimensions())
+		end
+	end
 end
 
 function CanvasLayer:onRemovedFromTree()
@@ -213,6 +223,13 @@ function CanvasLayer:getViewport()
 	return self._viewport or CanvasLayer.super.getViewport(self)
 end
 
+---Used for deserialization
+---@param newViewport Viewport
+function CanvasLayer:_setViewport(newViewport)
+	self._viewport = newViewport
+	self:shallowEmit("_eAncestorViewportChanged", self._viewport)
+end
+
 function CanvasLayer:update(dt)
 	local viewport = self._viewport
 	if viewport then
@@ -229,7 +246,8 @@ end
 
 function CanvasLayer._addDefinition(entry)
 	entry:newInteger("_layerIndex", 2, nil, nil, nil, "setIndex")
+	entry:newObject("_viewport", "Viewport", "_setViewport")
+	entry:newBoolean("_ownsViewport", false)
 end
-CanvasLayer:getClassDBEntry()
 
 return CanvasLayer

@@ -55,7 +55,10 @@ function Vec2P:lerp(from, to, percent)
 end
 
 function Vec2P:serialize(obj, propertyName, value)
-	return {x = value.x, y = value.y}
+	if value then
+		return {x = value.x, y = value.y}
+	end
+	return nil
 end
 
 function Vec2P:deserialize(obj, propertyName, value)

@@ -39,18 +39,26 @@ local Properties = {
 
 	---@type Property.Vec2
 	Vec2 = require "data.property.vec2",
+	---@type Property.Rect2
+	Rect2 = require "data.property.rect2",
 	---@type Property.Color
 	Color = require "data.property.color",
 	---@type Property.Signal
 	Signal = require "data.property.signal",
 	---@type Property.NodeRef
 	NodeRef = require "data.property.noderef",
+	---@type Property.AssetPath
+	AssetPath = require "data.property.assetpath",
+	---@type Property.Object
+	Object = require "data.property.object",
+	---@type Property.LoveObject
+	LoveObject = require "data.property.loveobject",
 }
 
 local PropertiesMT = {
 	__index = {
-		setClassDB = function(self)
-			Property.ClassDB = self
+		setClassDB = function(ClassDB)
+			Property.ClassDB = ClassDB
 		end
 	}
 }

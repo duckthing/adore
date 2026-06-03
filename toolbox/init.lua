@@ -111,7 +111,7 @@ return setmetatable(Toolbox, {
 				defaultCallbacks[handler] = function(_, ...)
 					-- Call it on the god root
 					-- The even will get passed to the subroot through a Context
-					godRoot[handler](godRoot, ...)
+					return godRoot[handler](godRoot, ...)
 				end
 			elseif not overrides[handler] then
 				-- Wrap the existing one, if it wasn't by us
@@ -126,12 +126,14 @@ return setmetatable(Toolbox, {
 							self:pushSubroot()
 						end
 
-						existingCallback(...)
+						handled = existingCallback(...)
 
 						if not isPushed then
 							self:popSubroot()
 						end
 					end
+
+					return handled
 				end
 			end
 		end

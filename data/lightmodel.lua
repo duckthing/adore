@@ -1,7 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local Rect2 = Adore.Common("Rect2")
-local SimpleObject = Adore.Libraries("SimpleObject")
+local Object = Adore.Resources("Object")
 ---@type Adore.Loader
 local Loader = require "loader"
 local shaderCollection, shaderAssets = Loader.getCollection("love.Shader")
@@ -10,10 +10,11 @@ local SHADOW_MESH_SHADER, _ = shaderCollection:get(("%s/shaders/screenshadowmesh
 	(Adore.PATH):gsub("%.", "/")
 ))
 
----@class LightModel: SimpleObject
----@field super SimpleObject
+---@class LightModel: Object
+---@field super Object
 ---@overload fun(viewport: Viewport, lightMode: LightModel.LightMode, postProcessing: boolean): LightModel
-local LightModel = SimpleObject:extend()
+local LightModel = Object:extend()
+LightModel.CLASS_NAME = "LightModel"
 
 ---@alias LightModel.LightMode
 ---| "none" # No lighting will be applied
@@ -228,7 +229,7 @@ function lightModeScreenShadow(self, dst)
 	viewport._lightShash:each(bounds.x, bounds.y, bounds.w, bounds.h, lmssAddLightsToArr, lightsWithShadows, lightsNoShadows)
 
 	-- Make a Rect2 that contains the viewport dimensions and expands towards the light origins
-	lightRect:iSetRect(viewport._boundingBox)
+	lightRect:iCopyRect(viewport._boundingBox)
 	for i = 2, lightsWithShadows[1] do
 		-- TODO: Decide if the lightRect should get expands towards the middle point or furthest corner
 		local light = lightsWithShadows[i]
@@ -480,6 +481,12 @@ end
 ---@return boolean shouldRun
 function LightModel:isRequested()
 	return self._lightMode ~= "none"
+end
+
+function LightModel._addDefinition(entry)
+	entry:newObject("_viewport", "Viewport", "%_viewportOptionsChanged")
+	entry:newString("_lightMode", "none", nil, nil, "%_viewportOptionsChanged")
+	entry:newBoolean("_postProcessing", false, "%_viewportOptionsChanged")
 end
 
 return LightModel

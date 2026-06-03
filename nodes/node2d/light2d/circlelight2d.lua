@@ -5,6 +5,7 @@ local Light2d = Adore.Nodes("Light2d")
 ---@class CircleLight2d: Light2d
 ---@overload fun(x: number?, y: number?, radius: number?): CircleLight2d
 local CircleLight2d = Light2d:extend()
+CircleLight2d.CLASS_NAME = "CircleLight2d"
 
 function CircleLight2d:new(x, y, radius)
 	CircleLight2d.super.new(self, x, y)
@@ -20,8 +21,9 @@ end
 ---@return self
 function CircleLight2d:setRadius(newRadius)
 	if self.lightRadius ~= newRadius then
+		-- TODO: Fix disappearing when not completely offscreen
 		self.lightRadius = newRadius
-		self._localContentRect:iSetComponents(-newRadius * 5, -newRadius * 5, newRadius * 10, newRadius * 10)
+		self._localContentRect:iSetComponents(-newRadius, -newRadius, newRadius * 2, newRadius * 2)
 	end
 	return self
 end
@@ -34,7 +36,6 @@ function CircleLight2d:draw()
 	local radius = self.lightRadius
 
 	love.graphics.setColor(1, 1, 1, 0.2)
-	love.graphics.scale(5, 5)
 
 	love.graphics.circle("fill", mx, my, radius)
 
@@ -46,6 +47,10 @@ function CircleLight2d:draw()
 
 	love.graphics.scale(0.6, 0.6)
 	love.graphics.circle("fill", mx, my, radius)
+end
+
+function CircleLight2d._addDefinition(entry)
+	entry:newNumber("lightRadius", 0, 0, nil, nil, "setRadius")
 end
 
 return CircleLight2d

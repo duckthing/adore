@@ -8,6 +8,8 @@ local SimpleObject = Adore.Libraries("SimpleObject")
 local Property = SimpleObject:extend()
 ---@type ClassDB
 Property.ClassDB = nil
+---@type ObjectSaver
+Property.ObjectSaver = nil
 
 Property.TYPE = "Property"
 Property.IS_BINARY = false
@@ -37,7 +39,10 @@ Property.visible = true
 ---@param defaultValue any
 function Property:new(class, propertyName, defaultValue)
 	---@type any # The default value of this Property
-	self.defaultValue = defaultValue or class[propertyName] or self:newValue()
+	self.defaultValue = defaultValue
+	if defaultValue == nil then
+		self.defaultValue = class[propertyName] or self:newValue()
+	end
 	self.propertyName = propertyName
 	---@type Property? # If this Property is a subproperty, the super property is what this one is a part of
 	self.superProperty = nil
@@ -130,7 +135,7 @@ function Property:getSharedMatch(obj, propertyName, value, resources)
 	end
 
 	-- No match, return the new reference
-	return nil, self:getReference(obj, propertyName, value)
+	return nil, self:getReference(obj, propertyName, value, resources)
 end
 
 ---Creates a reference from the given values;
@@ -138,8 +143,9 @@ end
 ---@param obj Object
 ---@param propertyName string
 ---@param value any
+---@param resources any[]
 ---@return table
-function Property:getReference(obj, propertyName, value)
+function Property:getReference(obj, propertyName, value, resources)
 	return {
 		TYPE = self.TYPE,
 		value = value,
@@ -163,7 +169,7 @@ end
 ---@param deserializedValue any
 ---@param resources any[]?
 function Property:deserialize(obj, propertyName, deserializedValue, resources)
-	self:set(obj, propertyName, self:sanitize(deserializedValue))
+	self:set(obj, propertyName, deserializedValue)
 end
 
 ---Reads binary data from a string.buffer and sets it in an Object (performed while deserializing).
@@ -203,15 +209,33 @@ end
 ---@param obj Object
 ---@param property string # Unused, using setter instead
 ---@param value number
-local function useSetter(self, obj, property, value)
+local function useNormalSetter(self, obj, property, value)
 	obj[self.setter](obj, self:sanitize(value))
 end
+
+---Sets the value and then calls the method
+---@param self Property.Boolean
+---@param obj Object
+---@param property string # Unused, using setter instead
+---@param value number
+local function usePostSetter(self, obj, property, value)
+	obj[property] = self:sanitize(value)
+	obj[self.setter](obj)
+end
+
 
 ---Uses this setter method (name) when attempting to set this property
 ---@param setterName string
 function Property:withSetter(setterName)
-	self.setter = setterName
-	self.set = useSetter
+	if setterName:match("^%%") then
+		-- Use post setter
+		self.setter = setterName:match("^%%(.*)")
+		self.set = usePostSetter
+	else
+		-- Not special
+		self.setter = setterName
+		self.set = useNormalSetter
+	end
 end
 
 ---Makes this Property unpokable

@@ -157,7 +157,7 @@ end
 ---[IN PLACE] Sets this Rect2's components equal to another Rect2
 ---@param other Rect2
 ---@return self
-function Rect2:iSetRect(other)
+function Rect2:iCopyRect(other)
 	self.x, self.y, self.w, self.h =
 		other.x, other.y, other.w, other.h
 	return self
@@ -221,6 +221,12 @@ function Rect2:iExpandTowards(px, py)
 	end
 
 	return self
+end
+
+---Returns a clone of this Rect2
+---@return Rect2
+function Rect2:clone()
+	return Rect2C(self.x, self.y, self.w, self.h)
 end
 
 ---Returns all components as a tuple

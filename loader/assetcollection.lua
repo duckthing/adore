@@ -286,7 +286,7 @@ function AssetCollection:has(path)
 	local id = self.pathToId[path]
 	if id then
 		-- Returns the existing ID
-		return id, self.assets[id]
+		return self.assets[id], id
 	end
 	return nil, nil
 end
@@ -320,6 +320,22 @@ function AssetCollection:reload(path, ...)
 	end
 
 	return true
+end
+
+---Gets the AssetID and path for a given asset
+---@param asset any
+---@return AssetID? id
+---@return string? path
+function AssetCollection:getAssetPath(asset)
+	local assets = self.assets
+	for i = 1, #assets do
+		local curr = assets[i]
+		if curr == asset then
+			-- `i` is the AssetID
+			return i, self.idToPath[i]
+		end
+	end
+	-- Not found
 end
 
 return AssetCollection

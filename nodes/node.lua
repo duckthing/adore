@@ -906,6 +906,5 @@ function Node._addDefinition(entry)
 	entry:newString("name")
 	entry:newBoolean("_visible", true, "setVisible")
 end
-Node:getClassDBEntry()
 
 return Node

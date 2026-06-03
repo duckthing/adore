@@ -178,6 +178,10 @@ function SceneTreeViewer:selectNode(toSelect, index)
 
 			if not index then
 				-- Still couldn't find it
+				-- Might be an object, inspect it
+				self.pressedIndex = 0
+				self.pressedNode = nil
+				self.nodeSelected:fire(toSelect)
 				return
 			end
 		end

@@ -1127,6 +1127,5 @@ function Control._addDefinition(entry)
 	entry:newVec2("_maximumSize", nil, "setMaximumSizeVec")
 	entry:newColor("albedo")
 end
-Control:getClassDBEntry()
 
 return Control

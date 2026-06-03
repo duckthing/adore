@@ -5,6 +5,7 @@ local Light2d = Adore.Nodes("Light2d")
 ---@class PointLight2d: Light2d
 ---@overload fun(x: number?, y: number?, tSource: TextureSource?): PointLight2d
 local PointLight2d = Light2d:extend()
+PointLight2d.CLASS_NAME = "PointLight2d"
 
 function PointLight2d:new(x, y, tSource)
 	PointLight2d.super.new(self, x, y)

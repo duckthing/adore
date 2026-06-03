@@ -9,6 +9,8 @@ local min, max, floor = math.min, math.max, math.floor
 local Sprite = Node2d:extend()
 Sprite.CLASS_NAME = "Sprite"
 
+local TexCol = Adore.Loader.getCollection("TextureLoader")
+
 function Sprite:new(x, y, texture, rows, columns)
 	Sprite.super.new(self, x, y)
 
@@ -176,7 +178,7 @@ function Sprite:draw()
 end
 
 function Sprite._addDefinition(entry)
-	entry:newAny("_texture", nil, "setTexture")
+	entry:newAssetPath("_texture", "TextureLoader", nil, "setTexture")
 	entry:newInteger("_frame", 1, 1, nil, nil, "setFrame")
 	entry:newInteger("_columns", 1, 1, nil, nil, "setColumns")
 	entry:newInteger("_rows", 1, 1, nil, nil, "setRows")
@@ -184,6 +186,5 @@ function Sprite._addDefinition(entry)
 	entry:newBoolean("flipH", false)
 	entry:newBoolean("flipV", false)
 end
-Sprite:getClassDBEntry()
 
 return Sprite

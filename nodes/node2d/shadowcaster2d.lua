@@ -21,7 +21,7 @@ function Shadow2d:new(x, y, points, fill, transform)
 	---@type boolean # Duplicates the first point automatically, if the shape should be filled
 	self.fillOccluder = fill or false
 	---@type boolean # If the points should be transformed according to the global transform
-	self.transformOccluder = transform
+	self.transformOccluder = transform or false
 	if transform == nil then self.transformOccluder = true end
 
 	self._localContentRect:iSetComponents(0, 0, 0, 0)
@@ -37,6 +37,7 @@ function Shadow2d:setPoints(points)
 	if points ~= self.points then
 		if points then
 			assert(#points % 2 == 0, "ShadowCaster2d's points given in :setPoints() is incomplete (not a set of 2)")
+			self.points = points
 		else
 			self.points = {}
 		end
@@ -99,6 +100,12 @@ function Shadow2d:_onGlobalBoundsChanged()
 		local rect = self._globalContentRect
 		viewport._shadowShash:update(self, rect.x, rect.y, rect.w, rect.h)
 	end
+end
+
+function Shadow2d._addDefinition(entry)
+	entry:newTable("points", nil, "setPoints")
+	entry:newBoolean("fillOccluder", false)
+	entry:newBoolean("transformOccluder", false)
 end
 
 return Shadow2d

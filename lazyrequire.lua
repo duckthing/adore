@@ -55,7 +55,8 @@ local LazyRequireMT = {
 		else
 			-- Don't change `require` for dependencies that don't expect it.
 			-- Change the path instead.
-			path = ADORE_PATH.."."..path
+			local prefix = rawget(self, "_lrPrefix")
+			path = prefix..path
 			require = originalRequire
 		end
 
@@ -72,8 +73,14 @@ local LazyRequireMT = {
 ---Creates a new `LazyRequire`
 ---@param paths {[string]: string}
 ---@param keepOriginalRequire boolean # Should `require` be left unchanged?
-local function newLazyRequire(paths, keepOriginalRequire)
-	return setmetatable({_paths = paths, _keepOriginalRequire = keepOriginalRequire}, LazyRequireMT)
+---@param prefix string? # If unchanged, what should the prefix to the path be? (default: ADORE_PATH..".")
+local function newLazyRequire(paths, keepOriginalRequire, prefix)
+	local t = {
+		_paths = paths,
+		_keepOriginalRequire = keepOriginalRequire,
+		_lrPrefix = (keepOriginalRequire and (prefix or ADORE_PATH..".")) or nil
+	}
+	return setmetatable(t, LazyRequireMT)
 end
 
 return newLazyRequire

@@ -31,8 +31,7 @@ end
 function CollisionShape:setShape(shape)
 	local oldShape = self._shape
 	if oldShape ~= shape then
-		self._shape = oldShape
-		self:_destroyFixture()
+		self._shape = shape
 		self:_addFixture()
 	end
 end
@@ -58,7 +57,8 @@ function CollisionShape:_addFixture()
 	if parent and parent:is(Physical2d) then
 		---@cast parent Physical2d
 		self:_destroyFixture()
-		if not parent.body:isDestroyed() then
+		local pBody = parent.body
+		if pBody and not pBody:isDestroyed() then
 			local shape = self._shape
 			if shape then
 				self._fixture = parent:_addShape(shape, self._density)
@@ -92,8 +92,7 @@ end
 
 function CollisionShape._addDefinition(entry)
 	entry:newNumber("_density", 1, 0, nil, nil, "setDensity")
-	entry:newAny("_shape", nil, "setShape")
+	entry:newLoveObject("_shape", "Shape", "setShape")
 end
-CollisionShape:getClassDBEntry()
 
 return CollisionShape

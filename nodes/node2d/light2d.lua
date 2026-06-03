@@ -65,4 +65,8 @@ function Light2d:_onGlobalBoundsChanged()
 	end
 end
 
+function Light2d._addDefinition(entry)
+	entry:newBoolean("_shadows", true)
+end
+
 return Light2d

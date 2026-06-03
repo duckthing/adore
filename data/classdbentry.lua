@@ -19,6 +19,8 @@ local ClassDBEntryMT = {
 	__index = ClassDBEntry,
 }
 
+ClassDBEntry.Adore = Adore
+
 ---Creates a new ClassDB.Entry, adds the definitions from the class, and returns it.
 ---You shouldn't call this, as it should be created automatically inside ClassDB.
 ---@param class Object # The **class** object, not its name
@@ -253,6 +255,24 @@ function ClassDBEntry:newStringBuffer(name)
 	return self
 end
 
+---Adds a Property.Object
+---@param name string
+---@param baseClass string?
+---@param setter string?
+function ClassDBEntry:newObject(name, baseClass, setter)
+	self:insertProperty(Properties.Object(self._class, name, baseClass, setter))
+	return self
+end
+
+---Adds a Property.LoveObject
+---@param name string
+---@param baseClass string?
+---@param setter string?
+function ClassDBEntry:newLoveObject(name, baseClass, setter)
+	self:insertProperty(Properties.LoveObject(self._class, name, baseClass, nil, setter))
+	return self
+end
+
 ---Adds a Property.Vec2
 ---@param name string
 ---@param defaultValue Vec2?
@@ -260,6 +280,16 @@ end
 ---@return self
 function ClassDBEntry:newVec2(name, defaultValue, setter)
 	self:insertProperty(Properties.Vec2(self._class, name, defaultValue, setter))
+	return self
+end
+
+---Adds a Property.Rect2
+---@param name string
+---@param defaultValue Rect2?
+---@param setter string?
+---@return self
+function ClassDBEntry:newRect2(name, defaultValue, setter)
+	self:insertProperty(Properties.Rect2(self._class, name, defaultValue, setter))
 	return self
 end
 
@@ -290,6 +320,17 @@ end
 ---@return self
 function ClassDBEntry:newNodeRef(name, baseClass, setter)
 	self:insertProperty(Properties.NodeRef(self._class, name, baseClass, setter))
+	return self
+end
+
+---Adds a Property.AssetPath
+---@param name string
+---@param collectionName string # The collection this asset will be from
+---@param defaultValue string?
+---@param setter string?
+---@return self
+function ClassDBEntry:newAssetPath(name, collectionName, defaultValue, setter)
+	self:insertProperty(Properties.AssetPath(self._class, name, collectionName, defaultValue, setter))
 	return self
 end
 
@@ -448,9 +489,6 @@ function ClassDBEntry:forEachPropertyCheck(object, recursive, checkFunc, forEach
 	end
 end
 
----@type table # Used for later methods
-local dictionary = {}
-
 ---Runs a function for each Property in this Object.
 ---@param object Object
 ---@param recursive boolean
@@ -461,7 +499,8 @@ function ClassDBEntry:forEachProperty(object, recursive, forEach, ...)
 
 	---@type ClassDB.Info
 	local currInfo = self._info
-	local alreadyUsedProperties = dictionary
+	-- Should use a new table, this method may be recursively called
+	local alreadyUsedProperties = {}
 	repeat
 		local class = currInfo.class
 		---@cast class Object
@@ -491,7 +530,8 @@ function ClassDBEntry:forEachBinaryProperty(object, recursive, forEach, ...)
 
 	---@type ClassDB.Info
 	local currInfo = self._info
-	local alreadyUsedProperties = dictionary
+	-- Should use a new table, this method may be recursively called
+	local alreadyUsedProperties = {}
 	repeat
 		local class = currInfo.class
 		---@cast class Object
@@ -510,5 +550,7 @@ function ClassDBEntry:forEachBinaryProperty(object, recursive, forEach, ...)
 
 	tclear(alreadyUsedProperties)
 end
+
+function ClassDBEntry._setClassDB(ClassDB) Properties.setClassDB(ClassDB) end
 
 return ClassDBEntry

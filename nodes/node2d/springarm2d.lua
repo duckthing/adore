@@ -49,6 +49,5 @@ end
 function SpringArm2d._addDefinition(entry)
 	entry:newNumber("margin", 0, nil)
 end
-SpringArm2d:getClassDBEntry()
 
 return SpringArm2d

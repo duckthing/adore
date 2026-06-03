@@ -66,7 +66,7 @@ local function genericHandle(method, path, ...)
 	-- See if there's another collection for this
 	local collectionName = EXTENSION_TO_COLLECTION[extension]
 	if not collectionName then
-		error(("TextureLoader cannot load '%s'"):format(path))
+		error(("TextureLoader cannot load '%s' (unsupported extension '%s')"):format(path, extension))
 	end
 
 	-- Use that collection
@@ -87,6 +87,10 @@ function TextureLoader:handler(path, ...)
 end
 
 function TextureLoader:get(path, ...)
+	local id = self.pathToId[path]
+	if id then
+		return self.assets[id], id
+	end
 	return genericHandle("get", path, ...)
 end
 

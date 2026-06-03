@@ -1,19 +1,20 @@
 ---@type AdoreInit
 local Adore = require ""
 
-local StringBuffer = require "_G.string.buffer"
 local Object = Adore.Resources("Object")
 local ObjectSaver = Adore.Common("ObjectSaver")
+local tremove = table.remove
+local enqueue = function(arr, val) arr[#arr+1] = val end
 
----@class PackedScene: Object
----@overload fun(): PackedScene
-local PackedScene = Object:extend()
-PackedScene.CLASS_NAME = "PackedScene"
+---@class TableScene: Object
+---@overload fun(): TableScene
+local TableScene = Object:extend()
+TableScene.CLASS_NAME = "TableScene"
 
-function PackedScene:new()
-	PackedScene.super.new(self)
-	---@type string.buffer
-	self.buffer = StringBuffer.new()
+function TableScene:new()
+	TableScene.super.new(self)
+	---@type table[]
+	self.table = {}
 end
 
 local STRING_TO_CONTROL = {
@@ -23,14 +24,14 @@ local STRING_TO_CONTROL = {
 	END_CHILDREN = 4,
 }
 
----@param buffer string.buffer
+---@param array table[]
 ---@param node Node
 ---@param resources any[]
-local function packInto(buffer, node, resources)
+local function packInto(array, node, resources)
 	if not node._adorePersist then return end
 
-	buffer:encode(STRING_TO_CONTROL.BEGIN_NODE)
-	ObjectSaver.serializeObjectToBuffer(node, buffer, resources)
+	enqueue(array, STRING_TO_CONTROL.BEGIN_NODE)
+	ObjectSaver.serializeObjectToArray(node, array, resources)
 
 	if #node.children ~= 0 then
 		local index = 1
@@ -38,45 +39,46 @@ local function packInto(buffer, node, resources)
 			local child = node.children[i]
 			if child._adorePersist then
 				if index == 1 then
-					buffer:encode(STRING_TO_CONTROL.BEGIN_CHILDREN)
+					enqueue(array, STRING_TO_CONTROL.BEGIN_CHILDREN)
 				end
 
 				index = index + 1
-				packInto(buffer, child, resources)
+				packInto(array, child, resources)
 			end
 		end
 
 		-- If there is at least 1 child that has 'adoreCanSave', we end the list
 		if index > 1 then
-			buffer:encode(STRING_TO_CONTROL.END_CHILDREN)
+			enqueue(array, STRING_TO_CONTROL.END_CHILDREN)
 		end
 	end
-	buffer:encode(STRING_TO_CONTROL.END_NODE)
+	enqueue(array, STRING_TO_CONTROL.END_NODE)
 end
 
 ---Packs the node and any children.
 ---@param node Node
-function PackedScene:pack(node)
-	self.buffer:reset()
+function TableScene:pack(node)
+	self.table = {}
 	local resources = {}
-	packInto(self.buffer, node, resources)
-	ObjectSaver.serializeResourcesToBuffer(self.buffer, resources)
+	packInto(self.table, node, resources)
+	self.table[#self.table+1] = resources
 end
 
 local instantiateTree
 
 ---@param ontoParent Node?
----@param buffer string.buffer
+---@param array table[]
 ---@param allDeferredProperties {[Node]: {[string]: any}}?
 ---@return Node? node
-function instantiateTree(ontoParent, buffer, allDeferredProperties)
-	local control = buffer:decode()
+function instantiateTree(ontoParent, array, allDeferredProperties)
+	local control = tremove(array, 1)
 	if control ~= STRING_TO_CONTROL.BEGIN_NODE then return end
-	local err, obj, deferredProperties = ObjectSaver.deserializeFromBuffer(buffer, "Node", true)
+	local header, body = tremove(array, 1), tremove(array, 1)
+	local err, obj, deferredProperties = ObjectSaver.deserializeObjectFromArray(header, body, "Node", true)
 	---@cast obj Node?
 
 	if not obj then
-		print(("[Adore.PackedScene...instantiateTree] %s"):format(err))
+		print(("[Adore.TableScene...instantiateTree] %s"):format(err))
 		return
 	end
 
@@ -84,7 +86,7 @@ function instantiateTree(ontoParent, buffer, allDeferredProperties)
 		allDeferredProperties[obj] = deferredProperties
 	end
 
-	control = buffer:decode()
+	control = tremove(array, 1)
 	if control == STRING_TO_CONTROL.END_NODE then
 		-- Finished with this Node
 		if ontoParent then
@@ -93,8 +95,8 @@ function instantiateTree(ontoParent, buffer, allDeferredProperties)
 		return obj
 	elseif control == STRING_TO_CONTROL.BEGIN_CHILDREN then
 		-- Repeat this until a Node isn't returned (which means END_CHILDREN was (probably) returned)
-		while instantiateTree(obj, buffer, allDeferredProperties) ~= nil do end
-		assert(buffer:decode() == STRING_TO_CONTROL.END_NODE, "Did not get END_NODE control code (after END_CHILDREN was received)")
+		while instantiateTree(obj, array, allDeferredProperties) ~= nil do end
+		assert(tremove(array, 1) == STRING_TO_CONTROL.END_NODE, "Did not get END_NODE control code (after END_CHILDREN was received)")
 		if ontoParent then
 			ontoParent:addChild(obj)
 		end
@@ -104,33 +106,29 @@ function instantiateTree(ontoParent, buffer, allDeferredProperties)
 	end
 end
 
----Returns `true` if this PackedScene is empty
+---Returns `true` if this TableScene is empty
 ---@return boolean
-function PackedScene:isEmpty()
-	return #self.buffer == 0
+function TableScene:isEmpty()
+	return #self.table == 0
 end
 
 ---Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
 ---@param parent Node?
 ---@param consumeBuffer boolean? # [Default: `false`] Whether the buffer should be destroyed afterwards
 ---@return Node? instanced
-function PackedScene:instantiate(parent, consumeBuffer)
+function TableScene:instantiate(parent, consumeBuffer)
 	if self:isEmpty() then
-		print("[Adore.PackedScene:instantiate] Tree is empty; nothing to instantiate")
+		print("[Adore.TableScene:instantiate] Tree is empty; nothing to instantiate")
 	else
 		---@type {[Node]: {[string]: any}}
 		local deferredData = {}
-		local buffer = self.buffer
-		if not consumeBuffer then
-			buffer = StringBuffer.new()
-			buffer:put(self.buffer:tostring())
-		end
+		local array = self.table
 
-		local instanced = instantiateTree(nil, buffer, deferredData)
-		local err, resources = ObjectSaver.deserializeResourcesFromBuffer(buffer)
+		local instanced = instantiateTree(nil, array, deferredData)
+		local resources, err = array[#array], nil
 
 		if err then
-			print(("[Adore.PackedScene:instantiate] Error while deserializing resources: %s"):format(err))
+			print(("[Adore.TableScene:instantiate] Error while deserializing resources: %s"):format(err))
 		end
 
 		-- Set all deferred properties; they are usually deferred if they depend on a tree structure (like Signals)
@@ -147,17 +145,17 @@ function PackedScene:instantiate(parent, consumeBuffer)
 	end
 end
 
----Returns a function that can be called to instantiate a PackedScene's contents
+---Returns a function that can be called to instantiate a TableScene's contents
 ---@return SceneFunction
-function PackedScene:asFunction()
+function TableScene:asFunction()
 	local func = self.instantiate
 	return function(parent)
 		return func(self, parent, true)
 	end
 end
 
-function PackedScene._addDefinition(entry)
-	entry:newStringBuffer("buffer")
+function TableScene._addDefinition(entry)
+	entry:newTable("table")
 end
 
-return PackedScene
+return TableScene

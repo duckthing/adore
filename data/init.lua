@@ -42,6 +42,8 @@ local resourcePaths = {
 		["DrawRequest.NinePatchRect"] = "data.drawrequest.drawninepatchrect",
 	---@type PackedScene
 	PackedScene = "data.packedscene",
+	---@type TableScene
+	TableScene = "data.tablescene",
 	---@type SceneFactory
 	SceneFactory = "data.scenefactory",
 	---@type Context
@@ -56,10 +58,14 @@ local resourcePaths = {
 		MainLoopContext = "data.context.mainloopcontext",
 	---@type Viewport
 	Viewport = "data.viewport",
+	---@type LightModel
+	LightModel = "data.lightmodel",
 	---@type Tween
 	Tween = "data.tween",
 	---@type Animation
 	Animation = "data.animation",
+	---@type Animation.Library
+	["Animation.Library"] = "data.animation.animationlibrary",
 	---@type NinePatch
 	NinePatch = "data.ninepatch",
 }

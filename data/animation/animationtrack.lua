@@ -1,12 +1,12 @@
 ---@type AdoreInit
 local Adore = require ""
-local SimpleObject = Adore.Libraries("SimpleObject")
+local Object = Adore.Resources("Object")
 local sort = table.sort
 local max = math.max
 
----@class AnimationTrack: SimpleObject
+---@class AnimationTrack: Object
 ---@overload fun(animation: Animation, nodePath: NodePath): PropertyTrack
-local AnimationTrack = SimpleObject:extend()
+local AnimationTrack = Object:extend()
 AnimationTrack.CLASS_NAME = "AnimationTrack"
 AnimationTrack.TRACK_TYPE = "none"
 
@@ -159,6 +159,12 @@ function AnimationTrack:_sort()
 	else
 		self._ownDuration = 0
 	end
+end
+
+function AnimationTrack._addDefinition(entry)
+	entry:newObject("sourceAnimation")
+	entry:newString("nodePath")
+	entry:newTable("keyframes")
 end
 
 return AnimationTrack

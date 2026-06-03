@@ -1,20 +1,55 @@
 ---@type AdoreInit
 local Adore = require ""
+---@type Property
 local Property = require "data.property"
-local StringBuffer = require "_G.string.buffer"
-local ObjectSaver = Adore.Common("ObjectSaver")
+local Structures = Adore.Common("Structures")
+local tclear = Structures.tableClear
 
 ---@class Property.Object: Property
 local Object = Property:extend()
 Object.TYPE = "Object"
-Object.IS_BINARY = true
 Object.DEFER_MODE = "shared"
 
-function Object:new(class, property, baseClass)
+---@type {[Object]: true?} # Cleared after usage
+local visited = {}
+
+local insertRecursiveResources
+---@param obj Object
+---@param property Property
+---@param propertyName string
+---@param value any
+---@param self Property.Object
+---@param resources any[]
+local function femvInsertResourcesCallback(obj, property, propertyName, value, self, resources)
+	if property.DEFER_MODE and value.CLASS_NAME and not visited[value] then
+		-- It's an object
+		local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
+		if not index then
+			index = #resources + 1
+			local tempRef = {TYPE = self.TYPE, value = value}
+			resources[index] = tempRef
+			insertRecursiveResources(self, value, resources)
+			resources[index] = self:getReference(obj, propertyName, value, resources)
+		end
+	end
+end
+
+---@param self Property.Object
+---@param object Object
+---@param resources any[]
+function insertRecursiveResources(self, object, resources)
+	-- If there's a reference to another object, we should include it
+	visited[object] = true
+	object:getClassDBEntry():forEachModifiedValue(object, true, femvInsertResourcesCallback, self, resources)
+end
+
+function Object:new(class, property, baseClass, setter)
 	Object.super.new(self, class, property)
 
 	---@type string
 	self.baseClass = baseClass or "Object"
+
+	if setter then self:withSetter(setter) end
 end
 
 function Object:newValue()
@@ -26,23 +61,17 @@ function Object:sanitize(val)
 	return val
 end
 
-function Object.packBufferResource(buffer, reference, resources)
-	local value = reference.value
-	ObjectSaver.serializeObject(value, buffer, resources)
-end
-
-function Object.unpackBufferResource(buffer, reference, resources)
-	local err, obj, deferredProperties = ObjectSaver.deserializeFromBuffer(buffer)
-	reference.value = obj
-	reference.deferredProperties = deferredProperties
-end
-
 function Object:serialize(obj, propertyName, value, resources)
 	-- TODO: Search Objects for shared resources too
 	local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
 	if not index then
 		index = #resources + 1
-		resources[index] = ref
+		local tempRef = {TYPE = self.TYPE, value = value}
+		resources[index] = tempRef
+		insertRecursiveResources(self, value, resources)
+		resources[index] = self:getReference(obj, propertyName, value, resources)
+
+		tclear(visited)
 	end
 	return index
 end
@@ -54,16 +83,51 @@ function Object:deserialize(obj, propertyName, value, resources)
 	-- (which tends to be the ID to a resource)
 
 	local reference = resources[value]
-	local parsedObject = reference.value
-	local deferred = reference.deferredProperties
+	if reference then
+		local parsedObject = reference.value
+		local deferred
+		if not parsedObject then
+			local err
+			err, parsedObject, deferred = Property.ObjectSaver.deserializeObjectFromArray(reference.header, reference.body)
+			if err then
+				error(err)
+			end
+			reference.value = parsedObject
+		end
 
-	if deferred then
-		-- Set any deferred properties, and remove it so later `:deserialize()` calls don't do it again
-		reference.deferredProperties = nil
-		ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
+		if deferred then
+			-- Set any deferred properties, and remove it so later `:deserialize()` calls don't do it again
+			Property.ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
+		end
+
+		self:set(obj, propertyName, parsedObject)
+	else
+		print(("[ObjectProperty] Can't deserialize '%s' due to invalid resource index '%d' (max is '%d')"):format(propertyName, value, #resources))
+	end
+end
+
+function Object:getSharedMatch(obj, propertyName, value, resources)
+	local ownType = self.TYPE
+	for i = 1, #resources do
+		local resReference = resources[i]
+		if resReference.TYPE == ownType and value == resReference.value then
+			-- Found match, do nothing
+			return i, resReference
+		end
 	end
 
-	self:set(obj, propertyName, parsedObject)
+	-- No match, DON'T return a new reference
+	return nil, nil
+end
+
+function Object:getReference(obj, propertyName, value, resources)
+	local header, body = Property.ObjectSaver.getPropertyPairs(value, resources, true)
+	return setmetatable({
+		TYPE = self.TYPE,
+		header = header,
+		body = body,
+	}, {__index = {value = value}}
+	)
 end
 
 return Object

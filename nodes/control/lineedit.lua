@@ -288,6 +288,5 @@ function LineEdit._addDefinition(entry)
 	entry:newString("_text", "", nil, nil, "setText")
 	entry:newString("_placeholderText", "", nil, nil, "setPlaceholderText")
 end
-LineEdit:getClassDBEntry()
 
 return LineEdit

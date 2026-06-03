@@ -18,28 +18,32 @@ local allLazyLoaders = {
 	Nodes = false,
 	Resources = false,
 	Common = false,
+	User = false,
 	Libraries = Libraries
 }
 
 ---Finds a type somewhere in Adore, in case the developer mistyped something
 ---@param type string
----@param exclude string
+---@param exclude string?
 ---@return any
 local function fallbackToOthers(type, exclude)
 	for category, loader in pairs(allLazyLoaders) do
-		if category ~= exclude then
+		if loader and category ~= exclude then
 			local val = loader[type]
 			if val then
-				-- Found it under this category, tell the user
-				print(debug.traceback(
-					("[Adore] Found '%s' in category 'Adore.%s' instead of 'Adore.%s'; you should change it"):format(type, category, exclude),
-					3
-				))
+				-- Found it under this category
+				if exclude then
+					-- Print it out if we've checked a category already
+					print(debug.traceback(
+						("[Adore] Found '%s' in category 'Adore.%s' instead of 'Adore.%s'; you should change it"):format(type, category, exclude),
+						3
+					))
+				end
 				return val
 			end
 		end
 	end
-	error(("Type '%s' is not found inside of Adore"):format(type))
+	error(("Class '%s' is not found inside of Adore\nIf it's your class, add it in 'Adore.addUserPaths' before performing that action (such as in 'love.load')"):format(type))
 end
 
 
@@ -82,9 +86,10 @@ end
 local Nodes = require(PKG_NAME..".nodes")
 local Resources = require(PKG_NAME..".data")
 local Common = require(PKG_NAME..".common")
+local User = require(PKG_NAME..".data.userspecified")
 
-allLazyLoaders.Nodes, allLazyLoaders.Resources, allLazyLoaders.Common =
-	Nodes, Resources, Common
+allLazyLoaders.Nodes, allLazyLoaders.Resources, allLazyLoaders.Common, allLazyLoaders.User =
+	Nodes, Resources, Common, User
 
 ---A Node is an instanced object that is used in the scene tree
 ---@generic T
@@ -108,6 +113,38 @@ end
 ---@return T
 Adore.Common = function(name)
 	return Common[name] or fallbackToOthers(name, "Common")
+end
+
+---User-specified paths
+---@generic T
+---@param name `T` | Adore.Nodes | Adore.Resources | Adore.Common | Adore.Libraries
+---@return T
+Adore.User = function(name)
+	return fallbackToOthers(name, "User")
+end
+
+---Everything that can be loaded
+---@generic T
+---@param name `T` | Adore.Nodes | Adore.Resources | Adore.Common | Adore.Libraries
+---@return T
+Adore.Any = function(name)
+	return fallbackToOthers(name)
+end
+
+---Adds user-specified paths so that ObjectLoaders can find them
+---@param paths {[string]: string | false}
+function Adore.addUserPaths(paths)
+	local userPaths = User._paths
+	for className, path in pairs(paths) do
+		if path == false then
+			-- Remove a path
+			userPaths[className] = nil
+			User[className] = nil
+		else
+			-- Add it
+			userPaths[className] = path
+		end
+	end
 end
 
 ---@type Adore.Loader # The asset loader, which prevents duplicating assets in memory
