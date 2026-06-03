@@ -43,7 +43,7 @@ local function fallbackToOthers(type, exclude)
 			end
 		end
 	end
-	error(("Type '%s' is not found inside of Adore (if you created it, add it in 'Adore.addUserPaths')"):format(type))
+	error(("Class '%s' is not found inside of Adore\nIf it's your class, add it in 'Adore.addUserPaths' before performing that action (such as in 'love.load')"):format(type))
 end
 
 
