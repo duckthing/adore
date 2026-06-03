@@ -18,6 +18,7 @@ local libraryPaths = {
 	Shash = "lib.shash",
 	---@type TinyTOML
 	TinyTOML = "lib.tinytoml",
+	Serpent = "lib.serpent",
 	RTA = "lib.runtimeatlas",
 	Expression = "lib.expression",
 }
