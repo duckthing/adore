@@ -38,6 +38,4 @@ function DRect:update(dt)
 	end
 end
 
-DRect:getClassDBEntry()
-
 return DRect

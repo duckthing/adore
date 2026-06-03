@@ -488,6 +488,5 @@ function LightModel._addDefinition(entry)
 	entry:newString("_lightMode", "none", nil, nil, "%_viewportOptionsChanged")
 	entry:newBoolean("_postProcessing", false, "%_viewportOptionsChanged")
 end
-LightModel:getClassDBEntry()
 
 return LightModel

@@ -132,6 +132,5 @@ function Camera._addDefinition(entry)
 	entry:newBoolean("_center", true, "setCentered")
 	entry:newBoolean("_inheritRotation", true, "setInheritRotation")
 end
-Camera:getClassDBEntry()
 
 return Camera

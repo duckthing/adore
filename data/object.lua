@@ -76,6 +76,5 @@ function Object._addDefinition(entry)
 		:hide()
 	entry:setSerialization(true, true)
 end
-Object:getClassDBEntry()
 
 return Object

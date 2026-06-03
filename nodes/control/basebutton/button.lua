@@ -167,6 +167,5 @@ end
 function Button._addDefinition(entry)
 	entry:newString("_text", "", nil, nil, "setText")
 end
-Button:getClassDBEntry()
 
 return Button

@@ -169,6 +169,5 @@ function Raycast2d._addDefinition(entry)
 	entry:newNumber("_distance", 25, 0, nil, nil, "setDistance")
 	entry:newBoolean("detectOwnChildren", false)
 end
-Raycast2d:getClassDBEntry()
 
 return Raycast2d

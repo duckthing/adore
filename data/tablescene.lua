@@ -157,6 +157,5 @@ end
 function TableScene._addDefinition(entry)
 	entry:newTable("table")
 end
-TableScene:getClassDBEntry()
 
 return TableScene

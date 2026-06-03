@@ -112,6 +112,5 @@ function Label._addDefinition(entry)
 	entry:newString("_text", "", nil, nil, "setText")
 	entry:newInteger("_fontSize", 0, nil, nil, nil, "setFontSize")
 end
-Label:getClassDBEntry()
 
 return Label

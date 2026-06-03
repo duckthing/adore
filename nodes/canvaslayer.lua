@@ -249,6 +249,5 @@ function CanvasLayer._addDefinition(entry)
 	entry:newObject("_viewport", "Viewport", "_setViewport")
 	entry:newBoolean("_ownsViewport", false)
 end
-CanvasLayer:getClassDBEntry()
 
 return CanvasLayer

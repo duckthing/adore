@@ -159,6 +159,5 @@ end
 function PackedScene._addDefinition(entry)
 	entry:newStringBuffer("buffer")
 end
-PackedScene:getClassDBEntry()
 
 return PackedScene

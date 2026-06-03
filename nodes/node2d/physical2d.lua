@@ -640,6 +640,5 @@ function Physical2d._addDefinition(entry)
 	entry:newBoolean("_active", true, "setActive")
 	entry:newVec2("upDirection")
 end
-Physical2d:getClassDBEntry()
 
 return Physical2d

@@ -300,6 +300,5 @@ function Node2d._addDefinition(entry)
 	entry:newBoolean("_transformRelativeToParent", true, "setRelativeTransform")
 	entry:newColor("albedo")
 end
-Node2d:getClassDBEntry()
 
 return Node2d

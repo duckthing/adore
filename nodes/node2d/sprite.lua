@@ -186,6 +186,5 @@ function Sprite._addDefinition(entry)
 	entry:newBoolean("flipH", false)
 	entry:newBoolean("flipV", false)
 end
-Sprite:getClassDBEntry()
 
 return Sprite
