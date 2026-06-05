@@ -99,7 +99,6 @@ function CanvasLayer:withViewportOptions(viewportOptions)
 			-- Parent viewport will always be the Root when using a CanvasLayer
 			self._viewport._parentViewport = Node._root._viewport
 
-
 			---Returns the safe area of the Viewport when inside a CanvasLayer
 			---@param viewport Viewport
 			local function viewportGetSafeArea(viewport)
@@ -155,12 +154,12 @@ function CanvasLayer:_intDraw() end
 
 function CanvasLayer:drawLayer()
 	-- appleCakeProfileDrawLayer = AppleCake.profile("CanvasLayer:drawLayer", nil, appleCakeProfileDrawLayer)
-	local viewport = self._viewport
 	if not self:ownsViewport() then
 		self:_beforeDraw()
 		self:_drawChildren()
 		self:_afterDraw()
 	else
+		local viewport = self._viewport
 		viewport:push()
 		-- These lines are commented, since the Viewport applies its own transform
 		-- self:_beforeDraw()
@@ -187,9 +186,12 @@ function CanvasLayer:onAddedToTree()
 	layers[#layers+1] = self
 	table.sort(layers, sortLayers)
 
-	-- When initialized, fits this CanvasLayer's Viewport into the parent Viewport
 	local viewport = self._viewport
-	if viewport then
+	if viewport and self._ownsViewport then
+		-- Parent viewport will always be the Root when using a CanvasLayer
+		viewport._parentViewport = Node._root._viewport
+
+		-- When initialized, fits this CanvasLayer's Viewport into the parent Viewport
 		local pCanvas = CanvasLayer.super.getViewport(self)
 		if pCanvas then
 			viewport:fitInto(pCanvas:getDimensions())
@@ -226,8 +228,27 @@ end
 ---Used for deserialization
 ---@param newViewport Viewport
 function CanvasLayer:_setViewport(newViewport)
-	self._viewport = newViewport
-	self:shallowEmit("_eAncestorViewportChanged", self._viewport)
+	-- Will get set early by the header
+	if self._ownsViewport then
+		self._viewport = newViewport
+
+		---Returns the safe area of the Viewport when inside a CanvasLayer
+		---@param viewport Viewport
+		local function viewportGetSafeArea(viewport)
+			local gx, gy, gw, gh = self:getRoot():getViewport():getSafeArea()
+			local x, y = viewport:windowToViewportPoint(gx, gy)
+			local w, h = viewport:windowToViewportPoint(gx + gw, gy + gh)
+
+			return
+				max(0, x),
+				max(0, y),
+				min(w, viewport._canvasW),
+				min(h, viewport._canvasH)
+		end
+		newViewport.getSafeArea = viewportGetSafeArea
+
+		self:shallowEmit("_eAncestorViewportChanged", self._viewport)
+	end
 end
 
 function CanvasLayer:update(dt)
@@ -247,7 +268,9 @@ end
 function CanvasLayer._addDefinition(entry)
 	entry:newInteger("_layerIndex", 2, nil, nil, nil, "setIndex")
 	entry:newObject("_viewport", "Viewport", "_setViewport")
+	-- Put in the header so the new Viewport can get removed
 	entry:newBoolean("_ownsViewport", false)
+		:moveToHeader()
 end
 
 return CanvasLayer

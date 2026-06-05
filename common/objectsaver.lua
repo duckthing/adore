@@ -35,6 +35,7 @@ end
 
 local STRING_MAGIC_NUMBER = fromhex("AD0430B7") -- "AdoreObj"
 local EMPTY_ARR = {}
+local SERPENT_OPTIONS = {nocode = true}
 
 do
 	local success, mod = pcall(require, "_G.string.buffer")
@@ -557,7 +558,7 @@ local saveFormatHandler = {
 		local array = {}
 		local resources = ObjectSaver.serializeObjectToArray(object, array)
 		array[#array+1] = resources
-		local _, err = file:write(Serpent.dump(array))
+		local _, err = file:write(Serpent.dump(array, SERPENT_OPTIONS))
 		return err
 	end,
 }
@@ -772,7 +773,7 @@ local loadFormatHandler = {
 		file:close()
 
 		---@cast contents string
-		local success, array = Serpent.load(contents)
+		local success, array = Serpent.load(contents, SERPENT_OPTIONS)
 		if not success then
 			return ("Failed to deserialize Lua: %s"):format(array)
 		end

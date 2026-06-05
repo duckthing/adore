@@ -675,7 +675,7 @@ function Node:getDrawingViewport()
 end
 
 ---Gets the Viewport that this Node is beneath by looking at the tree.
----If you need the Viewport from a Node2d, use `:getParentViewport()` instead.
+---If you need the Viewport a Node will be drawn to by default, use `:getViewport()` instead.
 ---@return Viewport
 function Node:getTreeViewport()
 	if self._parentViewport then return self._parentViewport end
