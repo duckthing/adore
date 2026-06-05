@@ -1027,6 +1027,8 @@ function Viewport._addDefinition(entry)
 	entry:newNumber("maxPhysicsSteps", 1, 1, nil, nil, "%_onOptionsChanged")
 	entry:newString("multiplyPhysicsSteps", "decrease", nil, nil, "%_onOptionsChanged")
 	entry:newBoolean("shouldDrawPhysics", false, "%_onOptionsChanged")
+	-- TODO: Should this be removed? It should be managed outside of the Viewport anyways.
+	entry:newObject("_parentViewport", "Viewport")
 end
 
 return Viewport

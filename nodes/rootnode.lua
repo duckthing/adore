@@ -52,6 +52,7 @@ local _, shaderAssets = Loader.getCollection("love.Shader")
 local Root = Node:extend()
 Root.CLASS_NAME = "Root"
 Root.albedo = {1, 1, 1, 1}
+Root._adorePersist = false
 MainLoopContext.Root = Root
 
 do
@@ -113,8 +114,9 @@ function Root:new(rootOptions, defaultTheme)
 	end
 
 	---@type Viewport
-	self._viewport = Viewport(rootOptions)
-	self._viewport:fitInto(self._windowW, self._windowH)
+	local viewport = Viewport(rootOptions)
+	viewport:fitInto(self._windowW, self._windowH)
+	viewport._adorePersist = false
 
 	---Returns the safe area of the Viewport
 	---@param viewport Viewport
@@ -129,7 +131,8 @@ function Root:new(rootOptions, defaultTheme)
 			min(w, viewport._canvasW),
 			min(h, viewport._canvasH)
 	end
-	self._viewport.getSafeArea = viewportGetSafeArea
+	viewport.getSafeArea = viewportGetSafeArea
+	self._viewport = viewport
 
 	---@type boolean # (CanvasLayer) If this RootNode should get post-processing applied
 	self._applyParentProcessing = true

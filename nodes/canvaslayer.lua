@@ -228,27 +228,24 @@ end
 ---Used for deserialization
 ---@param newViewport Viewport
 function CanvasLayer:_setViewport(newViewport)
-	-- Will get set early by the header
-	if self._ownsViewport then
-		self._viewport = newViewport
+	self._viewport = newViewport
 
-		---Returns the safe area of the Viewport when inside a CanvasLayer
-		---@param viewport Viewport
-		local function viewportGetSafeArea(viewport)
-			local gx, gy, gw, gh = self:getRoot():getViewport():getSafeArea()
-			local x, y = viewport:windowToViewportPoint(gx, gy)
-			local w, h = viewport:windowToViewportPoint(gx + gw, gy + gh)
+	---Returns the safe area of the Viewport when inside a CanvasLayer
+	---@param viewport Viewport
+	local function viewportGetSafeArea(viewport)
+		local gx, gy, gw, gh = self:getRoot():getViewport():getSafeArea()
+		local x, y = viewport:windowToViewportPoint(gx, gy)
+		local w, h = viewport:windowToViewportPoint(gx + gw, gy + gh)
 
-			return
-				max(0, x),
-				max(0, y),
-				min(w, viewport._canvasW),
-				min(h, viewport._canvasH)
-		end
-		newViewport.getSafeArea = viewportGetSafeArea
-
-		self:shallowEmit("_eAncestorViewportChanged", self._viewport)
+		return
+			max(0, x),
+			max(0, y),
+			min(w, viewport._canvasW),
+			min(h, viewport._canvasH)
 	end
+	newViewport.getSafeArea = viewportGetSafeArea
+
+	self:shallowEmit("_eAncestorViewportChanged", self._viewport)
 end
 
 function CanvasLayer:update(dt)
@@ -268,9 +265,7 @@ end
 function CanvasLayer._addDefinition(entry)
 	entry:newInteger("_layerIndex", 2, nil, nil, nil, "setIndex")
 	entry:newObject("_viewport", "Viewport", "_setViewport")
-	-- Put in the header so the new Viewport can get removed
 	entry:newBoolean("_ownsViewport", false)
-		:moveToHeader()
 end
 
 return CanvasLayer

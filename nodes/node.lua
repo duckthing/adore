@@ -25,8 +25,6 @@ Node.OVERRIDES_VIEWPORT = {}
 Node._root = nil
 ---@type Viewport # The Viewport that is currently getting drawn to; only readable inside `:draw()`
 Node._activeViewport = nil
----@type boolean # If this Node should be saved when put into a PackedScene
-Node._adorePersist = true
 ---@type Node.PauseMode # How will this Node be processed on pauses
 Node._pauseMode = "inherit"
 ---@type number # If the pause mode isn't `inherit`, when should this Node be processed. Lower is earlier.

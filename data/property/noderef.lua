@@ -37,7 +37,7 @@ function NodeRef:serialize(obj, propertyName, node)
 	if not (obj.IS_NODE and obj._valid) then return nil end
 
 	-- Invalid/destroyed Node or wrong class; don't save
-	if not (node and node.IS_NODE and node._valid and Property.ClassDB.doesClassInherit(self.baseClass, node.CLASS_NAME)) then
+	if not (node and node.IS_NODE and node._valid and node._adorePersist and Property.ClassDB.doesClassInherit(self.baseClass, node.CLASS_NAME)) then
 		return nil
 	end
 

@@ -21,8 +21,8 @@ local insertRecursiveResources
 ---@param self Property.Object
 ---@param resources any[]
 local function femvInsertResourcesCallback(obj, property, propertyName, value, self, resources)
-	if property.DEFER_MODE and value.CLASS_NAME and not visited[value] then
-		-- It's an object
+	if property.DEFER_MODE and value._adorePersist and value.CLASS_NAME and not visited[value] then
+		-- It's an Object
 		local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
 		if not index then
 			index = #resources + 1
@@ -62,7 +62,11 @@ function Object:sanitize(val)
 end
 
 function Object:serialize(obj, propertyName, value, resources)
-	-- TODO: Search Objects for shared resources too
+	if not value._adorePersist then
+		-- Only serialize persistent Objects
+		return nil
+	end
+
 	local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
 	if not index then
 		index = #resources + 1

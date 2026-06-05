@@ -13,6 +13,8 @@ Object.__index = Object
 Object.CLASS_ID = 1
 Object.CLASS_NAME = "Object"
 Object.INHERITED_BY = {}
+---@type boolean # Whether this Object can be serialized
+Object._adorePersist = true
 
 ---@type AdoreInit
 local Adore = require ""
