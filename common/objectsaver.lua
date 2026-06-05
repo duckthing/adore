@@ -195,12 +195,11 @@ end
 ---@param binaryBuffer string.buffer
 ---@param header table # The serialized header of the Object
 ---@param body table # The serialized body of the Object
----@param requestedClassName `T` # The optional class (name) to expect; should be a string
+---@param requestedClassName `T`? # The optional class (name) to expect; should be a string
 ---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
 ---@return string? err
----@return T? result
+---@return T | Object? result
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; can be deserialized later once ready
----@overload fun(binaryBuffer: string.buffer, header: table, body: table): string?, Object?, {[string]: any}?
 function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, requestedClassName, canInherit)
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
@@ -337,12 +336,11 @@ end
 ---NOTE: Do not include the magic number at the start of the buffer. That is only used for files.
 ---@generic T: Object
 ---@param buffer string.buffer
----@param requestedClassName `T`
+---@param requestedClassName `T`?
 ---@param canInherit boolean?
 ---@return string? err
----@return T? object
+---@return T | Object? object
 ---@return {[string]: any}? deferredProperties
----@overload fun(binaryBuffer: string.buffer): string?, Object?, {[string]: any}?
 function ObjectSaver.deserializeFromBuffer(buffer, requestedClassName, canInherit)
 	---@type table # The header of the Object
 	local headerTable
@@ -429,12 +427,11 @@ end
 ---@generic T: Object
 ---@param header table # The serialized header of the Object
 ---@param body table # The serialized body of the Object
----@param requestedClassName `T` # The optional class (name) to expect; should be a string
+---@param requestedClassName `T`? # The optional class (name) to expect; should be a string
 ---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
 ---@return string? err
----@return T? result
+---@return T | Object? result
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; can be deserialized later once ready
----@overload fun(header: table, body: table): string?, Object?, {[string]: any}?
 function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName, canInherit)
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
@@ -778,11 +775,11 @@ local loadFormatHandler = {
 			return ("Failed to deserialize Lua: %s"):format(array)
 		end
 
-
 		local err, obj, deferredProperties = ObjectSaver.deserializeObjectFromArray(
 			array[1], array[2], -- The header and body
 			requestedClassName, canInherit
 		)
+
 		if err then
 			return err, nil
 		end
@@ -798,7 +795,7 @@ local loadFormatHandler = {
 ---@generic T: Object
 ---@param file love.File
 ---@param format ObjectSaver.Format?
----@param requestedClassName `T` | nil # The optional class to expect
+---@param requestedClassName `T`? # The optional class to expect
 ---@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
 ---@return string? err
 ---@return T | Object? result
@@ -831,7 +828,7 @@ end
 ---@generic T: Object
 ---@param path string
 ---@param format ObjectSaver.Format?
----@param requestedClassName `T` | nil # The optional class to expect
+---@param requestedClassName `T`? # The optional class to expect
 ---@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
 ---@return string? err
 ---@return T | Object? result
