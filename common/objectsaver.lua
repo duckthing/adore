@@ -1,7 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 
-local StringBuffer = require "_G.string.buffer"
+local StringBuffer
 local ffi = Adore.Common("ffilib")
 
 local ClassDB = Adore.Common("ClassDB")
@@ -36,8 +36,19 @@ end
 local STRING_MAGIC_NUMBER = fromhex("AD0430B7") -- "AdoreObj"
 local EMPTY_ARR = {}
 
+do
+	local success, mod = pcall(require, "_G.string.buffer")
+	if success then StringBuffer = mod end
+end
+
 ---@type string.buffer
-local tbuffer = StringBuffer.new()
+local tbuffer
+local DEFAULT_FORMAT = "lua"
+if StringBuffer then
+	---@diagnostic disable-next-line: undefined-field
+	tbuffer = StringBuffer.new()
+	DEFAULT_FORMAT = "binary"
+end
 
 ---Passed into a pcall; decodes a buffer
 ---@param buf string.buffer
@@ -555,10 +566,16 @@ local saveFormatHandler = {
 ---* For `nativefs` files, see `ObjectSaver.saveToNativeFilePath`
 ---@param file love.File
 ---@param object Object
----@param format ObjectSaver.Format? # Default: "binary"
+---@param format ObjectSaver.Format?
 ---@return string? error
 function ObjectSaver.saveToFile(file, object, format)
-	if not format then format = "binary" end
+	-- Get the best format if not provided
+	if not format then
+		format = DEFAULT_FORMAT
+	elseif not StringBuffer and format == "binary" then
+		return "Binary format is not supported on this platform"
+	end
+
 	if not file:isOpen() then
 		-- Open the file if it isn't already
 		local ok, err = file:open("w")
@@ -585,7 +602,7 @@ end
 ---This function uses more memory than `ObjectSaver.saveToNativeFilePath` when FFI is available.
 ---@param path string
 ---@param object Object
----@param format ObjectSaver.Format? # Default: "binary"
+---@param format ObjectSaver.Format?
 ---@return string? error
 function ObjectSaver.saveToFilePath(path, object, format)
 	local file = love.filesystem.newFile(path, "w")
@@ -601,10 +618,16 @@ end
 ---On restricted platforms, it's more predictable to use the other functions, as they use the normal `love.filesystem`.
 ---@param path string
 ---@param object Object
----@param format ObjectSaver.Format? # Default: "binary"
+---@param format ObjectSaver.Format?
 ---@return string? error
 function ObjectSaver.saveToNativeFilePath(path, object, format)
-	if not format then format = "binary" end
+	-- Get the best format if not provided
+	if not format then
+		format = DEFAULT_FORMAT
+	elseif not StringBuffer and format == "binary" then
+		return "Binary format is not supported on this platform"
+	end
+
 	-- Create the native file, and return if there's an issue
 	---@type love.File
 	local file = nativefs.newFile(path)
@@ -773,13 +796,19 @@ local loadFormatHandler = {
 ---Opens, deserializes a serialized `Object` from the `File` object, and returns it
 ---@generic T: Object
 ---@param file love.File
----@param format ObjectSaver.Format? # Default: "binary"
+---@param format ObjectSaver.Format?
 ---@param requestedClassName `T` | nil # The optional class to expect
 ---@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
 ---@return string? err
 ---@return T | Object? result
 function ObjectSaver.loadFromFile(file, format, requestedClassName, canInherit)
-	if not format then format = "binary" end
+	-- Get the best format if not provided
+	if not format then
+		format = DEFAULT_FORMAT
+	elseif not StringBuffer and format == "binary" then
+		return "Binary format is not supported on this platform"
+	end
+
 	if not file:isOpen() then
 		-- Open the file if it isn't already
 		local ok, err = file:open("r")
@@ -800,7 +829,7 @@ end
 ---Opens and returns the binary serialized `Object` from the file path. Will create a File object.
 ---@generic T: Object
 ---@param path string
----@param format ObjectSaver.Format? # Default: "binary"
+---@param format ObjectSaver.Format?
 ---@param requestedClassName `T` | nil # The optional class to expect
 ---@param canInherit boolean? # Whether the deserialized object can inherit from the requested class; default false
 ---@return string? err
