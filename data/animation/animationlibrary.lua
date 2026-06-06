@@ -19,6 +19,7 @@ end
 
 function AnimLibrary._addDefinition(entry)
 	entry:newString("name", "AnimationLibrary")
+	entry:newTable("animations")
 	-- TODO: Make a 'map' property for animations
 end
 

@@ -4,7 +4,7 @@ local Property = require "data.property"
 ---@class Property.NodeRef: Property
 local NodeRef = Property:extend()
 NodeRef.TYPE = "NodeRef"
-NodeRef.IS_DEFERRED = "unique"
+NodeRef.DEFER_MODE = "unique"
 
 ---@param class Node
 ---@param propertyName string
@@ -49,9 +49,9 @@ function NodeRef:deserialize(obj, propertyName, nodePath)
 	---@cast obj Node
 	if not (obj.IS_NODE and obj._valid) then return nil end
 
-	local foundNode, err = obj:getNodeFromPath(nodePath, true, false)
+	local foundNode, _ = obj:getNodeFromPath(nodePath, true, false)
 	if foundNode and Property.ClassDB.doesClassInherit(self.baseClass, foundNode.CLASS_NAME) then
-		self:set(obj, propertyName, nodePath)
+		self:set(obj, propertyName, foundNode)
 	end
 end
 

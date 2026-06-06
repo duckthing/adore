@@ -3,7 +3,7 @@ local Property = require "data.property"
 ---@class Property.Signal: Property
 local Signal = Property:extend()
 Signal.TYPE = "Signal"
-Signal.IS_DEFERRED = "unique"
+Signal.DEFER_MODE = "unique"
 
 function Signal:new(class, property)
 	Signal.super.new(self, class, property)

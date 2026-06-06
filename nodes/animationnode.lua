@@ -270,4 +270,8 @@ function AnimationNode:update(dt)
 	end
 end
 
+function AnimationNode._addDefinition(entry)
+	entry:newObject("_library", "Animation.Library")
+end
+
 return AnimationNode

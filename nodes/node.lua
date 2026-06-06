@@ -314,13 +314,21 @@ function Node:getNodeByName(...)
 		end
 
 		-- No other special keywords; search all children
-		for j = 1, #currNode.children do
-			local child = currNode.children[j]
+		local children = currNode.children
+		local foundChild
+		for j = 1, #children do
+			local child = children[j]
 			if child.name == name then
 				-- Found it
-				currNode = child
+				foundChild = child
 				break
 			end
+		end
+
+		if foundChild then
+			currNode = foundChild
+		else
+			return nil
 		end
 	end
 
@@ -348,7 +356,7 @@ function Node:getNodeFromPath(path, allowUp, verbose)
 	if path:sub(1, 5) == "/root" then
 		if not allowUp then
 			if verbose then
-				return nil, ("Attempted to move upwards via '/root' (with '%')"):format(path)
+				return nil, ("Attempted to move upwards via '/root' (with '%s')"):format(path)
 			else
 				return nil, "Attempted to move upwards via '/root'"
 			end
@@ -371,7 +379,7 @@ function Node:getNodeFromPath(path, allowUp, verbose)
 		if not allowUp and name == ".." then
 			-- Attempt to move up when disallowed
 			if verbose then
-				return nil, ("Attempted to move upwards via '..' (with '%')"):format(path)
+				return nil, ("Attempted to move upwards via '..' (with '%s')"):format(path)
 			else
 				return nil, "Attempted to move upwards via '..'"
 			end
@@ -897,7 +905,7 @@ function Node:onRemovedFromTree()
 end
 
 function Node:__tostring()
-	return self.name
+	return self.name or self.CLASS_NAME
 end
 
 function Node._addDefinition(entry)
