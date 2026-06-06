@@ -23,8 +23,8 @@ end
 ---@field oneShot boolean?
 
 function Signal:serialize(obj, propertyName, value)
-	-- Can only save signals under Nodes; don't save
-	if not obj.IS_NODE then return nil end
+	-- Can only save signals under Nodes that are persistent; don't save
+	if not (obj.IS_NODE and obj._adorePersist) then return nil end
 	---@cast obj Node
 
 	---@type Signal
