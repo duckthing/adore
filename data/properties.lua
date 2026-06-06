@@ -10,9 +10,13 @@ local Property = require "data.property"
 ---| "table"
 ---| "string.buffer" # Not supported on the web
 ---| "Vec2"
+---| "Rect2"
 ---| "Color"
 ---| "Signal"
 ---| "NodeRef"
+---| "AssetPath"
+---| "Object"
+---| "LoveObject"
 
 local stringBuffer
 if pcall(require, "_G.string.buffer") then
