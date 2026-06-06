@@ -496,7 +496,6 @@ end
 function Vec2:iLerp(to, percent)
 	-- TODO: Figure out if we should clamp this and :step
 	local diff = tempVec2:iCopyVector(to):iSub(self)
-	---@cast diff Vec2
 	diff:iMult(percent)
 	self:iAdd(diff)
 	return self

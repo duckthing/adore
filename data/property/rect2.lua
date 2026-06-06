@@ -15,7 +15,7 @@ Rect2P.subproperties = {
 	h = NumberProperty(Rect2, "h", 0)
 }
 
-local tempRect2 = Rect2(0, 0)
+local tempRect2 = Rect2(0, 0, 0, 0)
 
 function Rect2P:new(class, property, defaultValue, setter)
 	Rect2P.super.new(self, class, property, defaultValue or class[property] or Rect2(0, 0, 0, 0))
@@ -52,12 +52,12 @@ function Rect2P:stepTowards(from, to, amount)
 	return from
 end
 
+---@param from Rect2
+---@param to Rect2
+---@param percent number
+---@return Rect2
 function Rect2P:lerp(from, to, percent)
-	if percent < 1 then
-		return from
-	else
-		return to
-	end
+	return tempRect2:iCopyRect(to):iLerp(to, percent)
 end
 
 function Rect2P:serialize(obj, propertyName, value)

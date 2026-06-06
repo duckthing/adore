@@ -27,6 +27,8 @@ end
 
 ---@type Rect2 # Calling this returns a new Rect2 (ex. `Rect2C(0, 0, 0, 0)`)
 local Rect2C
+---@type Rect2 # Used for calculations where an extra Rect2 is useful
+local tempRect2
 
 ---@class Rect2: ffi.cdata*
 ---@field x number
@@ -191,6 +193,26 @@ function Rect2:iAbs()
 	return self
 end
 
+---[IN PLACE] Sets this Rect2 to a dimension that is `percent` between `self` and `to`
+---@param to Rect2
+---@param percent number
+---@return Rect2 self
+function Rect2:iLerp(to, percent)
+	local diff = tempRect2:iCopyRect(to)
+	diff.x, diff.y, diff.w, diff.h =
+		(to.x - diff.x) * percent,
+		(to.y - diff.y) * percent,
+		(to.w - diff.w) * percent,
+		(to.h - diff.h) * percent
+
+	self.x, self.y, self.w, self.h =
+		self.x + diff.x,
+		self.y + diff.y,
+		self.w + diff.w,
+		self.h + diff.h
+	return self
+end
+
 ---[IN PLACE] Expands the Rect2 to include (px, py). If the point is outside of the bounds, this method does nothing.
 ---@param px number
 ---@param py number
@@ -299,4 +321,5 @@ else
 	end
 end
 
+tempVec2 = Rect2C(0, 0, 0, 0)
 return Rect2C
