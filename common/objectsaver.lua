@@ -761,7 +761,7 @@ local loadFormatHandler = {
 		tbuffer:reset()
 
 		if err then
-			print(("[ObjectSaver.fromFile] Errored while deserializing resources: %s"):format(err))
+			return ("[ObjectSaver.fromFile] Errored while deserializing resources: %s"):format(err), nil
 		end
 
 		ObjectSaver.setDeferredProperties(obj, deferredProperties, resources)
