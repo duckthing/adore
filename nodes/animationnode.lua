@@ -47,6 +47,12 @@ function AnimationNode:ready()
 	if self.autostart and self._autostartAnimation then
 		self:setAnimation(self._autostartAnimation)
 		self:play()
+	else
+		local currAnimationName = self._currAnimationName
+		if currAnimationName then
+			self._currAnimationName = nil
+			self:setAnimation(currAnimationName)
+		end
 	end
 end
 
@@ -80,6 +86,10 @@ end
 ---@param keepElapsed boolean? # If the new Animation should start at the previous elapsed time; good for walking animations.
 ---@return AnimationNode self
 function AnimationNode:setAnimation(name, keepElapsed)
+	if not self._ready then
+		self._currAnimationName = name
+		return self
+	end
 	local library = self._library
 	assert(library, "Library doesn't exist on AnimationNode")
 	local animation = library.animations[name]
@@ -272,6 +282,12 @@ end
 
 function AnimationNode._addDefinition(entry)
 	entry:newObject("_library", "Animation.Library")
+	entry:newString("_currAnimationName", nil, nil, nil, "setAnimation")
+	entry:newBoolean("autostart", false)
+	entry:newNumber("speed", 1, nil, nil, nil, "setSpeed")
+	entry:newBoolean("_playing", false)
+	entry:newBoolean("_paused", false)
+	entry:newString("_autostartAnimation")
 end
 
 return AnimationNode

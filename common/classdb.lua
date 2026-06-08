@@ -1,3 +1,5 @@
+---@type AdoreInit
+local Adore = require ""
 ---@class ClassDB
 local ClassDB = {}
 ---@type ClassDB.Entry
@@ -29,9 +31,19 @@ ClassDB.ClassNameToClass = classNameToClass
 
 ---(Registers itself and super classes, and) returns the ClassDBEntry used for registering new properties.
 ---Only call this once the class name was set!
----@param class Object
+---@param class Object | string
 ---@return ClassDB.Entry
 function ClassDB.getClassDBEntry(class)
+	if type(class) == "string" then
+		local newClass = Adore.Any(class)
+		if newClass then
+			class = newClass
+		else
+			error("Class '%s' doesn't exist; try adding its path with 'Adore.addUserPaths' if this belongs to you")
+		end
+	end
+	assert(class, "Class is nil")
+
 	-- TODO: Check if getting a later entry affects getting earlier entries
 	local classId = rawget(class, "CLASS_ID")
 	if not classId then

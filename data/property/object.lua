@@ -77,16 +77,17 @@ function Object:serialize(obj, propertyName, value, resources)
 
 		tclear(visited)
 	end
+
 	return index
 end
 
-function Object:deserialize(obj, propertyName, value, resources)
+function Object:deserialize(obj, propertyName, resourceId, resources)
 	-- Do nothing; we unpack the buffer later
 	-- When deferred, this function gets called later.
 	-- When deferred and reliant on a shared resource, the `value` parameter will be whatever `:serialize()` returned.
 	-- (which tends to be the ID to a resource)
 
-	local reference = resources[value]
+	local reference = resources[resourceId]
 	if reference then
 		local parsedObject = reference.value
 		local deferred
@@ -106,7 +107,10 @@ function Object:deserialize(obj, propertyName, value, resources)
 
 		self:set(obj, propertyName, parsedObject)
 	else
-		print(("[ObjectProperty] Can't deserialize '%s' due to invalid resource index '%d' (max is '%d')"):format(propertyName, value, #resources))
+		print(
+			("[Property.Object] Can't deserialize '%s' due to invalid resource index '%s' (max is '%s')")
+			:format(propertyName, tostring(resourceId), tostring(#resources))
+		)
 	end
 end
 
@@ -130,8 +134,7 @@ function Object:getReference(obj, propertyName, value, resources)
 		TYPE = self.TYPE,
 		header = header,
 		body = body,
-	}, {__index = {value = value}}
-	)
+	}, {__index = {value = value}})
 end
 
 return Object

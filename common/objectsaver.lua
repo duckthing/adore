@@ -35,7 +35,7 @@ end
 
 local STRING_MAGIC_NUMBER = fromhex("AD0430B7") -- "AdoreObj"
 local EMPTY_ARR = {}
-local SERPENT_OPTIONS = {nocode = true}
+local SERPENT_OPTIONS = {nocode = true, comment = false}
 
 do
 	local success, mod = pcall(require, "_G.string.buffer")

@@ -153,18 +153,19 @@ end
 
 ---Sorts the keyframes of this AnimationTrack by their time, and then sets the duration of this track
 function AnimationTrack:_sort()
-	sort(self.keyframes, sortKeyframes)
-	if #self.keyframes > 0 then
-		self._ownDuration = self.keyframes[#self.keyframes].time
+	local keyframes = self.keyframes
+	sort(keyframes, sortKeyframes)
+	if #keyframes > 0 then
+		self._ownDuration = keyframes[#keyframes].time
 	else
 		self._ownDuration = 0
 	end
 end
 
 function AnimationTrack._addDefinition(entry)
-	entry:newObject("sourceAnimation")
+	entry:newObject("sourceAnimation", "Animation")
 	entry:newString("nodePath")
-	entry:newTable("keyframes")
+	entry:newNumber("_ownDuration", 0, 0)
 end
 
 return AnimationTrack

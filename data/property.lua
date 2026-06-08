@@ -204,13 +204,26 @@ end
 function Property.unpackBufferResource(buffer, reference, resources)
 end
 
+---Skips the setter for the next call; mainly used internally
+function Property:skipSetter()
+	if self.setter then
+		self.oldSetter = self.setter
+		self.setter = nil
+	end
+end
+
 ---Used in case there is a setter method
 ---@param self Property.Boolean
 ---@param obj Object
 ---@param property string # Unused, using setter instead
 ---@param value number
 local function useNormalSetter(self, obj, property, value)
-	obj[self.setter](obj, self:sanitize(value))
+	if not self.setter then
+		obj[property] = self:sanitize(value)
+		self.setter = self.oldSetter
+	else
+		obj[self.setter](obj, self:sanitize(value))
+	end
 end
 
 ---Sets the value and then calls the method
@@ -219,8 +232,13 @@ end
 ---@param property string # Unused, using setter instead
 ---@param value number
 local function usePostSetter(self, obj, property, value)
-	obj[property] = self:sanitize(value)
-	obj[self.setter](obj)
+	if not self.setter then
+		obj[property] = self:sanitize(value)
+		self.setter = self.oldSetter
+	else
+		obj[property] = self:sanitize(value)
+		obj[self.setter](obj)
+	end
 end
 
 
@@ -294,7 +312,7 @@ end
 function Property:__tostring()
 	if self.propertyName then
 		-- It's an instance
-		return ("'%s'[%s]"):format(self.TYPE, self.propertyName)
+		return ("%s[%s]"):format(self.TYPE, self.propertyName)
 	else
 		-- It's the Class itself
 		return ("'%s'"):format(self.TYPE)

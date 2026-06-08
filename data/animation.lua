@@ -7,7 +7,7 @@ local PropertyTrack = require "data.animation.propertytrack"
 local MethodTrack = require "data.animation.methodtrack"
 
 ---@alias Animation.TrackOptions
----| {type: "property", nodePath: NodePath, propertyName: string, keyframes: PropertyTrack.KeyFrame[]?, valueMode: PropertyTrack.ValueMode}
+---| {type: "property", nodePath: NodePath, propertyName: string, baseClass: string?, keyframes: PropertyTrack.KeyFrame[]?, valueMode: PropertyTrack.ValueMode}
 ---| {type: "method", nodePath: NodePath, keyframes: MethodTrack.KeyFrame[]?}
 
 ---@class Animation: Object
@@ -33,7 +33,7 @@ function Animation:new(duration, loop, tracks)
 			local trackData = tracks[i]
 			local type = trackData.type
 			if type == "property" then
-				self.tracks[i] = PropertyTrack(self, trackData.nodePath, trackData.propertyName, trackData.keyframes, trackData.valueMode)
+				self.tracks[i] = PropertyTrack(self, trackData.nodePath, trackData.propertyName, trackData.baseClass, trackData.keyframes, trackData.valueMode)
 			elseif type == "method" then
 				self.tracks[i] = MethodTrack(self, trackData.nodePath, trackData.keyframes)
 			else
@@ -57,8 +57,13 @@ function Animation:setLoop(loop)
 end
 
 function Animation._addDefinition(entry)
-	entry:newBoolean("look", false, "setLoop")
+	entry:newBoolean("loop", false, "setLoop")
 	entry:newNumber("duration", 0, 0)
+	entry:newMap(
+		"tracks",
+		entry:newInteger("key"):popProperty(),
+		entry:newObject("value", "AnimationTrack"):popProperty()
+	)
 end
 
 return Animation

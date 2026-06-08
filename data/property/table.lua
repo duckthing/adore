@@ -51,4 +51,3 @@ function Table:deserialize(obj, propertyName, value, resources)
 end
 
 return Table
-

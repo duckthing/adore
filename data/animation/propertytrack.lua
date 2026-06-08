@@ -1,3 +1,6 @@
+---@type AdoreInit
+local Adore = require ""
+local ClassDB = Adore.Common("ClassDB")
 ---@type AnimationTrack
 local AnimationTrack = require "data.animation.animationtrack"
 ---@type PropertyTrack.Seeker
@@ -7,7 +10,7 @@ local min, max = math.min, math.max
 
 ---@class PropertyTrack: AnimationTrack
 ---@field super AnimationTrack
----@overload fun(animation: Animation, nodePath: NodePath, propertyName: string, keyframes: PropertyTrack.KeyFrame[]?, valueMode: PropertyTrack.ValueMode?): PropertyTrack
+---@overload fun(animation: Animation, nodePath: NodePath, propertyName: string, baseClass: string?, keyframes: PropertyTrack.KeyFrame[]?, valueMode: PropertyTrack.ValueMode?): PropertyTrack
 local PTrack = AnimationTrack:extend()
 PTrack.CLASS_NAME = "PropertyTrack"
 PTrack.TRACK_TYPE = "property"
@@ -22,11 +25,14 @@ PTrack.TRACK_TYPE = "property"
 ---@param animation Animation
 ---@param nodePath NodePath
 ---@param propertyName string
+---@param baseClass string?
 ---@param keyframes PropertyTrack.KeyFrame[]?
 ---@param mode PropertyTrack.ValueMode?
-function PTrack:new(animation, nodePath, propertyName, keyframes, mode)
+function PTrack:new(animation, nodePath, propertyName, baseClass, keyframes, mode)
 	PTrack.super.new(self, animation, nodePath)
 
+	---@type string
+	self.baseClass = baseClass or "Object"
 	---@type string
 	self.propertyName = propertyName
 	---@type PropertyTrack.ValueMode
@@ -49,6 +55,39 @@ end
 ---@return PropertyTrack.Seeker
 function PTrack:newSeeker(node)
 	return PTrackSeeker(self, node)
+end
+
+function PTrack._addDefinition(entry)
+	entry:newString("propertyName")
+	entry:newString("valueMode")
+	entry:newString("baseClass", "Object")
+	entry:newMap(
+		"keyframes",
+		entry:newNumber("key", nil, 0):popProperty(),
+		entry:newStruct("value", {
+			time = entry:newNumber("time"):popProperty(),
+			value = entry:newDynamic(
+				"value",
+				---@param self Property.Dynamic
+				---@param obj PropertyTrack
+				---@param propertyName string
+				---@param value any
+				function(self, obj, propertyName, value, ...)
+					---@type PropertyTrack
+					local pTrack = ...
+
+					if pTrack.baseClass then
+						local baseClassEntry = ClassDB.getClassDBEntry(pTrack.baseClass)
+
+						if baseClassEntry then
+							local resultProperty = baseClassEntry:getProperty(pTrack.propertyName, true)
+							return resultProperty
+						end
+					end
+				end
+			):popProperty()
+		}):popProperty()
+	)
 end
 
 return PTrack

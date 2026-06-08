@@ -18,6 +18,7 @@ local allLazyLoaders = {
 	Nodes = false,
 	Resources = false,
 	Common = false,
+	Internal = false,
 	User = false,
 	Libraries = Libraries
 }
@@ -86,10 +87,11 @@ end
 local Nodes = require(PKG_NAME..".nodes")
 local Resources = require(PKG_NAME..".data")
 local Common = require(PKG_NAME..".common")
+local Internal = require(PKG_NAME..".data.internal")
 local User = require(PKG_NAME..".data.userspecified")
 
-allLazyLoaders.Nodes, allLazyLoaders.Resources, allLazyLoaders.Common, allLazyLoaders.User =
-	Nodes, Resources, Common, User
+allLazyLoaders.Nodes, allLazyLoaders.Resources, allLazyLoaders.Common, allLazyLoaders.Internal, allLazyLoaders.User =
+	Nodes, Resources, Common, Internal, User
 
 ---A Node is an instanced object that is used in the scene tree
 ---@generic T
@@ -113,6 +115,15 @@ end
 ---@return T
 Adore.Common = function(name)
 	return Common[name] or fallbackToOthers(name, "Common")
+end
+
+---Behaviors and objects that are not intended to be used directly by developers.
+---Mainly used for deserialization later.
+---@generic T
+---@param name `T` | Adore.Internal
+---@return T
+Adore.Internal = function(name)
+	return Internal[name] or fallbackToOthers(name, "Internal")
 end
 
 ---User-specified paths

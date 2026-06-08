@@ -1,29 +1,12 @@
 ---@type Property
 local Property = require "data.property"
 
----@alias PropertyType
----| "any"
----| "number"
----| "integer"
----| "string"
----| "boolean"
----| "table"
----| "string.buffer" # Not supported on the web
----| "Vec2"
----| "Rect2"
----| "Color"
----| "Signal"
----| "NodeRef"
----| "AssetPath"
----| "Object"
----| "LoveObject"
-
-local stringBuffer
+local StringBuffer
 if pcall(require, "_G.string.buffer") then
-	stringBuffer = require "data.property.stringbuffer"
+	StringBuffer = require "data.property.stringbuffer"
 end
 
----@type {[PropertyType]: Property}
+---@enum (key) PropertyType
 local Properties = {
 	---@type Property.Any
 	any = require "data.property.any",
@@ -37,9 +20,13 @@ local Properties = {
 	---@type Property.Boolean
 	boolean = require "data.property.boolean",
 	---@type Property.Table
-	["table"] = require "data.property.table",
+	table = require "data.property.table",
+		---@type Property.Map
+		map = require "data.property.map",
+		---@type Property.Struct
+		struct = require "data.property.struct",
 	---@type Property.StringBuffer
-	["string.buffer"] = stringBuffer,
+	["string.buffer"] = StringBuffer,
 
 	---@type Property.Vec2
 	Vec2 = require "data.property.vec2",
@@ -57,6 +44,9 @@ local Properties = {
 	Object = require "data.property.object",
 	---@type Property.LoveObject
 	LoveObject = require "data.property.loveobject",
+
+	---@type Property.Dynamic
+	Dynamic = require "data.property.dynamic",
 }
 
 local PropertiesMT = {

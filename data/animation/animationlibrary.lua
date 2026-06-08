@@ -19,8 +19,10 @@ end
 
 function AnimLibrary._addDefinition(entry)
 	entry:newString("name", "AnimationLibrary")
-	entry:newTable("animations")
-	-- TODO: Make a 'map' property for animations
+	entry:newMap("animations",
+		entry:newString("name"):popProperty(),
+		entry:newObject("anim", "Animation"):popProperty()
+	)
 end
 
 return AnimLibrary

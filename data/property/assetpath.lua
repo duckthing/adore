@@ -27,7 +27,10 @@ function AssetP:serialize(obj, propertyName, value, resources)
 		if path then
 			return path
 		else
-			print("Couldn't find the path for an asset")
+			print(
+				("[Property.AssetPath] Couldn't find the path for the asset in %s (on %s:%s)")
+				:format(self.collectionName, tostring(obj), propertyName)
+			)
 		end
 	end
 end

@@ -121,7 +121,7 @@ function ClassDBEntry:newProperty(propertyName, propertyType, ...)
 	return self
 end
 
----Inserts an already created Property.
+---Inserts an already created Property
 ---@param property Property
 ---@return self
 function ClassDBEntry:insertProperty(property)
@@ -134,6 +134,20 @@ function ClassDBEntry:insertProperty(property)
 	info.nameToProperty[propertyName] = property
 	info.propertyList[#info.propertyList+1] = property
 	return self
+end
+
+---Removes the last created Property
+---@return Property
+function ClassDBEntry:popProperty()
+	local info = self._info
+
+	local property = self:getInsertedProperty()
+	self._lastProperty = nil
+	info.propertyList[#info.propertyList] = nil
+
+	info.nameToProperty[self._lastPropertyName] = nil
+	self._lastPropertyName = nil
+	return property
 end
 
 ---Moves the last inserted Property into the header.
@@ -218,7 +232,7 @@ end
 ---Adds a Property.String
 ---@param name string
 ---@param defaultValue string?
----@param maxLength string?
+---@param maxLength integer?
 ---@param validator (fun(val: string): boolean)?
 ---@param setter string?
 ---@return self
@@ -244,6 +258,29 @@ end
 ---@return self
 function ClassDBEntry:newTable(name, defaultValue, setter)
 	self:insertProperty(Properties.table(self._class, name, defaultValue, setter))
+	return self
+end
+
+---Adds a Property.Map
+---@param name string
+---@param keyProperty Property
+---@param valueProperty Property
+---@param defaultValue table?
+---@param setter string?
+---@return self
+function ClassDBEntry:newMap(name, keyProperty, valueProperty, defaultValue, setter)
+	self:insertProperty(Properties.map(self._class, name, keyProperty, valueProperty, defaultValue, setter))
+	return self
+end
+
+---Adds a Property.Struct
+---@param name string
+---@param definition {[string]: Property}
+---@param defaultValue table?
+---@param setter string?
+---@return self
+function ClassDBEntry:newStruct(name, definition, defaultValue, setter)
+	self:insertProperty(Properties.struct(self._class, name, definition, defaultValue, setter))
 	return self
 end
 
@@ -331,6 +368,17 @@ end
 ---@return self
 function ClassDBEntry:newAssetPath(name, collectionName, defaultValue, setter)
 	self:insertProperty(Properties.AssetPath(self._class, name, collectionName, defaultValue, setter))
+	return self
+end
+
+---Adds a Property.Dynamic; used internally, you might want something else
+---@param name string
+---@param propertyGetter Property.Dynamic.Getter # Gets the desired Property on every access
+---@param defaultValue any?
+---@param setter string?
+---@return self
+function ClassDBEntry:newDynamic(name, propertyGetter, defaultValue, setter)
+	self:insertProperty(Properties.Dynamic(self._class, name, propertyGetter, defaultValue, setter))
 	return self
 end
 
