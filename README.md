@@ -206,7 +206,7 @@ Any content suspected to be assisted/created with generative AI/LLM (other than 
 to legal and ethical concerns.
 
 ## Platform Support
-The target platforms for Adore is *Windows*, *Linux*, and *web* (through [love.js](https://github.com/Davidobot/love.js/)).
+The target platforms for Adore is **Windows**, **Linux**, and **web** (through [love.js](https://github.com/Davidobot/love.js/)).
 I do not have the ability to test Android, iOS, and Mac right now.
 
 > [!NOTE]
