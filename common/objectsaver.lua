@@ -202,10 +202,19 @@ end
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; keep this for later
 ---@overload fun(binaryBuffer: string.buffer, header: table, body: table): string?, Object?
 function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, requestedClassName, canInherit)
+	local RequestedClass
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
 		requestedClassName = "Object"
 		canInherit = true
+	else
+		-- Check if the class name matches/inherits the parameters
+		RequestedClass = Adore.Any(requestedClassName) or ClassDB.ClassNameToClass[requestedClassName]
+
+		if not RequestedClass then
+			-- The passed parameters request a class that doesn't exist
+			return ("Requested class parameter '%s' does not exist"):format(requestedClassName), nil
+		end
 	end
 
 	if not header.CLASS_NAME then
@@ -214,18 +223,10 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 	end
 
 	---@type Object
-	local TargetClass = ClassDB.ClassNameToClass[header.CLASS_NAME] or Adore.Any(header.CLASS_NAME)
+	local TargetClass = Adore.Any(header.CLASS_NAME) or ClassDB.ClassNameToClass[header.CLASS_NAME]
 	if not TargetClass then
 		-- The table has a class that doesn't exist
 		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME), nil
-	end
-
-	-- Check if the class name matches/inherits the parameters
-	local RequestedClass = ClassDB.ClassNameToClass[requestedClassName]
-
-	if not RequestedClass then
-		-- The passed parameters request a class that doesn't exist
-		return ("Requested object class '%s' does not exist"):format(header.CLASS_NAME), nil
 	end
 
 	if canInherit then
@@ -240,10 +241,11 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 		end
 	end
 
-	local entry = TargetClass:getClassDBEntry()
 
+	-- Check if the entry allows deserialization
+	local entry = TargetClass:getClassDBEntry()
 	if not entry:canDeserialize() then
-		return ("Requested object class '%s' cannot be deserialized"):format(header.CLASS_NAME), nil
+		return ("Serialized object class '%s' is requesting a class that disallows deserialization"):format(header.CLASS_NAME), nil
 	end
 
 	---@type Object # The object where all the properties will get set
@@ -436,10 +438,19 @@ end
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; keep this for later
 ---@overload fun(header: table, body: table): string?, Object?
 function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName, canInherit)
+	local RequestedClass
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
 		requestedClassName = "Object"
 		canInherit = true
+	else
+		-- Check if the class name matches/inherits the parameters
+		RequestedClass = Adore.Any(requestedClassName) or ClassDB.ClassNameToClass[requestedClassName]
+
+		if not RequestedClass then
+			-- The passed parameters request a class that doesn't exist
+			return ("Requested class parameter '%s' does not exist"):format(requestedClassName), nil
+		end
 	end
 
 	if not header.CLASS_NAME then
@@ -454,14 +465,6 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME), nil
 	end
 
-	-- Check if the class name matches/inherits the parameters
-	local RequestedClass = ClassDB.ClassNameToClass[requestedClassName]
-
-	if not RequestedClass then
-		-- The passed parameters request a class that doesn't exist
-		return ("Requested object class '%s' does not exist"):format(header.CLASS_NAME), nil
-	end
-
 	if canInherit then
 		-- Check if the requested class is inheriting from the target class
 		if not TargetClass:is(RequestedClass) then
@@ -474,10 +477,10 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 		end
 	end
 
+	-- Check if the entry allows deserialization
 	local entry = TargetClass:getClassDBEntry()
-
 	if not entry:canDeserialize() then
-		return ("Requested object class '%s' cannot be deserialized"):format(header.CLASS_NAME), nil
+		return ("Serialized object class '%s' is requesting a class that disallows deserialization"):format(header.CLASS_NAME), nil
 	end
 
 	---@type Object # The object where all the properties will get set
