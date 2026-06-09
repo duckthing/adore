@@ -276,6 +276,33 @@ function Node2d:setRelativeTransform(relative)
 	return self
 end
 
+-- local appleCakeProfileNode2dDraw
+-- local appleCakeArgs = {class = ""}
+
+if ADORE_NODE2D_CULL then
+	function Node2d:_intDraw()
+		self:_beforeDraw()
+		if self._globalContentRect:overlapping(self._parentViewport._boundingBox) then
+			-- appleCakeArgs.class = self.CLASS_NAME
+			-- appleCakeProfileNode2dDraw = AppleCake.profile("Node2d:draw", appleCakeArgs, appleCakeProfileNode2dDraw)
+			self:draw()
+		end
+		-- appleCakeProfileNode2dDraw:stop()
+		self:_drawChildren()
+		self:_afterDraw()
+	end
+else
+	function Node2d:_intDraw()
+		self:_beforeDraw()
+		-- appleCakeArgs.class = self.CLASS_NAME
+		-- appleCakeProfileNode2dDraw = AppleCake.profile("Node2d:draw", appleCakeArgs, appleCakeProfileNode2dDraw)
+		self:draw()
+		-- appleCakeProfileNode2dDraw:stop()
+		self:_drawChildren()
+		self:_afterDraw()
+	end
+end
+
 function Node2d:_beforeDraw()
 	love.graphics.push("all")
 	love.graphics.setColor(self.albedo)

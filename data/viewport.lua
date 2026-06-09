@@ -141,7 +141,7 @@ function Viewport:new(options)
 	self._canvasSettings = options.canvasSettings or {}
 	---@type boolean # Whether new Canvases should be created  (due to ex. different canvas settings)
 	self.remakeCanvases = true
-	---@type Rect2 # The bounding box that the shown Canvas will contain
+	---@type Rect2 # The bounding box that contains all visible content
 	self._boundingBox = Rect2(0, 0, 0, 0)
 	---@type love.Transform # The default Transform when drawing
 	self._viewportTransform = love.math.newTransform()

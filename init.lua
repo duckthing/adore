@@ -10,6 +10,9 @@ if false then
 	---**Default:** `true` on desktop, `false` anywhere else.
 	---@type boolean?
 	ADORE_FORCE_FFI = nil
+	---Enable/disable culling for Node2d
+	---@type boolean?
+	ADORE_NODE2D_CULL = nil
 end
 
 local Libraries = require(PKG_NAME..".lib")
