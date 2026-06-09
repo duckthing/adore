@@ -156,6 +156,19 @@ function Rect2:iSetComponents(x, y, w, h)
 	return self
 end
 
+---[IN PLACE] Sets the components of this Rect2
+---@param topLeftX number
+---@param topLeftY number
+---@param bottomRightX number
+---@param bottomRightY number
+---@return self
+function Rect2:iSetFromPoints(topLeftX, topLeftY, bottomRightX, bottomRightY)
+	local w, h = bottomRightX - topLeftX, bottomRightY - topLeftY
+	self.x, self.y, self.w, self.h =
+		topLeftX, topLeftY, w, h
+	return self
+end
+
 ---[IN PLACE] Sets this Rect2's components equal to another Rect2
 ---@param other Rect2
 ---@return self

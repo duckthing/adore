@@ -705,25 +705,18 @@ function Viewport:drawFittedContents(offsetX, offsetY)
 	love.graphics.draw(self:getFinalCanvas(), self._canvasOffsetX + offsetX, self._canvasOffsetY + offsetY, 0, self._canvasScaleW, self._canvasScaleH)
 end
 
--- local appleCakeProfileDrawPhysics
+local drawPhysicsForEachFixture
+if ADORE_NODE2D_CULL then
+	local tempRect2 = Rect2()
+	---@param body love.Body
+	---@param boundingBox Rect2
+	function drawPhysicsForEachFixture(body, boundingBox)
+		for _, fixture in ipairs(body:getFixtures()) do
+			---@cast fixture love.Fixture
+			local shape = fixture:getShape()
+			tempRect2:iSetFromPoints(fixture:getBoundingBox(1))
 
----Draws the physics objects contained in this Viewport's world
----@private
-function Viewport:drawPhysics()
-	-- appleCakeProfileDrawPhysics = AppleCake.profile("Viewport:drawPhysics", nil, appleCakeProfileDrawPhysics)
-	local physicsWorld = self._physicsWorld
-	if physicsWorld then
-		love.graphics.setBlendMode("alpha", "alphamultiply")
-		for _, body in ipairs(physicsWorld:getBodies()) do
-			if body:isActive() then
-				love.graphics.setColor(0, 1, 0, 0.7)
-			else
-				love.graphics.setColor(1, 0, 0, 0.7)
-			end
-
-			for _, fixture in ipairs(body:getFixtures()) do
-				local shape = fixture:getShape()
-
+			if tempRect2:overlapping(boundingBox) then
 				if shape:typeOf("CircleShape") then
 					local cx, cy = body:getWorldPoints(shape:getPoint())
 					love.graphics.circle("line", cx, cy, shape:getRadius())
@@ -733,6 +726,45 @@ function Viewport:drawPhysics()
 					love.graphics.line(body:getWorldPoints(shape:getPoints()))
 				end
 			end
+		end
+	end
+else
+	---@param body love.Body
+	function drawPhysicsForEachFixture(body)
+		for _, fixture in ipairs(body:getFixtures()) do
+			---@cast fixture love.Fixture
+			local shape = fixture:getShape()
+
+			if shape:typeOf("CircleShape") then
+				local cx, cy = body:getWorldPoints(shape:getPoint())
+				love.graphics.circle("line", cx, cy, shape:getRadius())
+			elseif shape:typeOf("PolygonShape") then
+				love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
+			else
+				love.graphics.line(body:getWorldPoints(shape:getPoints()))
+			end
+		end
+	end
+end
+
+-- local appleCakeProfileDrawPhysics
+
+---Draws the physics objects contained in this Viewport's world
+---@private
+function Viewport:drawPhysics()
+	-- appleCakeProfileDrawPhysics = AppleCake.profile("Viewport:drawPhysics", nil, appleCakeProfileDrawPhysics)
+	local physicsWorld = self._physicsWorld
+	if physicsWorld then
+		love.graphics.setBlendMode("alpha", "alphamultiply")
+		local boundingBox = self._boundingBox
+		for _, body in ipairs(physicsWorld:getBodies()) do
+			if body:isActive() then
+				love.graphics.setColor(0, 1, 0, 0.7)
+			else
+				love.graphics.setColor(1, 0, 0, 0.7)
+			end
+
+			drawPhysicsForEachFixture(body, boundingBox)
 		end
 	end
 	-- appleCakeProfileDrawPhysics:stop()
