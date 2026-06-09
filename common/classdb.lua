@@ -92,7 +92,7 @@ function ClassDB.doesClassInherit(baseClass, targetClass)
 	if type(baseClass) == "string" then baseClass = ClassDBEntry.Adore.Any(baseClass) end
 	if type(targetClass) == "string" then targetClass = ClassDBEntry.Adore.Any(targetClass) end
 
-	return targetClass:is(baseClass)
+	return baseClass == targetClass or targetClass:is(baseClass)
 end
 
 return ClassDB

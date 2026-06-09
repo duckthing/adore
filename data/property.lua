@@ -122,9 +122,10 @@ end
 ---@param propertyName string
 ---@param value any
 ---@param resources any[]
+---@param ...Object # If this Property is a part of another Property (like a Map), all tuples will be earlier Objects
 ---@return integer? index
 ---@return table reference
-function Property:getSharedMatch(obj, propertyName, value, resources)
+function Property:getSharedMatch(obj, propertyName, value, resources, ...)
 	local ownType = self.TYPE
 	for i = 1, #resources do
 		local resReference = resources[i]
@@ -135,7 +136,7 @@ function Property:getSharedMatch(obj, propertyName, value, resources)
 	end
 
 	-- No match, return the new reference
-	return nil, self:getReference(obj, propertyName, value, resources)
+	return nil, self:getReference(obj, propertyName, value, resources, ...)
 end
 
 ---Creates a reference from the given values;
@@ -144,8 +145,9 @@ end
 ---@param propertyName string
 ---@param value any
 ---@param resources any[]
+---@param ...Object # If this Property is a part of another Property (like a Map), all tuples will be earlier Objects
 ---@return table
-function Property:getReference(obj, propertyName, value, resources)
+function Property:getReference(obj, propertyName, value, resources, ...)
 	return {
 		TYPE = self.TYPE,
 		value = value,
@@ -157,8 +159,9 @@ end
 ---@param propertyName string
 ---@param value any
 ---@param resources any[]?
+---@param ...Object # If this Property is a part of another Property (like a Map), all tuples will be earlier Objects
 ---@return any
-function Property:serialize(obj, propertyName, value, resources)
+function Property:serialize(obj, propertyName, value, resources, ...)
 	return value
 end
 
@@ -168,7 +171,8 @@ end
 ---@param propertyName string
 ---@param deserializedValue any
 ---@param resources any[]?
-function Property:deserialize(obj, propertyName, deserializedValue, resources)
+---@param ...Object # If this Property is a part of another Property (like a Map), all tuples will be earlier Objects
+function Property:deserialize(obj, propertyName, deserializedValue, resources, ...)
 	self:set(obj, propertyName, deserializedValue)
 end
 
@@ -205,6 +209,7 @@ function Property.unpackBufferResource(buffer, reference, resources)
 end
 
 ---Skips the setter for the next call; mainly used internally
+-- TODO: Replace with a stack
 function Property:skipSetter()
 	if self.setter then
 		self.oldSetter = self.setter

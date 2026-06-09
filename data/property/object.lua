@@ -89,7 +89,7 @@ function Object:deserialize(obj, propertyName, resourceId, resources)
 
 	local reference = resources[resourceId]
 	if reference then
-		local parsedObject = reference.value
+		local parsedObject = reference._deserializedObject
 		local deferred
 		if not parsedObject then
 			local err
@@ -97,7 +97,7 @@ function Object:deserialize(obj, propertyName, resourceId, resources)
 			if err then
 				error(err)
 			end
-			reference.value = parsedObject
+			reference._deserializedObject = parsedObject
 		end
 
 		if deferred then

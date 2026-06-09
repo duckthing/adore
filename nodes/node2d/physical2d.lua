@@ -639,6 +639,9 @@ end
 function Physical2d._addDefinition(entry)
 	entry:newBoolean("_active", true, "setActive")
 	entry:newVec2("upDirection")
+
+	-- Common override
+	entry:newBoolean("_transformRelativeToParent", false, "setRelativeTransform")
 end
 
 return Physical2d

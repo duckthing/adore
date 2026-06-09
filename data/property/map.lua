@@ -49,7 +49,7 @@ local temp = {}
 function Map:deserialize(obj, propertyName, resourceId, resources, ...)
 	local resource = resources[resourceId]
 
-	if not resource.map then
+	if not resource._deserializedMap then
 		-- Map not built; do that
 		local map = {}
 		local keys, values = resource.keys, resource.values
@@ -68,10 +68,10 @@ function Map:deserialize(obj, propertyName, resourceId, resources, ...)
 			end
 		end
 
-		resource.map = map
+		resource._deserializedMap = map
 	end
 
-	self:set(obj, propertyName, resource.map)
+	self:set(obj, propertyName, resource._deserializedMap)
 end
 
 function Map:getReference(obj, propertyName, value, resources, ...)

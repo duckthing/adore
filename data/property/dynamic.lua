@@ -41,6 +41,25 @@ function Dynamic:deserialize(obj, propertyName, value, resources, ...)
 	targetProperty:deserialize(obj, propertyName, value, resources, ...)
 end
 
+function Dynamic:getSharedMatch(obj, propertyName, value, resources, ...)
+	local targetProperty = self:getProperty(obj, propertyName, value, ...)
+	if not targetProperty then
+		return
+	end
+
+	local ownType = targetProperty.TYPE
+	for i = 1, #resources do
+		local resReference = resources[i]
+		if resReference.TYPE == ownType and self:areEqual(resReference.value, value) then
+			-- Found match, do nothing
+			return i, resReference
+		end
+	end
+
+	-- No match, return the new reference
+	return nil, self:getReference(obj, propertyName, value, resources, ...)
+end
+
 function Dynamic:getReference(obj, propertyName, value, resources, ...)
 	local targetProperty = self:getProperty(obj, propertyName, value, ...)
 	if not targetProperty then
