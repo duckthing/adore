@@ -5,8 +5,6 @@ local ClassDB = Adore.Common("ClassDB")
 local AnimationTrack = require "data.animation.animationtrack"
 ---@type PropertyTrack.Seeker
 local PTrackSeeker = require "data.animation.propertytrackseeker"
-local sort = table.sort
-local min, max = math.min, math.max
 
 ---@class PropertyTrack: AnimationTrack
 ---@field super AnimationTrack
