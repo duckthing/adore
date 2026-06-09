@@ -68,10 +68,6 @@ function PTrack._addDefinition(entry)
 			time = entry:newNumber("time"):popProperty(),
 			value = entry:newDynamic(
 				"value",
-				---@param self Property.Dynamic
-				---@param obj PropertyTrack
-				---@param propertyName string
-				---@param value any
 				function(self, obj, propertyName, value, ...)
 					---@type PropertyTrack
 					local pTrack = ...

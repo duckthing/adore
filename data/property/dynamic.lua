@@ -6,7 +6,7 @@ Dynamic.TYPE = "Dynamic"
 Dynamic.DEFER_MODE = "shared"
 
 ---@alias Property.Dynamic.Getter
----| fun(self: Property.Dynamic, obj: Object, propertyName: string, value: any): Property?
+---| fun(self: Property.Dynamic, obj: Object, propertyName: string, value: any, parentObjects: ...): Property?
 
 ---@param class Object
 ---@param propertyName string
@@ -18,6 +18,12 @@ function Dynamic:new(class, propertyName, propertyGetter, defaultValue, setter)
 	if setter then self:withSetter(setter) end
 end
 
+---Gets the Property with the property getter
+---@param obj Object
+---@param propertyName string
+---@param value any
+---@param ...Object
+---@return Property?
 function Dynamic:getProperty(obj, propertyName, value, ...)
 	return self.propertyGetter and self:propertyGetter(obj, propertyName, value, ...)
 end
