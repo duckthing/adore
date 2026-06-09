@@ -42,6 +42,11 @@ function ClassDBEntry.new(class, info)
 		func(entry)
 	end
 
+	-- Usually the default name is the CLASS_NAME, so we insert it automatically
+	if not entry:getProperty("name", false) then
+		entry:newString("name", class.CLASS_NAME)
+	end
+
 	return entry
 end
 
@@ -270,6 +275,17 @@ end
 ---@return self
 function ClassDBEntry:newMap(name, keyProperty, valueProperty, defaultValue, setter)
 	self:insertProperty(Properties.map(self._class, name, keyProperty, valueProperty, defaultValue, setter))
+	return self
+end
+
+---Adds a Property.Array
+---@param name string
+---@param valueProperty Property
+---@param defaultValue table?
+---@param setter string?
+---@return self
+function ClassDBEntry:newArray(name, valueProperty, defaultValue, setter)
+	self:insertProperty(Properties.array(self._class, name, valueProperty, defaultValue, setter))
 	return self
 end
 

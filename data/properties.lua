@@ -21,6 +21,8 @@ local Properties = {
 	boolean = require "data.property.boolean",
 	---@type Property.Table
 	table = require "data.property.table",
+		---@type Property.Array
+		array = require "data.property.array",
 		---@type Property.Map
 		map = require "data.property.map",
 		---@type Property.Struct

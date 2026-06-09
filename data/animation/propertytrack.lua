@@ -61,9 +61,8 @@ function PTrack._addDefinition(entry)
 	entry:newString("propertyName")
 	entry:newString("valueMode")
 	entry:newString("baseClass", "Object")
-	entry:newMap(
+	entry:newArray(
 		"keyframes",
-		entry:newNumber("key", nil, 0):popProperty(),
 		entry:newStruct("value", {
 			time = entry:newNumber("time"):popProperty(),
 			value = entry:newDynamic(

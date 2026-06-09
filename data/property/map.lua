@@ -34,7 +34,6 @@ function Map:isValid(val)
 end
 
 function Map:serialize(obj, propertyName, value, resources, ...)
-	-- TODO: Search tables for shared resources too
 	local index, ref = self:getSharedMatch(obj, propertyName, value, resources, ...)
 	if not index then
 		index = #resources + 1
