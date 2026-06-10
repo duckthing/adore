@@ -206,6 +206,7 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
 		requestedClassName = "Object"
+		RequestedClass = Adore.Resources("Object")
 		canInherit = true
 	else
 		-- Check if the class name matches/inherits the parameters
@@ -231,7 +232,7 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 
 	if canInherit then
 		-- Check if the requested class is inheriting from the target class
-		if not TargetClass:is(RequestedClass) then
+		if not (TargetClass == RequestedClass or TargetClass:is(RequestedClass)) then
 			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
 		end
 	else
@@ -442,6 +443,7 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
 		requestedClassName = "Object"
+		RequestedClass = Adore.Resources("Object")
 		canInherit = true
 	else
 		-- Check if the class name matches/inherits the parameters

@@ -59,9 +59,8 @@ end
 function Animation._addDefinition(entry)
 	entry:newBoolean("loop", false, "setLoop")
 	entry:newNumber("duration", 0, 0)
-	entry:newMap(
+	entry:newArray(
 		"tracks",
-		entry:newInteger("key"):popProperty(),
 		entry:newObject("value", "AnimationTrack"):popProperty()
 	)
 end
