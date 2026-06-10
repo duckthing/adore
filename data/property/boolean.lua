@@ -21,11 +21,4 @@ function Boolean:isValid(val)
 	return type(val) == "boolean"
 end
 
-function Boolean:lerp(start, final, percent)
-	if percent >= 1 then
-		return final
-	end
-	return start
-end
-
 return Boolean

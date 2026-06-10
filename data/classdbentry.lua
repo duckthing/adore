@@ -326,6 +326,16 @@ function ClassDBEntry:newLoveObject(name, baseClass, setter)
 	return self
 end
 
+---Adds a Property.Enum
+---@param name string
+---@param values {[string | number | boolean]: true} # A lookup table of valid values
+---@param defaultValue string | number | boolean | nil
+---@param setter string?
+function ClassDBEntry:newEnum(name, values, defaultValue, setter)
+	self:insertProperty(Properties.Enum(self._class, name, values, defaultValue, setter))
+	return self
+end
+
 ---Adds a Property.Vec2
 ---@param name string
 ---@param defaultValue Vec2?

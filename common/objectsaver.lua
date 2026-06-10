@@ -242,7 +242,6 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 		end
 	end
 
-
 	-- Check if the entry allows deserialization
 	local entry = TargetClass:getClassDBEntry()
 	if not entry:canDeserialize() then

@@ -1045,7 +1045,17 @@ function Viewport._addDefinition(entry)
 	entry:newInteger("_windowW", 1, 1, nil, nil, "%_onOptionsChanged")
 	entry:newInteger("_windowH", 1, 1, nil, nil, "%_onOptionsChanged")
 	entry:newNumber("_pixelScale", 0, 0, nil, nil, "%_onOptionsChanged")
-	entry:newString("_scaleMode", "resize", "%_onOptionsChanged")
+	local scaleMap = {
+		resize = true,
+		fraction = true,
+		integer = true,
+	}
+	entry:newEnum("_scaleMode", scaleMap, "resize", "%_onOptionsChanged")
+	local aspectMap = {
+		ignore = true,
+		keep = true,
+	}
+	entry:newEnum("_aspect", aspectMap, "keep", "%_onOptionsChanged")
 	entry:newBoolean("_includeStencil", false, "%_onOptionsChanged")
 	entry:newTable("_canvasSettings", nil, "%_onOptionsChanged")
 	entry:newNodeRef("_activeCamera", "Camera", "%_onOptionsChanged")
@@ -1057,7 +1067,13 @@ function Viewport._addDefinition(entry)
 	entry:newBoolean("_ownsWorld", false)
 	entry:newNumber("targetPhysicsStep", nil, 0, nil, nil, "%_onOptionsChanged")
 	entry:newNumber("maxPhysicsSteps", 1, 1, nil, nil, "%_onOptionsChanged")
-	entry:newString("multiplyPhysicsSteps", "decrease", nil, nil, "%_onOptionsChanged")
+	local physicsMultiplierMap = {
+		never = true,
+		increase = true,
+		decrease = true,
+		any = true,
+	}
+	entry:newEnum("multiplyPhysicsSteps", physicsMultiplierMap, "decrease", "%_onOptionsChanged")
 	entry:newBoolean("shouldDrawPhysics", false, "%_onOptionsChanged")
 	-- TODO: Should this be removed? It should be managed outside of the Viewport anyways.
 	entry:newObject("_parentViewport", "Viewport")
