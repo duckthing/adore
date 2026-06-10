@@ -326,13 +326,14 @@ function ClassDBEntry:newLoveObject(name, baseClass, setter)
 	return self
 end
 
----Adds a Property.Enum
+---Adds a Property.Enum.
+---Pass a function as `valueMap` if you'd like to dynamically get the valid values.
 ---@param name string
----@param values {[string | number | boolean]: true} # A lookup table of valid values
+---@param valueMap {[string | number | boolean]: any} | fun(self: Property.Enum, object: Object, propertyName: string?): {[string | number | boolean]: any}
 ---@param defaultValue string | number | boolean | nil
 ---@param setter string?
-function ClassDBEntry:newEnum(name, values, defaultValue, setter)
-	self:insertProperty(Properties.Enum(self._class, name, values, defaultValue, setter))
+function ClassDBEntry:newEnum(name, valueMap, defaultValue, setter)
+	self:insertProperty(Properties.Enum(self._class, name, valueMap, defaultValue, setter))
 	return self
 end
 

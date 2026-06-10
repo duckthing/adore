@@ -25,7 +25,7 @@ function EnumP:onInput()
 	---@cast property Property.Enum
 
 	local currVal = property:get(object, propertyName)
-	local validValues = property.values
+	local validValues = property:getValueMap(object, propertyName)
 	local newVal = next(validValues, currVal)
 	if newVal == nil then
 		newVal = next(validValues)
