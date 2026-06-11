@@ -5,11 +5,25 @@ local Node = Adore.Nodes("Node")
 
 ---A convenient wrapper for building scenes with scripts
 ---@class SceneFactory: Object
+---@overload fun(func: SceneFunction?, source: string?): SceneFactory
 local SceneFactory = Object:extend()
 SceneFactory.CLASS_NAME = "SceneFactory"
 
 ---@alias SceneFunction
 ---| fun(parent: Node?, ...): Node
+
+---@param func SceneFunction?
+---@param source string? # What path should the output be tagged as?
+function SceneFactory:new(func, source)
+	SceneFactory.super.new(self)
+
+	if func then
+		self.build = func
+	end
+
+	---@type string? # What path should the output be tagged as? Assigned in `:instantiate()`
+	self.source = source
+end
 
 ---This function should be overloaded to define a factory's output
 ---@param ... unknown
@@ -27,6 +41,7 @@ end
 function SceneFactory:instantiate(parent, ...)
 	-- Overload :create() instead
 	local node = self:build(...)
+	node._adoreSource = self.source
 	if parent then
 		parent:addChild(node)
 	end
