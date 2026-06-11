@@ -123,9 +123,30 @@ function TableScene:instantiate(parent, consumeBuffer)
 		---@type {[Node]: {[string]: any}}
 		local deferredData = {}
 		local array = self.table
+		local resources = array[#array]
+
+		if not consumeBuffer then
+			-- Clone the table
+			local newArray = {}
+			for i = 1, #array do
+				newArray[i] = array[i]
+			end
+			array = newArray
+
+			local newResources = {}
+			for i = 1, #resources do
+				local resource = resources[i]
+				local newResource = {}
+				for k, v in pairs(resource) do
+					newResource[k] = v
+				end
+				newResources[i] = newResource
+			end
+			resources = newResources
+		end
 
 		local instanced = instantiateTree(nil, array, deferredData)
-		local resources, err = array[#array], nil
+		local err
 
 		if err then
 			print(("[Adore.TableScene:instantiate] Error while deserializing resources: %s"):format(err))
@@ -150,7 +171,7 @@ end
 function TableScene:asFunction()
 	local func = self.instantiate
 	return function(parent)
-		return func(self, parent, true)
+		return func(self, parent, false)
 	end
 end
 
