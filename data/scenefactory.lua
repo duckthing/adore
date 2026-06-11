@@ -1,6 +1,6 @@
 ---@type AdoreInit
 local Adore = require ""
-local Object = Adore.Common("Object")
+local Object = Adore.Resources("Object")
 local Node = Adore.Nodes("Node")
 
 ---A convenient wrapper for building scenes with scripts
@@ -15,7 +15,9 @@ SceneFactory.CLASS_NAME = "SceneFactory"
 ---@param ... unknown
 ---@return Node node
 function SceneFactory:build(...)
-	return Node()
+	local node = Node()
+	node.name = "SceneFactory Output"
+	return node
 end
 
 ---Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
@@ -40,5 +42,4 @@ function SceneFactory:asFunction()
 	end
 end
 
-SceneFactory.__call = function(self, ...) return self:build(...) end
 return SceneFactory

@@ -2,12 +2,12 @@
 local Adore = require ""
 
 local StringBuffer = require "_G.string.buffer"
-local Object = Adore.Resources("Object")
+local SceneFactory = Adore.Resources("SceneFactory")
 local ObjectSaver = Adore.Common("ObjectSaver")
 
----@class PackedScene: Object
+---@class PackedScene: SceneFactory
 ---@overload fun(): PackedScene
-local PackedScene = Object:extend()
+local PackedScene = SceneFactory:extend()
 PackedScene.CLASS_NAME = "PackedScene"
 
 function PackedScene:new()
@@ -110,13 +110,12 @@ function PackedScene:isEmpty()
 	return #self.buffer == 0
 end
 
----Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
----@param parent Node?
+---Instantiates this Scene and returns the highest level `Node`
 ---@param consumeBuffer boolean? # [Default: `false`] Whether the buffer should be destroyed afterwards
 ---@return Node? instanced
-function PackedScene:instantiate(parent, consumeBuffer)
+function PackedScene:build(consumeBuffer)
 	if self:isEmpty() then
-		print("[Adore.PackedScene:instantiate] Tree is empty; nothing to instantiate")
+		print("[Adore.PackedScene:build] Tree is empty; nothing to instantiate")
 	else
 		---@type {[Node]: {[string]: any}}
 		local deferredData = {}
@@ -130,7 +129,7 @@ function PackedScene:instantiate(parent, consumeBuffer)
 		local err, resources = ObjectSaver.deserializeResourcesFromBuffer(buffer)
 
 		if err then
-			print(("[Adore.PackedScene:instantiate] Error while deserializing resources: %s"):format(err))
+			print(("[Adore.PackedScene:build] Error while deserializing resources: %s"):format(err))
 		end
 
 		-- Set all deferred properties; they are usually deferred if they depend on a tree structure (like Signals)
@@ -140,9 +139,6 @@ function PackedScene:instantiate(parent, consumeBuffer)
 			end
 		end
 
-		if parent and instanced then
-			parent:addChild(instanced)
-		end
 		return instanced
 	end
 end
@@ -150,9 +146,9 @@ end
 ---Returns a function that can be called to instantiate a PackedScene's contents
 ---@return SceneFunction
 function PackedScene:asFunction()
-	local func = self.instantiate
+	local func = self.build
 	return function(parent)
-		return func(self, parent, true)
+		return func(self, parent, false)
 	end
 end
 

@@ -849,7 +849,7 @@ function ObjectSaver.loadFromFilePath(path, format, requestedClassName, canInher
 
 	local obj
 	---@diagnostic disable-next-line: cast-local-type
-	err, obj = ObjectSaver.loadFromFile(file, format, canInherit, requestedClassName)
+	err, obj = ObjectSaver.loadFromFile(file, format, requestedClassName, canInherit)
 	file:release()
 	return err, obj
 end

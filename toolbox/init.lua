@@ -140,13 +140,13 @@ return setmetatable(Toolbox, {
 
 		-- Push the subroot when changing scenes
 		local originalChangeScene = originalRoot.changeSceneTo
-		originalRoot.changeSceneTo = function(s, c)
+		originalRoot.changeSceneTo = function(s, constructor)
 			local isPushed = self:isPushed()
 			if not isPushed then
 				self:pushSubroot()
 			end
 
-			originalChangeScene(s, c)
+			originalChangeScene(s, constructor)
 
 			if not isPushed then
 				self:popSubroot()

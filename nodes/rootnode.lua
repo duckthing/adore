@@ -285,23 +285,33 @@ end
 
 ---Changes the scene to the PackedScene/SceneFactory by calling :instantiate() on it.
 ---Will also reset the pause mode and game speed.
----@param constructor PackedScene | SceneFactory | SceneFunction
+---@param constructor SceneFactory | SceneFunction
 function Root:changeSceneTo(constructor)
-	if type(constructor) ~= "function" then
-		-- Assuming it is a PackedScene
-		constructor = constructor:asFunction()
-	elseif type(constructor) == "table" and constructor.IS_NODE then
-		-- We got a Node?
-		---@cast constructor Node
-		local node = constructor
-		constructor = function() return node end
-		return
+	local makeLastScene = true
+	if type(constructor) == "table" then
+		if not constructor.IS_NODE then
+			-- It's a SceneFactory, turn it into a function
+			constructor = constructor:asFunction()
+		else
+			-- We got a Node?
+			---@cast constructor Node
+			if constructor._inTree then
+				-- It's already in the tree, do nothing
+				print("[RootNode:changeSceneTo] Passed a Node which was already in the scene; doing nothing")
+				return
+			end
+
+			-- Add it to the tree later
+			local node = constructor
+			constructor = function() return node end
+			makeLastScene = false
+		end
 	end
+	---@cast constructor SceneFunction
 
 	self:uiUnfocus()
 	while self:popControlModal() do end
 	self:clearChildren(true)
-	self.lastScene = constructor
 	self:resetInputContexts()
 	self:setPauseMode("pausable")
 	self.gameSpeed = 1
@@ -309,6 +319,11 @@ function Root:changeSceneTo(constructor)
 		local albedo = self.albedo
 		albedo[1], albedo[2], albedo[3], albedo[4] =
 			1, 1, 1, 1
+	end
+	if makeLastScene then
+		self.lastScene = constructor
+	else
+		self.lastScene = nil
 	end
 
 	self:resume()

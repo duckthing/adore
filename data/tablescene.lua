@@ -1,14 +1,14 @@
 ---@type AdoreInit
 local Adore = require ""
 
-local Object = Adore.Resources("Object")
+local SceneFactory = Adore.Resources("SceneFactory")
 local ObjectSaver = Adore.Common("ObjectSaver")
 local tremove = table.remove
 local enqueue = function(arr, val) arr[#arr+1] = val end
 
----@class TableScene: Object
+---@class TableScene: SceneFactory
 ---@overload fun(): TableScene
-local TableScene = Object:extend()
+local TableScene = SceneFactory:extend()
 TableScene.CLASS_NAME = "TableScene"
 
 function TableScene:new()
@@ -112,13 +112,12 @@ function TableScene:isEmpty()
 	return #self.table == 0
 end
 
----Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
----@param parent Node?
+---Instantiates this Scene and returns the highest level `Node`
 ---@param consumeBuffer boolean? # [Default: `false`] Whether the buffer should be destroyed afterwards
 ---@return Node? instanced
-function TableScene:instantiate(parent, consumeBuffer)
+function TableScene:build(consumeBuffer)
 	if self:isEmpty() then
-		print("[Adore.TableScene:instantiate] Tree is empty; nothing to instantiate")
+		print("[Adore.TableScene:build] Tree is empty; nothing to instantiate")
 	else
 		---@type {[Node]: {[string]: any}}
 		local deferredData = {}
@@ -149,7 +148,7 @@ function TableScene:instantiate(parent, consumeBuffer)
 		local err
 
 		if err then
-			print(("[Adore.TableScene:instantiate] Error while deserializing resources: %s"):format(err))
+			print(("[Adore.TableScene:build] Error while deserializing resources: %s"):format(err))
 		end
 
 		-- Set all deferred properties; they are usually deferred if they depend on a tree structure (like Signals)
@@ -162,6 +161,7 @@ function TableScene:instantiate(parent, consumeBuffer)
 		if parent and instanced then
 			parent:addChild(instanced)
 		end
+
 		return instanced
 	end
 end
@@ -169,7 +169,7 @@ end
 ---Returns a function that can be called to instantiate a TableScene's contents
 ---@return SceneFunction
 function TableScene:asFunction()
-	local func = self.instantiate
+	local func = self.build
 	return function(parent)
 		return func(self, parent, false)
 	end
