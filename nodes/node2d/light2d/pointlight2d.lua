@@ -72,4 +72,9 @@ function PointLight2d:draw()
 	love.graphics.draw(tSource.texture, tSource.quad, px, py)
 end
 
+function PointLight2d._addDefinition(entry)
+	entry:newAssetPath("_lightTexture", "TextureLoader", nil, "setTexture")
+	entry:newBoolean("_centered", false, "setCentered")
+end
+
 return PointLight2d
