@@ -56,13 +56,7 @@ function NoiseGen.new2d(seed, frequency, octaves, redistribution)
 	return setmetatable(t, Noise2dMT)
 end
 
----Gets the value at a certain point, in the [0..1] range
----@param x number
----@param y number
----@return number value
-function Noise2d:get(x, y)
-	local seed, frequency, octaves =
-		self.seed, self.frequency, self.octaves
+local function noise2dGet(seed, frequency, octaves, redistribution, x, y)
 	x, y =
 		x * frequency,
 		y * frequency
@@ -73,18 +67,20 @@ function Noise2d:get(x, y)
 		local subFreq = OCTAVE_VALS[i * 3 - 1]
 		e = e + avgMult * noise(subFreq * x, subFreq * y, seed)
 	end
-	e = (e * OCTAVE_VALS[octaves * 3]) ^ self.redistribution
+	e = (e * OCTAVE_VALS[octaves * 3]) ^ redistribution
 
 	return e
 end
 
----Gets the value at a certain point, in the [0..1] range, while wrapping every 1 X unit
+---Gets the value at a certain point, in the [0..1] range
 ---@param x number
 ---@param y number
 ---@return number value
-function Noise2d:getXWrapped(x, y)
-	local seed, frequency, octaves =
-		self.seed, self.frequency, self.octaves
+function Noise2d:get(x, y)
+	return noise2dGet(self.seed, self.frequency, self.octaves, self.redistribution, x, y)
+end
+
+local function noise2dGetXWrapped(seed, frequency, octaves, redistribution, x, y)
 	y = y * frequency
 
 	local e = 0
@@ -101,18 +97,20 @@ function Noise2d:getXWrapped(x, y)
 			seed
 		)
 	end
-	e = (e * OCTAVE_VALS[octaves * 3]) ^ self.redistribution
+	e = (e * OCTAVE_VALS[octaves * 3]) ^ redistribution
 
 	return e
 end
 
----Gets the value at a certain point, in the [0..1] range, while wrapping every 1 Y unit
+---Gets the value at a certain point, in the [0..1] range, while wrapping every 1 X unit
 ---@param x number
 ---@param y number
 ---@return number value
-function Noise2d:getYWrapped(x, y)
-	local seed, frequency, octaves =
-		self.seed, self.frequency, self.octaves
+function Noise2d:getXWrapped(x, y)
+	return noise2dGetXWrapped(self.seed, self.frequency, self.octaves, self.redistribution, x, y)
+end
+
+local function noise2dGetYWrapped(seed, frequency, octaves, redistribution, x, y)
 	x = x * frequency
 
 	local e = 0
@@ -128,19 +126,20 @@ function Noise2d:getYWrapped(x, y)
 			seed
 		)
 	end
-	e = (e * OCTAVE_VALS[octaves * 3]) ^ self.redistribution
+	e = (e * OCTAVE_VALS[octaves * 3]) ^ redistribution
 
 	return e
 end
 
----Gets the value at a certain point, in the [0..1] range, while wrapping every 1 X and 1 Y unit
+---Gets the value at a certain point, in the [0..1] range, while wrapping every 1 Y unit
 ---@param x number
 ---@param y number
 ---@return number value
-function Noise2d:getXYWrapped(x, y)
-	local seed, frequency, octaves =
-		self.seed, self.frequency, self.octaves
+function Noise2d:getYWrapped(x, y)
+	return noise2dGetYWrapped(self.seed, self.frequency, self.octaves, self.redistribution, x, y)
+end
 
+local function noise2dGetXYWrapped(seed, frequency, octaves, redistribution, x, y)
 	local e = 0
 	local angleX = PI2 * x
 	local angleY = PI2 * y
@@ -155,9 +154,17 @@ function Noise2d:getXYWrapped(x, y)
 			sin(angleY) * mult + seed
 		)
 	end
-	e = (e * OCTAVE_VALS[octaves * 3]) ^ self.redistribution
+	e = (e * OCTAVE_VALS[octaves * 3]) ^ redistribution
 
 	return e
+end
+
+---Gets the value at a certain point, in the [0..1] range, while wrapping every 1 X and 1 Y unit
+---@param x number
+---@param y number
+---@return number value
+function Noise2d:getXYWrapped(x, y)
+	return noise2dGetXYWrapped(self.seed, self.frequency, self.octaves, self.redistribution, x, y)
 end
 
 ---Creates a love.Image with this Noise2d.
@@ -179,23 +186,26 @@ function Noise2d:asImage(width, height, xMult, yMult, wrapX, wrapY)
 	local f
 	if wrapX then
 		if wrapY then
-			f = self.getXYWrapped
+			f = noise2dGetXYWrapped
 		else
-			f = self.getXWrapped
+			f = noise2dGetXWrapped
 		end
 	elseif wrapY then
-		f = self.getYWrapped
+		f = noise2dGetYWrapped
 	else
-		f = self.get
+		f = noise2dGet
 	end
 
 	if ffi then
 		local p = ffi.cast("uint8_t*", imgData:getFFIPointer())
 
+		local seed, frequency, octaves, redistribution =
+			self.seed, self.frequency, self.octaves, self.redistribution
+
 		for y = 0, height - 1 do
 			local rowOffset = y * width * 4
 			for x = 0, width - 1 do
-				local val = floor(f(self, x * xMult, y * yMult) * 255)
+				local val = floor(f(seed, frequency, octaves, redistribution, x * xMult, y * yMult) * 255)
 				local pos = rowOffset + x * 4
 				p[pos], p[pos + 1], p[pos + 2], p[pos + 3] =
 					val, val, val, 255
@@ -203,8 +213,11 @@ function Noise2d:asImage(width, height, xMult, yMult, wrapX, wrapY)
 		end
 	else
 		-- Plain Lua fallback
+		local seed, frequency, octaves, redistribution =
+			self.seed, self.frequency, self.octaves, self.redistribution
+
 		imgData:mapPixel(function(x, y)
-			local val = f(self, x * xMult, y * yMult)
+			local val = f(seed, frequency, octaves, redistribution, x * xMult, y * yMult)
 			return val, val, val, 1
 		end)
 	end

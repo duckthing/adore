@@ -48,7 +48,7 @@ local function genericHandle(method, path, ...)
 		local success, result = pcall(require, requirePath)
 
 		if not success then
-			error(("Asset at '%s' is not a Lua module"):format(path))
+			error(("Lua asset at '%s' failed to load: \n%s"):format(path, result))
 		end
 
 		local type = result.type
