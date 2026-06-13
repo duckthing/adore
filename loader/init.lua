@@ -76,9 +76,22 @@ local collectionWarnings = {
 ]]
 }
 
+---@alias Adore.BuiltInCollections
+---| "TextureLoader"
+---| "AtlasLoader"
+---| "SheetLoader"
+---| "FontLoader"
+---| "ProcLoader"
+---| "love.ImageData"
+---| "love.Image"
+---| "love.Video"
+---| "love.Shader"
+---| "StreamSound"
+---| "StaticSound"
+
 ---(Creates if needed, and) returns a table of resources of `type`, as well as the array where you can look up assets by ID.
 ---@generic T
----@param name `T` | string
+---@param name `T` | string | Adore.BuiltInCollections
 ---@return T | Adore.AssetCollection
 ---@return T[]
 function Loader.getCollection(name)
