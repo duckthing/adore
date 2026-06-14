@@ -137,7 +137,7 @@ function Viewport:new(options)
 	self._mainIsFinal = true
 	---@type boolean # Internal
 	self._usingBufferLayer = false
-	---@type Viewport.Options # What Love2D settings will be used when creating the canvas
+	---@type Viewport.Options.CanvasSettings # What Love2D settings will be used when creating the canvas
 	self._canvasSettings = options.canvasSettings or {}
 	---@type boolean # Whether new Canvases should be created  (due to ex. different canvas settings)
 	self.remakeCanvases = true
@@ -239,6 +239,26 @@ end
 do
 local stencilOption = {format = "stencil8"}
 
+---Returns `true` if the `love.Canvas` matches the `settings`
+---@param canvas love.Canvas?
+---@param settings Viewport.Options.CanvasSettings?
+local function doSettingsMatch(canvas, settings)
+	if settings then
+		-- Canvas doesn't exist while settings do; return false
+		if not canvas then return false end
+		if settings.type and canvas:getTextureType() ~= settings.type then return false end
+		if settings.format and canvas:getFormat() ~= settings.format then return false end
+		if settings.readable ~= nil and canvas:isReadable() ~= settings.readable then return false end
+		-- MSAA can't be checked as the system may not support the requested amount
+		if settings.mipmaps and canvas:getMipmapCount() ~= settings.mipmaps then return false end
+	elseif canvas then
+		-- Canvas exists while settings do not; return false
+		return false
+	end
+	-- Settings match
+	return true
+end
+
 ---Call this to create the new `love.Canvas` objects from the `Viewport` options.
 ---Called automatically in `RootNode:resize()` and `Viewport:fitInto()`.
 function Viewport:_onOptionsChanged()
@@ -264,7 +284,11 @@ function Viewport:_onOptionsChanged()
 		end
 
 		local mainCanvas = self._mainCanvas
-		if self.remakeCanvases or not mainCanvas or mainCanvas:getWidth() ~= targetW or mainCanvas:getHeight() ~= targetH then
+		local canvasSettings = self._canvasSettings
+		local shouldRemake = self.remakeCanvases
+			or not mainCanvas or mainCanvas:getWidth() ~= targetW or mainCanvas:getHeight() ~= targetH
+			or not doSettingsMatch(mainCanvas, canvasSettings)
+		if shouldRemake then
 			-- Canvases should be remade
 			self.remakeCanvases = false
 
@@ -278,7 +302,7 @@ function Viewport:_onOptionsChanged()
 				self._mainCanvas:release()
 			end
 
-			self._mainCanvas = love.graphics.newCanvas(targetW, targetH, self._canvasSettings)
+			self._mainCanvas = love.graphics.newCanvas(targetW, targetH, canvasSettings)
 
 			if self._altCanvas then
 				-- Release the alternate canvas, if it exists
@@ -295,7 +319,7 @@ function Viewport:_onOptionsChanged()
 
 		if self._allowPostProcessing and not self._altCanvas then
 			-- Post-processing is allowed, create the alt-canvas
-			self._altCanvas = love.graphics.newCanvas(targetW, targetH, self._canvasSettings)
+			self._altCanvas = love.graphics.newCanvas(targetW, targetH, canvasSettings)
 		end
 
 		if self._includeStencil then
