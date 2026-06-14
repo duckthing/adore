@@ -8,7 +8,7 @@ local ShortcutContext = Adore.Resources("ShortcutContext")
 ---@overload fun(root: RootNode): CoreUIContext
 local CoreUIContext = ShortcutContext:extend()
 CoreUIContext.CLASS_NAME = "CoreUIContext"
--- Send every Love2D to this, so we can then send it to the focused UI element
+-- Send every Love2D event to this, so we can then send it to the focused UI element
 CoreUIContext.HANDLERS = {
 	keypressed = true,
 	keyreleased = true,
@@ -31,6 +31,7 @@ CoreUIContext.HANDLERS = {
 	touchreleased = true,
 
 	mousefocus = true,
+	postUpdate = true,
 }
 
 ---@alias CoreUIContext.Action fun(context: CoreUIContext, isRepeat: boolean?): boolean?
