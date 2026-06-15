@@ -3,6 +3,8 @@ local Adore = require ""
 local Object = Adore.Resources("Object")
 local Signal = Adore.Common("Signal")
 local Structures = Adore.Common("Structures")
+local min = math.min
+local tinsert = table.insert
 
 ---@alias Node.PauseMode
 ---| "inherit" # Run if the parent is running
@@ -224,9 +226,15 @@ function Node:addChild(child)
 	assert(child ~= self, "Can't add self to self")
 	assert(child._valid, "Child is not valid (was destroyed)")
 
-	if child.parent then
-		-- Remove the old parent
-		child.parent:removeChild(child)
+	local oldParent = child.parent
+	if oldParent then
+		if oldParent ~= self then
+			-- Remove the old parent
+			oldParent:removeChild(child)
+		else
+			-- It's ourselves, do nothing
+			return self
+		end
 	end
 
 	-- Set the new parent
@@ -237,6 +245,31 @@ function Node:addChild(child)
 	-- (The following is done in :_eAncestorTreeStatusUpdated()
 	-- child._inTree = self._inTree
 
+	return self
+end
+
+---Inserts a child to this Node at a certain index.
+---Returns self, *not* the child.
+---@generic T: Node
+---@param self T
+---@param child Node
+---@param index integer
+---@return T
+function Node:insertChild(child, index)
+	-- It's very hacky, as `:addChild` always adds at the end
+	if child.parent then
+		child.parent:removeChild(child)
+	end
+
+	local children = self.children
+	local totalChildren = #children + 1
+	index = min(index, totalChildren)
+	children[totalChildren], children[index] =
+		children[index], child
+	child.parent = self
+	child:onAddedToParent(self)
+
+	self:addChild(child)
 	return self
 end
 

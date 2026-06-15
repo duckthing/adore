@@ -82,6 +82,7 @@ return setmetatable(Toolbox, {
 		Toolbox.mainWindow = MainWindow(self)
 		godRoot:addChild(Toolbox.mainWindow)
 
+		---@type Toolbox.SubrootContext
 		local subrootContext = require(PKG_NAME..".subrootcontext")(Toolbox)
 		Toolbox.subrootContext = subrootContext
 		subrootContext:push()

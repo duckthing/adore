@@ -84,6 +84,10 @@ local nodePaths = {
 			ViewportContainer = "nodes.control.viewportcontainer",
 			---@type NinePatchRect
 			NinePatchRect = "nodes.control.ninepatchrect",
+			---@type TabBar
+			TabBar = "nodes.control.tabbar",
+			---@type TabContainer
+			TabContainer = "nodes.control.tabcontainer",
 		---@type CanvasLayer
 		CanvasLayer = "nodes.canvaslayer",
 

@@ -6,6 +6,7 @@ local Control = Adore.Nodes("Control")
 ---@field super Control
 ---@overload fun(viewport: Viewport?): ViewportContainer
 local ViewportContainer = Control:extend()
+ViewportContainer.CLASS_NAME = "ViewportContainer"
 
 function ViewportContainer:new(viewport)
 	ViewportContainer.super.new(self)

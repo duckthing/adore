@@ -1,5 +1,6 @@
 local PKG_NAME = ...
 local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
+---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 
@@ -22,6 +23,17 @@ local gameActions = {
 	},
 }
 
+local menuActions = {
+	{
+		"Save",
+		"saveScene",
+	},
+	{
+		"Load",
+		"loadScene",
+	},
+}
+
 ---@param toolbox Toolbox
 function MainWindow:new(toolbox)
 	MainWindow.super.new(self)
@@ -34,7 +46,27 @@ function MainWindow:new(toolbox)
 	self._fullView = true
 
 	---@type ViewportContainer # Where the game is rendered to
-	local subWindow = Nodes("ViewportContainer")(subRoot._viewport)
+	local subWindow
+	local tabContainer = Nodes("TabContainer")()
+	tabContainer:setAnchorsAndOffsets(
+			0.5, 0, 0.5, 0,
+			-220, 40, 220, 300 + 26
+	)
+	tabContainer._internalTabBar.tabSelected:connectCallable(function(_, index, tabInfo)
+		if toolbox.subrootContext then
+			toolbox.subrootContext._visible = tabInfo.node == subWindow
+		end
+	end)
+
+	self.tabContainer = tabContainer
+
+	local label = Nodes("Label")("Test Tab")
+	label:setOffsets(0, 0, 100, 100)
+	self.tabContainer:addChild(label)
+
+	subWindow = Nodes("ViewportContainer")(subRoot._viewport)
+	subWindow.name = "[ Game ]"
+
 	subWindow:setAnchors(0, 0, 1, 1)
 	subWindow.paused = true
 	self.subWindow = subWindow
@@ -57,13 +89,14 @@ function MainWindow:new(toolbox)
 	editor:setAnchors(0, 0, 1, 1)
 	self.editor = editor
 
-	local topbar = Nodes("HBox")()
-	topbar:setAnchorsAndOffsets(
+	local gameActionBar = Nodes("HBox")()
+	gameActionBar:setAnchorsAndOffsets(
 		1, 0, 1, 0,
 		-176, 0, -4, 32
 	)
-	topbar:setSortMode("center")
-	topbar:setMargin(4)
+	-- gameActionBar:setSortMode("center")
+	gameActionBar:setMargin(4)
+	gameActionBar:setPadding(4)
 
 	for i = 1, #gameActions do
 		local action = gameActions[i]
@@ -73,7 +106,26 @@ function MainWindow:new(toolbox)
 			0, -2, 80, -4
 		)
 		button.clicked:connect(self, action[2])
-		topbar:addChild(button)
+		gameActionBar:addChild(button)
+	end
+
+	local menuBar = Nodes("HBox")()
+	menuBar:setAnchorsAndOffsets(
+		0, 0, 1, 0,
+		4, 0, -180, 32
+	)
+	menuBar:setMargin(4)
+	menuBar:setPadding(4)
+
+	for i = 1, #menuActions do
+		local action = menuActions[i]
+		local button = Nodes("Button")(action[1])
+		button:setAnchorsAndOffsets(
+			0, 0, 0, 1,
+			0, -2, 80, -4
+		)
+		button.clicked:connect(self, action[2])
+		menuBar:addChild(button)
 	end
 
 	local sceneTree = SceneTreeViewer(toolbox)
@@ -92,11 +144,13 @@ function MainWindow:new(toolbox)
 
 	editor:addChild(sceneTree)
 	editor:addChild(inspector)
-	editor:addChild(topbar)
+	editor:addChild(gameActionBar)
+	editor:addChild(menuBar)
+	editor:addChild(tabContainer)
 	editor:hide()
 
 	self:addChild(editor)
-	self:addChild(self.subWindow)
+	self:addChild(subWindow)
 end
 
 function MainWindow:togglePause()
@@ -131,15 +185,20 @@ function MainWindow:toggleFull()
 
 	self.editor:setVisible(not full)
 	if full then
-		subWindow:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			0, 0, 0, 0
-		)
+		self:addChild(subWindow)
+		subWindow:setVisible(true)
+		self.toolbox.subrootContext._visible = true
+		-- subWindow:setAnchorsAndOffsets(
+		-- 	0, 0, 1, 1,
+		-- 	0, 0, 0, 0
+		-- )
 	else
-		subWindow:setAnchorsAndOffsets(
-			0.5, 0, 0.5, 0,
-			-220, 40, 220, 300
-		)
+		self.tabContainer:insertChild(subWindow, 1)
+		self.tabContainer:selectTab(subWindow)
+		-- subWindow:setAnchorsAndOffsets(
+		-- 	0.5, 0, 0.5, 0,
+		-- 	-220, 40 + 26, 220, 300
+		-- )
 	end
 end
 

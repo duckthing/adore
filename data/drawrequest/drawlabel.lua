@@ -2,16 +2,15 @@
 local Adore = require ""
 local DrawRequest = Adore.Resources("DrawRequest")
 local Loader = Adore.Loader
-local fontCollection = Loader.getCollection("love.Font")
-local fontAssets = fontCollection.assets
+local FontCollection = Loader.getCollection("love.Font")
 
 ---@class DrawRequest.Label: DrawRequest
 ---@overload fun(): DrawRequest.Label
 local DrawLabel = DrawRequest:extend()
 DrawLabel.CLASS_NAME = "DrawLabel"
 
-local defaultFont, _ = fontCollection:get("")
-local defaultFontSize = 0
+local DEFAULT_FONT, _ = FontCollection:get("")
+local DEFAULT_FONT_SIZE = 0
 
 ---@param label Label
 function DrawLabel:themeUpdate(label)
@@ -20,7 +19,7 @@ function DrawLabel:themeUpdate(label)
 	local textBatch = label._textBatch
 	local tbOldHeight = textBatch:getHeight()
 
-	textBatch:setFont((label._font or defaultFont)[label._fontSize or defaultFontSize])
+	textBatch:setFont((label._font or DEFAULT_FONT)[label._fontSize or DEFAULT_FONT_SIZE])
 	textBatch:setf(text, label._localContentRect.w, label._align)
 
 	local lcr = label._localContentRect

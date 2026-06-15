@@ -16,6 +16,8 @@ local function onRequire()
 	local TextureRect = Nodes("TextureRect")
 	local NinePatchRect = Nodes("NinePatchRect")
 	local LineEdit = Nodes("LineEdit")
+	local TabBar = Nodes("TabBar")
+	local TabContainer = Nodes("TabContainer")
 
 	local Box = Resources("DrawRequest.Box")
 	local DrawLabel = Resources("DrawRequest.Label")
@@ -25,6 +27,8 @@ local function onRequire()
 	local DrawTextureButton = Resources("DrawRequest.TextureButton")
 	local DrawLineEdit = Resources("DrawRequest.LineEdit")
 	local DrawNinePatchRect = Resources("DrawRequest.NinePatchRect")
+	local DrawTabBar = Resources("DrawRequest.TabBar")
+	local DrawTabContainer = Resources("DrawRequest.TabContainer")
 
 	local default = Theme()
 
@@ -55,6 +59,12 @@ local function onRequire()
 
 		-- LineEdit
 		default:setDrawable(LineEdit, nil, DrawLineEdit(buttonColors.normal))
+
+		-- TabBar
+		default:setDrawable(TabBar, nil, DrawTabBar())
+
+		-- TabContainer
+		default:setDrawable(TabContainer, nil, DrawTabContainer())
 	end
 
 	default:setDrawable(Label, nil, DrawLabel())

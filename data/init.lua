@@ -40,6 +40,10 @@ local resourcePaths = {
 		["DrawRequest.NinePatch"] = "data.drawrequest.drawninepatch",
 		---@type DrawRequest.NinePatchRect
 		["DrawRequest.NinePatchRect"] = "data.drawrequest.drawninepatchrect",
+		---@type DrawRequest.TabBar
+		["DrawRequest.TabBar"] = "data.drawrequest.drawtabbar",
+		---@type DrawRequest.TabContainer
+		["DrawRequest.TabContainer"] = "data.drawrequest.drawtabcontainer",
 	---@type PackedScene
 	PackedScene = "data.packedscene",
 	---@type TableScene

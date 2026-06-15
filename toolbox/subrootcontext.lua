@@ -16,6 +16,7 @@ function SubrootC:new(toolbox)
 
 	self.running = true
 	self._mouseInside = false
+	self._visible = true
 end
 
 function SubrootC:pointToWindow(mx, my)
@@ -41,7 +42,7 @@ function SubrootC:pointToWindow(mx, my)
 end
 
 function SubrootC:mousemoved(x, y, dx, dy, isTouch)
-	if not self.running then return false end
+	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
@@ -69,7 +70,7 @@ function SubrootC:mousemoved(x, y, dx, dy, isTouch)
 end
 
 function SubrootC:mousepressed(x, y, button, isTouch, presses)
-	if not self.running then return false end
+	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, _, _ = self:pointToWindow(x, y)
 	if lx then
@@ -82,7 +83,7 @@ function SubrootC:mousepressed(x, y, button, isTouch, presses)
 end
 
 function SubrootC:mousereleased(x, y, button, isTouch, presses)
-	if not self.running then return false end
+	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local subroot = toolbox.subRoot
 	local lx, ly, _, _ = self:pointToWindow(x, y)
@@ -102,7 +103,7 @@ function SubrootC:mousereleased(x, y, button, isTouch, presses)
 end
 
 function SubrootC:touchmoved(id, x, y, dx, dy, pressure)
-	if not self.running then return false end
+	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 	if lx then
@@ -115,7 +116,7 @@ function SubrootC:touchmoved(id, x, y, dx, dy, pressure)
 end
 
 function SubrootC:touchpressed(id, x, y, dx, dy, pressure)
-	if not self.running then return false end
+	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 	if lx then
@@ -128,7 +129,7 @@ function SubrootC:touchpressed(id, x, y, dx, dy, pressure)
 end
 
 function SubrootC:touchreleased(id, x, y, dx, dy, pressure)
-	if not self.running then return false end
+	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 	if lx then
@@ -141,7 +142,7 @@ function SubrootC:touchreleased(id, x, y, dx, dy, pressure)
 end
 
 function SubrootC:update(dt)
-	if not self.running then return false end
+	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local subroot = toolbox.subRoot
 	if subroot then
@@ -186,7 +187,7 @@ for handler, _ in pairs(SubrootC.HANDLERS) do
 	if not rawget(SubrootC, handler) then
 		---@param c Toolbox.SubrootContext
 		SubrootC[handler] = function(c, ...)
-			if not c.running then return false end
+			if not c.running or not c._visible then return false end
 			local toolbox = c._toolbox
 			local subroot = toolbox.subRoot
 			if subroot then
