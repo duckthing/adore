@@ -31,7 +31,12 @@ end
 
 ---Call this if the tab info changed
 ---@return self
-function TabBar:updateTabs()
+function TabBar:onTabInfoUpdated()
+	local oldTabIndex = self._currentTab
+	self._currentTab = 0
+	if oldTabIndex > 0 then
+		self:selectTab(oldTabIndex)
+	end
 	self:deferRefreshSelf()
 	return self
 end

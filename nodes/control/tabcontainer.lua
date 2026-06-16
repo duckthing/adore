@@ -51,6 +51,7 @@ function TabContainer:createTabInfo(index, child)
 	}
 end
 
+---Updates the internal TabBar TabInfo array by repeatedly calling `:createTabInfo`.
 function TabContainer:updateTabs()
 	local tabBar = self._internalTabBar
 	local tabs = tabBar._tabs
@@ -71,6 +72,7 @@ function TabContainer:updateTabs()
 
 	if selectedTab == 0 and #tabs ~= 0 then
 		-- Select a default tab
+		tabBar:onTabInfoUpdated()
 		self._internalTabBar:selectTab(1)
 	end
 end
@@ -148,23 +150,25 @@ function TabContainer:isSelectable(index)
 	return true
 end
 
+---Called on the `tabSelected` signal fired by the internal TabBar
+---@param _ TabBar
+---@param index integer
+---@return TabContainer
 function TabContainer:_onTabSelected(_, index)
-	if self._currentTab ~= index then
-		self._currentTab = index
-		local tabInfo = self._internalTabBar._tabs[index]
-		if not tabInfo then return self end
+	self._currentTab = index
+	local tabInfo = self._internalTabBar._tabs[index]
+	if not tabInfo then return self end
 
-		local selectedChild = tabInfo.node
+	local selectedChild = tabInfo.node
 
-		local children = self.children
-		for i = 1, #children do
-			local child = children[i]
-			child:setVisible(child == selectedChild)
-		end
-		self._internalTabBar:setVisible(self._showTabBar)
-
-		self:deferRefreshSelf()
+	local children = self.children
+	for i = 1, #children do
+		local child = children[i]
+		child:setVisible(child == selectedChild)
 	end
+	self._internalTabBar:setVisible(self._showTabBar)
+
+	self:deferRefreshSelf()
 
 	return self
 end
@@ -173,18 +177,21 @@ end
 ---@param index integer | Node
 ---@return TabContainer
 function TabContainer:selectTab(index)
-	if type(index) ~= "number" then
+	if type(index) == "table" then
 		-- Find the child and set the index
-		local children = self.children
-		for i = 1, #children do
-			if children[i] == index then
+		local tabs = self._internalTabBar._tabs
+		for i = 1, #tabs do
+			local tabInfo = tabs[i]
+			if tabInfo.node == index then
 				index = i
 				break
 			end
 		end
 
-		-- Not found
-		return self
+		if type(index) ~= "number" then
+			-- Not found
+			return self
+		end
 	end
 	---@cast index integer
 
