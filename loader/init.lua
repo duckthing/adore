@@ -1,3 +1,6 @@
+local PKG_NAME = ...
+local ADORE_PATH = PKG_NAME:match("(.*)%.loader")
+
 ---@class Adore.Loader
 local Loader = {}
 local function emptyFunc() end

@@ -6,6 +6,7 @@ local Nodes = Adore.Nodes
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
+local Assets = require(ADORE_PATH..".toolbox.assets")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
@@ -14,11 +15,11 @@ MainWindow.CLASS_NAME = "MainWindow"
 
 local gameActions = {
 	{
-		"Reload",
+		Assets.Reload,
 		"reloadLevel",
 	},
 	{
-		"Pause",
+		Assets.Play,
 		"togglePause",
 	},
 }
@@ -100,11 +101,15 @@ function MainWindow:new(toolbox)
 
 	for i = 1, #gameActions do
 		local action = gameActions[i]
-		local button = Nodes("Button")(action[1])
+		local button = Nodes("Button")("")
 		button:setAnchorsAndOffsets(
 			0, 0, 0, 1,
-			0, -2, 80, -4
+			0, 0, 32, 0
 		)
+		button:setIcon(action[1])
+		button:setIconExpand(true)
+		button:setIconJustify("center")
+		button:setIconAlign("center")
 		button.clicked:connect(self, action[2])
 		gameActionBar:addChild(button)
 	end
@@ -153,10 +158,15 @@ function MainWindow:new(toolbox)
 	self:addChild(subWindow)
 end
 
-function MainWindow:togglePause()
+---@param button Button?
+function MainWindow:togglePause(button)
 	local toolbox = self.toolbox
 	local c = toolbox.subrootContext
 	c.running = not c.running
+
+	if button then
+		button:setIcon(c.running and Assets.Play or Assets.Pause)
+	end
 end
 
 function MainWindow:reloadLevel()

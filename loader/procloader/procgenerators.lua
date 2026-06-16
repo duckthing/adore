@@ -33,6 +33,14 @@ end
 ---@field minFilter love.FilterMode?
 ---@field magFilter love.FilterMode?
 
+---@class ProcLoader.Manifest.DrawnResourceOptions: ProcLoader.Manifest.ResourceOptions
+---@field type "Drawn"
+---@field width integer
+---@field height integer
+---@field script string # The code
+---@field minFilter love.FilterMode?
+---@field magFilter love.FilterMode?
+
 local EXPRESSION_FUNCS = {
 	dist = function(ax, ay, bx, by)
 		local dx, dy = bx - ax, by - ay
@@ -120,6 +128,34 @@ local Generators = {
 
 		local image = love.graphics.newImage(imgData)
 		imgData:release()
+		---@type TextureSource
+		return {
+			texture = image,
+			quad = love.graphics.newQuad(0, 0, width, height, width, height)
+		}
+	end,
+	Drawn = function(manifest, manifestPath)
+		local options = manifest.options
+		---@cast options ProcLoader.Manifest.DrawnResourceOptions
+
+		local width, height = options.width, options.height
+		local canvas = love.graphics.newCanvas(width, height)
+
+		local success, func = pcall(loadstring, options.script)
+		if not success then
+			error(("Errored loading function in '%s': %s"):format(manifestPath, func))
+		end
+
+		love.graphics.push("all")
+		love.graphics.reset()
+		love.graphics.setCanvas(canvas)
+		func()
+		love.graphics.pop()
+
+		local imgData = canvas:newImageData()
+		local image = love.graphics.newImage(imgData)
+		imgData:release()
+		canvas:release()
 		---@type TextureSource
 		return {
 			texture = image,
