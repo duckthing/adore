@@ -51,7 +51,7 @@ function TabContainer:createTabInfo(index, child)
 	}
 end
 
----Updates the internal TabBar TabInfo array by repeatedly calling `:createTabInfo`.
+---Updates the internal TabBar TabInfo array by repeatedly calling `:createTabInfo`
 function TabContainer:updateTabs()
 	local tabBar = self._internalTabBar
 	local tabs = tabBar._tabs
