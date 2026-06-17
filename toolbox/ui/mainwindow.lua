@@ -19,7 +19,7 @@ local gameActions = {
 		"reloadLevel",
 	},
 	{
-		Assets.Play,
+		Assets.Pause,
 		"togglePause",
 	},
 }
@@ -165,7 +165,7 @@ function MainWindow:togglePause(button)
 	c.running = not c.running
 
 	if button then
-		button:setIcon(c.running and Assets.Play or Assets.Pause)
+		button:setIcon(c.running and Assets.Pause or Assets.Play)
 	end
 end
 

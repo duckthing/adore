@@ -19,11 +19,12 @@ local PI = math.pi
 love.graphics.setLineWidth(3)
 love.graphics.arc("line", "open",
 	halfTW, halfTH,
-5, 0.3, PI * 1.5 + 0.09)
+5, 0.3, PI * 1.5 + 0.07)
+love.graphics.rectangle("fill", 16, 8, 2, 7)
 love.graphics.polygon("fill",
-	16, 8,
+	18, 7,
 	22, 12,
-	16, 16
+	18, 15
 )
 ]],
 		width = 32,
