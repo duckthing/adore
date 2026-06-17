@@ -61,10 +61,6 @@ function MainWindow:new(toolbox)
 
 	self.tabContainer = tabContainer
 
-	local label = Nodes("Label")("Test Tab")
-	label:setOffsets(0, 0, 100, 100)
-	self.tabContainer:addChild(label)
-
 	subWindow = Nodes("ViewportContainer")(subRoot._viewport)
 	subWindow.name = "[ Game ]"
 

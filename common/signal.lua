@@ -51,6 +51,11 @@ function Signal:connect(connectingFrom, method, oneShot, persist)
 		self.connections = connections
 	end
 
+	if not connectingFrom[method] then
+		-- Error if the method doesn't exist
+		error(("Method '%s' does not exist on '%s' (type '%s')"):format(method, tostring(connectingFrom), connectingFrom.CLASS_NAME))
+	end
+
 	local connection = Connection.new(connectingFrom, method, oneShot or false, persist or false)
 	connections[#connections+1] = connection
 	return connection
