@@ -208,4 +208,10 @@ function MainWindow:toggleFull()
 	end
 end
 
+function MainWindow:saveScene()
+end
+
+function MainWindow:loadScene()
+end
+
 return MainWindow
