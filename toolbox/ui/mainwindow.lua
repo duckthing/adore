@@ -50,8 +50,8 @@ function MainWindow:new(toolbox)
 	local subWindow
 	local tabContainer = Nodes("TabContainer")()
 	tabContainer:setAnchorsAndOffsets(
-			0.5, 0, 0.5, 0,
-			-220, 40, 220, 300 + 26
+			0, 0, 1, 1,
+			256, 40, -256, -240
 	)
 	tabContainer._internalTabBar.tabSelected:connectCallable(function(_, index, tabInfo)
 		if toolbox.subrootContext then

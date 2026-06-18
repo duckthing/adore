@@ -17,6 +17,9 @@ function ViewportContainer:new(viewport)
 	self.autoResize = true
 	---@type boolean # Whether the Viewport should not receive updates
 	self.paused = false
+
+	---@type boolean # Whether the Viewport has enough space to render
+	self._viewportFits = true
 end
 
 ---Sets the contained Viewport
@@ -33,7 +36,10 @@ function ViewportContainer:setViewport(newViewport)
 end
 
 function ViewportContainer:_setCanonRect(x, y, w, h)
-	self:resizeViewport(w, h)
+	self._viewportFits = w > 1 and h > 1
+	if self._viewportFits then
+		self:resizeViewport(w, h)
+	end
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
 end
 
@@ -46,7 +52,7 @@ end
 
 function ViewportContainer:draw()
 	local viewport = self._subViewport
-	if viewport then
+	if viewport and self._viewportFits then
 		local lcr = self._localContentRect
 		viewport:drawFittedContents(lcr.x, lcr.y)
 	end
