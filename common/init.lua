@@ -35,6 +35,7 @@ local commonPaths = {
 	SheetLoader = "loader.sheetloader",
 	ProcLoader = "loader.procloader",
 	FontLoader = "loader.fontloader",
+	ObjectLoader = "loader.objectloader",
 	---@type Adore.Loader
 	["Adore.Loader"] = "loader",
 	---@type Adore.AssetCollection

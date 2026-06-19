@@ -1,12 +1,28 @@
 local PKG_NAME = ...
 local ADORE_PATH = PKG_NAME:match("(.*)%.loader")
 
+---@alias Adore.BuiltInCollections
+---| "TextureLoader"
+---| "AtlasLoader"
+---| "SheetLoader"
+---| "FontLoader"
+---| "ProcLoader"
+---| "love.ImageData"
+---| "love.Image"
+---| "love.Video"
+---| "love.Shader"
+---| "StreamSound"
+---| "StaticSound"
+---| "ObjectLoader"
+
 ---@class Adore.Loader
 local Loader = {}
 local function emptyFunc() end
 
 ---@type Adore.AssetCollection
 local AssetCollection = require("loader.assetcollection")
+---@type {[Adore.Common | "_paths"]: any}
+local Common = require "common"
 
 ---@type {[string]: Adore.AssetCollection}
 local loadedCollections = {}
@@ -68,8 +84,9 @@ local aliases = {
 	["love.source"] = "StaticSound",
 }
 
----@type {[string]: Adore.AssetCollection} A map of collection types to their (uninitialized) module
-local collectionTypeToPath = {}
+---@type {[string]: Adore.AssetCollection} A map of collection types to their (uninitialized) module.
+---Usually modified by `Loader.addCollection`.
+local collectionTypeToModule = {}
 
 ---@type {[string]: string} # Warning messages for using certain collections
 local collectionWarnings = {
@@ -78,19 +95,6 @@ local collectionWarnings = {
 [Adore.Loader] Only use 'love.Image' if you know what you are doing!
 ]]
 }
-
----@alias Adore.BuiltInCollections
----| "TextureLoader"
----| "AtlasLoader"
----| "SheetLoader"
----| "FontLoader"
----| "ProcLoader"
----| "love.ImageData"
----| "love.Image"
----| "love.Video"
----| "love.Shader"
----| "StreamSound"
----| "StaticSound"
 
 ---(Creates if needed, and) returns a table of resources of `type`, as well as the array where you can look up assets by ID.
 ---@generic T
@@ -107,21 +111,23 @@ function Loader.getCollection(name)
 			collection = loadedCollections[alias]
 		end
 	end
+
 	if not collection then
 		-- This collection might not be loaded
-		---@type Adore.AssetCollection
-		local Collection
-
 		local warning = collectionWarnings[name]
 		if warning then
 			-- Warn if we have a warning for this collection
 			print(debug.traceback(warning, 2))
 		end
 
-		-- Check if the passed type references an unloaded collection, and load it
-		if collectionTypeToPath[name] then
-			-- Load it
-			Collection = collectionTypeToPath[name]()
+		-- Check if the passed type references an uninitialized collection, and load it
+		if collectionTypeToModule[name] then
+			-- Instance it
+			collection = collectionTypeToModule[name]()
+		elseif Common._paths[name] then
+			-- Referencing an unloaded module, require and instance it
+			local module = Common[name]
+			collection = module()
 		else
 			-- Not referencing an unloaded collection
 			-- Create a new collection from the associated functions
@@ -133,11 +139,11 @@ function Loader.getCollection(name)
 			local reloader = reloaders[name] or nil
 			local destructor = destructors[name] or emptyFunc
 
-			Collection = AssetCollection(name, handler, reloader, destructor)
+			collection = AssetCollection(name, handler, reloader, destructor)
 		end
 
-		loadedCollections[name] = Collection
-		collection = Collection
+		loadedCollections[name] = collection
+		collection = collection
 	end
 
 	return collection, collection.assets
@@ -196,11 +202,11 @@ end
 ---@param overwrite boolean? # Should we overwrite existing collections and their aliases?
 function Loader.addCollection(module, overwrite)
 	local type = module.TYPE
-	if not overwrite and collectionTypeToPath[type] then
+	if not overwrite and collectionTypeToModule[type] then
 		error(("Collection '%s' already exists"):format(type))
 	end
 
-	collectionTypeToPath[type] = module
+	collectionTypeToModule[type] = module
 	local cAliases = module.ALIASES
 	for i = 1, #cAliases do
 		Loader.addAlias(cAliases[i], type, overwrite)

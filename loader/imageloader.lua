@@ -34,13 +34,10 @@ function ImageLoader:register(asset, path)
 	asset.fromId = Loader.getCollection("TextureLoader"):register(asset, path)
 end
 
----@param collection Adore.AssetCollection
----@param path string
----@param ... unknown
-function ImageLoader:reloader(collection, path, ...)
-	local id = collection.pathToId[path]
+function ImageLoader:reloader(path, ...)
+	local id = self.pathToId[path]
 	---@type TextureSource
-	local tSource = collection.assets[id]
+	local tSource = self.assets[id]
 	local imageData = love.image.newImageData(path)
 	local image = tSource.texture
 	---@cast image love.Image
