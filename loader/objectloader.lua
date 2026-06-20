@@ -4,6 +4,8 @@ local Loader = require "loader"
 local ObjectSaver = require "common.objectsaver"
 ---@type Adore.AssetCollection
 local AssetCollection = require "loader.assetcollection"
+---@type ClassDB
+local ClassDB = require "common.classdb"
 
 ---ObjectLoader returns an Object that is found at a certain file path.
 ---It's a wrapper around ObjectSaver for loading specifically.
@@ -33,6 +35,30 @@ local specialHandlers = {
 	---@diagnostic disable-next-line: assign-type-mismatch
 	agf = false,
 }
+
+---(Loads if needed, and) returns the asset and asset ID at the path
+---@param path string
+---@param requestedClassName string?
+---@param ... unknown
+---@return any asset
+---@return AssetID id
+function AssetCollection:get(path, requestedClassName, ...)
+	-- Check for existing path
+	local id = self.pathToId[path]
+	if not id then
+		-- Doesn't exist; create it
+		local asset = self:handler(path, requestedClassName, ...)
+		return asset, self:register(asset, path)
+	else
+		-- Returns the existing ID while checking if it inherits from the requested class
+		local existingAsset = self.assets[id]
+		if requestedClassName and ClassDB.doesClassInherit(existingAsset.CLASS_NAME, requestedClassName) then
+			error(("Asset at '%s' ('%s') does not inherit from '%s'"):format(path, existingAsset.CLASS_NAME, requestedClassName))
+		end
+
+		return existingAsset, id
+	end
+end
 
 ---@generic T: Object
 ---@param path string
