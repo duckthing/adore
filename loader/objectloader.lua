@@ -12,7 +12,6 @@ local ClassDB = require "common.classdb"
 ---@class ObjectLoader: Adore.AssetCollection
 local ObjectLoader = AssetCollection:extend()
 ObjectLoader.TYPE = "ObjectLoader"
-ObjectLoader.ALIASES = {"objectloader", "object"}
 
 ---Takes a filepath of a Lua file (like "/assets/fognoise.lua") and creates an Object from it
 ---@param filepath string
@@ -37,17 +36,18 @@ local specialHandlers = {
 }
 
 ---(Loads if needed, and) returns the asset and asset ID at the path
+---@generic T: Object
 ---@param path string
----@param requestedClassName string?
----@param ... unknown
----@return any asset
+---@param requestedClassName `T`
+---@return T asset
 ---@return AssetID id
-function AssetCollection:get(path, requestedClassName, ...)
+---@overload fun(self: ObjectLoader, path: string): Object, AssetID
+function ObjectLoader:get(path, requestedClassName)
 	-- Check for existing path
 	local id = self.pathToId[path]
 	if not id then
 		-- Doesn't exist; create it
-		local asset = self:handler(path, requestedClassName, ...)
+		local asset = self:handler(path, requestedClassName)
 		return asset, self:register(asset, path)
 	else
 		-- Returns the existing ID while checking if it inherits from the requested class
@@ -80,9 +80,6 @@ function ObjectLoader:handler(path, requestedClassName)
 		assert(obj, err)
 		return obj
 	end
-end
-
-function ObjectLoader:reloader(path, requestedClassName)
 end
 
 Loader.addCollection(ObjectLoader)

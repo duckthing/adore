@@ -11,11 +11,10 @@ local Tween = Resources("Tween")
 local Viewport = Resources("Viewport")
 local CoreUIContext = Resources("CoreUIContext")
 local MainLoopContext = Resources("MainLoopContext")
-local Loader = Adore.Loader
 
 local min, max = math.min, math.max
 
-local _, shaderAssets = Loader.getCollection("love.Shader")
+local _, shaderAssets = Adore.Loader.getCollection("love.Shader")
 
 ---INTERNAL! Don't use this!
 

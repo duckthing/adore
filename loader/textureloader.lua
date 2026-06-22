@@ -16,7 +16,6 @@ local Common = require(ADORE_PATH..".common")
 ---@class TextureLoader: Adore.AssetCollection
 local TextureLoader = AssetCollection:extend()
 TextureLoader.TYPE = "TextureLoader"
-TextureLoader.ALIASES = {"textureloader", "texture", "texturesource"}
 
 local EXTENSION_TO_COLLECTION = {
 	jpg = "ImageLoader",
@@ -86,6 +85,10 @@ function TextureLoader:handler(path, ...)
 	return genericHandle("handler", path, ...)
 end
 
+---@param path string
+---@param ... unknown
+---@return TextureSource
+---@return AssetID
 function TextureLoader:get(path, ...)
 	local id = self.pathToId[path]
 	if id then

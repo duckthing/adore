@@ -4,8 +4,7 @@ local Loader = Adore.Loader
 local AssetCollection = Adore.Common("Adore.AssetCollection")
 local Generators = require "loader.procloader.procgenerators"
 
----@type Adore.AssetCollection
-local textureCollection, _ = Loader.getCollection("TextureLoader")
+local TextureLoader = Loader.getCollection("TextureLoader")
 
 ---@class ProcLoader.Manifest.ResourceOptions
 ---@field type string # The type of resource to create
@@ -31,7 +30,6 @@ local textureCollection, _ = Loader.getCollection("TextureLoader")
 ---@class ProcLoader: Adore.AssetCollection
 local ProcLoader = AssetCollection:extend()
 ProcLoader.TYPE = "ProcLoader"
-ProcLoader.ALIASES = {"procloader", "noise", "procederal"}
 
 local PROC_LOADER_VERSION = 1
 local EMPTY_ARR = {}
@@ -186,7 +184,7 @@ end
 function ProcLoader:register(asset, path)
 	-- Handler should not register assets into the TextureLoader
 	ProcLoader.super.register(self, asset, path)
-	asset.fromId = textureCollection:register(asset, path)
+	asset.fromId = TextureLoader:register(asset, path)
 end
 
 -- TODO: Add ProcLoader reloading

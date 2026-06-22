@@ -8,13 +8,12 @@ local Loader = require(ADORE_PATH..".loader")
 ---@type Adore.AssetCollection
 local AssetCollection = require(ADORE_PATH..".loader.assetcollection")
 
----@type Adore.AssetCollection
-local textureCollection, _ = Loader.getCollection("TextureLoader")
+local TextureLoader = Loader.getCollection("TextureLoader")
 
 ---@class SheetLoader: Adore.AssetCollection
+---@field get fun(self: SheetLoader, path: string): SheetSource, AssetID
 local SheetLoader = AssetCollection:extend()
 SheetLoader.TYPE = "SheetLoader"
-SheetLoader.ALIASES = {"sheetloader", "spritesheetloader", "spritesheet", "sprite"}
 
 ---You should choose between `SheetSource.Manifest.Even` or `SheetSource.Manifest.Dynamic`
 ---@class SheetLoader.Manifest
@@ -68,7 +67,7 @@ local function createEvenFrames(manifestPath, manifest)
 		manifest.rows or 1, manifest.columns or 1
 
 	local texturePath = manifest.path
-	local tSource = textureCollection:get(texturePath)
+	local tSource = TextureLoader:get(texturePath)
 
 	local ox, oy, ow, oh = tSource.quad:getViewport()
 
@@ -110,7 +109,7 @@ local function createEvenFrames(manifestPath, manifest)
 				fromId = 0,
 			}, FrameSourceMT)
 			frames[frameI] = frameSource
-			frameSource.fromId = textureCollection:register(frameSource, assetPrefix..frameI)
+			frameSource.fromId = TextureLoader:register(frameSource, assetPrefix..frameI)
 		end
 	end
 
@@ -127,7 +126,7 @@ local function createDynamicFrames(manifestPath, manifest)
 	local numQuads = #quads
 
 	local texturePath = manifest.path
-	local tSource = textureCollection:get(texturePath)
+	local tSource = TextureLoader:get(texturePath)
 
 	local ox, oy, ow, oh = tSource.quad:getViewport()
 
@@ -175,14 +174,14 @@ local function createDynamicFrames(manifestPath, manifest)
 			fromId = 0,
 		}, FrameSourceMT)
 		frames[frameI] = frameSource
-		frameSource.fromId = textureCollection:register(frameSource, assetPrefix..frameI)
+		frameSource.fromId = TextureLoader:register(frameSource, assetPrefix..frameI)
 	end
 
 	return tSource, frames
 end
 
 ---@param assetPath string
----@return TextureSource
+---@return SheetSource
 function SheetLoader:handler(assetPath)
 	local luaRequirePath = assetPath:match("(.*)%.lua$"):gsub("[/\\]", ".")
 
@@ -231,7 +230,7 @@ function SheetLoader:register(sheetSource, assetPath)
 			end
 
 			-- Register the alternate name
-			textureCollection:register(frame, assetPrefix..altName)
+			TextureLoader:register(frame, assetPrefix..altName)
 		end
 	end
 end

@@ -3,16 +3,15 @@ local Adore = require ""
 local DrawRequest = Adore.Resources("DrawRequest")
 local Color = Adore.Common("Color")
 local mixRGBA = Color.mixRGBA
-local Loader = Adore.Loader
-local fontCollection, fontAssets = Loader.getCollection("love.Font")
+local FontLoader = Adore.Loader.getCollection("FontLoader")
 
 ---@class DrawRequest.Button: DrawRequest
 ---@overload fun(backgroundColor: integer[]?, angle: number?, iconAlbedo: integer[]?, textAlbedo: integer[]?): DrawRequest.Button
 local DrawButton = DrawRequest:extend()
 DrawButton.CLASS_NAME = "DrawButton"
 
-local defaultFont = fontCollection:get("")
-local defaultFontSize = 0
+local DEFAULT_FONT = FontLoader:get("")
+local DEFAULT_FONT_SIZE = 0
 
 function DrawButton:new(backgroundColor, angle, iconAlbedo, textAlbedo)
 	DrawButton.super.new(self)
@@ -39,7 +38,7 @@ function DrawButton:themeUpdate(button)
 	local textAlign = button._textAlign
 	local tbOldHeight = textBatch:getHeight()
 
-	textBatch:setFont((button._font or defaultFont)[button._fontSize or defaultFontSize])
+	textBatch:setFont((button._font or DEFAULT_FONT)[button._fontSize or DEFAULT_FONT_SIZE])
 
 	local offsetX, offsetY = 0, 0
 	local availableW, availableH = buttonW, buttonH

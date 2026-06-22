@@ -6,11 +6,12 @@ local Loader = require(ADORE_PATH..".loader")
 ---@type Adore.AssetCollection
 local AssetCollection = require(ADORE_PATH..".loader.assetcollection")
 
----ImageLoader does real loading through `love.graphics.newImage`, in the expected format
+---ImageLoader does loading through `love.graphics.newImage`.
+---Called automatically by `TextureLoader`, do not use this directly.
 ---@class ImageLoader: Adore.AssetCollection
+---@field get fun(self: ImageLoader, path: string): TextureSource, AssetID
 local ImageLoader = AssetCollection:extend()
 ImageLoader.TYPE = "ImageLoader"
-ImageLoader.ALIASES = {"imageloader", "image", "imagesource"}
 
 ---@param path string
 ---@return TextureSource

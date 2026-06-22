@@ -11,7 +11,7 @@ local shaderCollection, _ = Loader.getCollection("love.Shader")
 local Light2d = Node2d:extend()
 Light2d.CLASS_NAME = "Light2d"
 Light2d.albedo = {1, 1, 1, 1}
-local LIGHT_SHADER, _ = shaderCollection:get(("%s/shaders/lightshader.glsl"):format(
+local LIGHT_SHADER = shaderCollection:get(("%s/shaders/lightshader.glsl"):format(
 	(Adore.PATH):gsub("%.", "/")
 ))
 ---@type love.BlendMode # "add" is the default, and provides normal light behavior

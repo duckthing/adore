@@ -1,15 +1,14 @@
 ---@type AdoreInit
 local Adore = require ""
 local DrawRequest = Adore.Resources("DrawRequest")
-local Loader = Adore.Loader
-local FontCollection = Loader.getCollection("love.Font")
+local FontLoader = Adore.Loader.getCollection("FontLoader")
 
 ---@class DrawRequest.TabBar: DrawRequest
 ---@overload fun(): DrawRequest.TabBar
 local DrawTabBar = DrawRequest:extend()
 DrawTabBar.CLASS_NAME = "DrawTabBar"
 
-local DEFAULT_FONT, _ = FontCollection:get("")
+local DEFAULT_FONT = FontLoader:get("")
 local DEFAULT_FONT_SIZE = 0
 
 local SELECTED_COLOR = {1, 1, 1}

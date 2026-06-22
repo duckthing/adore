@@ -1,5 +1,6 @@
 local PKG_NAME = ...
 local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
+---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Label = Nodes("Label")
@@ -12,8 +13,8 @@ local Previewers = require(ADORE_PATH..".toolbox.ui.inspector.previewers")
 local Inspector = Nodes("Control"):extend()
 Inspector.CLASS_NAME = "Inspector"
 
-local fontCollection = Adore.Loader.getCollection("love.Font")
-local BOLD_FONT, _ = fontCollection:get("")
+local FontLoader = Adore.Loader.getCollection("FontLoader")
+local BOLD_FONT = FontLoader:get("")
 
 local BOLD_SIZE = 16
 

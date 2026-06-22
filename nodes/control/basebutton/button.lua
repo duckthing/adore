@@ -3,10 +3,7 @@ local Adore = require ""
 local BaseButton = Adore.Nodes("BaseButton")
 local max = math.max
 
-local Loader = Adore.Loader
-local fontCollection = Loader.getCollection("love.Font")
----@type love.Font[]
-local fontAssets = fontCollection.assets
+local FontLoader = Adore.Loader.getCollection("FontLoader")
 
 ---@class Button: BaseButton
 ---@field super BaseButton
@@ -24,10 +21,10 @@ Button._iconExpand = false
 ---@type string # What is in the Button. Use :setText() instead of setting this.
 Button._text = "Button"
 
-local defaultFont, _ = fontCollection:get("")
+local DEFAULT_FONT = FontLoader:get("")
 
 ---@type FontSource? # The overridden font
-Button._font = defaultFont
+Button._font = DEFAULT_FONT
 ---@type integer?
 Button._fontSize = 0
 
@@ -41,7 +38,7 @@ function Button:new(text, icon)
 	---@type string # The text part of the Button
 	self._text = text
 	---@type love.Text # The drawn part
-	self._textBatch = love.graphics.newText((self._font or defaultFont)[self._fontSize], self._text)
+	self._textBatch = love.graphics.newText((self._font or DEFAULT_FONT)[self._fontSize], self._text)
 	---@type TextureSource? # The icon that shows up next to the button
 	self._icon = nil
 

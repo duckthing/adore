@@ -7,9 +7,9 @@ local Loader = require(ADORE_PATH..".loader")
 local AssetCollection = require(ADORE_PATH..".loader.assetcollection")
 
 ---@class FontLoader: Adore.AssetCollection
+---@field get fun(self: FontLoader, path: string): FontSource, AssetID
 local FontLoader = AssetCollection:extend()
 FontLoader.TYPE = "FontLoader"
-FontLoader.ALIASES = {"fontloader", "love.font", "font", "fontsource"}
 
 ---@class FontSource
 ---@field path string

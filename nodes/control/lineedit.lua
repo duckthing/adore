@@ -5,10 +5,7 @@ local InputField = Adore.Libraries("InputField")
 local Vec2 = Adore.Common("Vec2")
 local max = math.max
 
-local Loader = Adore.Loader
-local fontCollection = Loader.getCollection("love.Font")
----@type love.Font[]
-local fontAssets = fontCollection.assets
+local FontLoader = Adore.Loader.getCollection("FontLoader")
 
 ---@class LineEdit: Control
 ---@field super Control
@@ -18,9 +15,9 @@ LineEdit.CLASS_NAME = "LineEdit"
 LineEdit._mouseMode = "sink"
 LineEdit.inputMode = "sink"
 LineEdit.focusMode = "all"
-local defaultFont, _ = fontCollection:get("")
+local DEFAULT_FONT = FontLoader:get("")
 ---@type FontSource? # The overridden font
-LineEdit._font = defaultFont
+LineEdit._font = DEFAULT_FONT
 ---@type integer?
 LineEdit._fontSize = 0
 

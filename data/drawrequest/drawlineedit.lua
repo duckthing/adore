@@ -1,13 +1,12 @@
 ---@type AdoreInit
 local Adore = require ""
 local DrawRequest = Adore.Resources("DrawRequest")
-local Loader = Adore.Loader
 local Color = Adore.Common("Color")
 local mixRGBA = Color.mixRGBA
 
-local fontCollection, fontAssets = Loader.getCollection("love.Font")
-local defaultFont, _ = fontCollection:get("")
-local defaultFontSize = 0
+local FontLoader = Adore.Loader.getCollection("FontLoader")
+local DEFAULT_FONT = FontLoader:get("")
+local DEFAULT_FONT_SIZE = 0
 
 ---@class DrawRequest.LineEdit: DrawRequest
 ---@overload fun(backgroundColor: integer[]?, angle: number?, textAlbedo: integer[]?, placeholderAlbedo: integer[]?): DrawRequest.Button
@@ -33,7 +32,7 @@ function DrawLineEdit:themeUpdate(edit)
 	DrawLineEdit.super.themeUpdate(self, edit)
 
 	local inputField = edit._inputField
-	local usedFont = (edit._font or defaultFont)[edit._fontSize or defaultFontSize]
+	local usedFont = (edit._font or DEFAULT_FONT)[edit._fontSize or DEFAULT_FONT_SIZE]
 
 	inputField:setFont(usedFont)
 	edit._textBatch:setFont(usedFont)

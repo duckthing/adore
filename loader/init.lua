@@ -1,15 +1,9 @@
-local PKG_NAME = ...
-local ADORE_PATH = PKG_NAME:match("(.*)%.loader")
-
 ---@alias Adore.BuiltInCollections
 ---| "TextureLoader"
 ---| "AtlasLoader"
 ---| "SheetLoader"
 ---| "FontLoader"
 ---| "ProcLoader"
----| "love.ImageData"
----| "love.Image"
----| "love.Video"
 ---| "love.Shader"
 ---| "StreamSound"
 ---| "StaticSound"
@@ -29,11 +23,6 @@ local loadedCollections = {}
 
 ---@type {[string]: fun(path: string): (table | userdata | any)}
 local handlers = {
-	["love.ImageData"] = love.image.newImageData,
-	-- `love.Image` will not return a `TextureSource` that is needed for most Nodes
-	-- Use `ImageLoader` instead
-	["love.Image"] = love.graphics.newImage,
-	["love.Video"] = love.graphics.newVideo,
 	["love.Shader"] = function(path)
 		-- Reads from a file and puts it into a shader
 		-- Will also log any warning with the shader
@@ -59,68 +48,26 @@ local handlers = {
 }
 
 ---@type {[string]: fun(collection: Adore.AssetCollection, path: string, ...: unknown)}
-local reloaders = {
-	["love.Image"] = function(collection, path)
-		local id = collection.pathToId[path]
-		---@type love.Image
-		local image = collection.assets[id]
-		local imageData = love.image.newImageData(path)
-		image:replacePixels(imageData)
-		imageData:release()
-	end,
-}
+local reloaders = {}
 
 ---@type {[string]: function}
 local destructors = {}
-
----Maps from a common name into the internal name.
----All keys should be in lower-case, while values can be upper-case
----@type {[string]: string}
-local aliases = {
-	shader = "love.Shader",
-
-	music = "StreamSound",
-	sfx = "StaticSound",
-	["love.source"] = "StaticSound",
-}
 
 ---@type {[string]: Adore.AssetCollection} A map of collection types to their (uninitialized) module.
 ---Usually modified by `Loader.addCollection`.
 local collectionTypeToModule = {}
 
----@type {[string]: string} # Warning messages for using certain collections
-local collectionWarnings = {
-	["love.Image"] = [[
-[Adore.Loader] Using 'love.Image', which does not return a 'TextureSource' needed for most Nodes.
-[Adore.Loader] Only use 'love.Image' if you know what you are doing!
-]]
-}
-
 ---(Creates if needed, and) returns a table of resources of `type`, as well as the array where you can look up assets by ID.
----@generic T
----@param name `T` | string | Adore.BuiltInCollections
----@return T | Adore.AssetCollection
----@return T[]
+---@generic T: Adore.AssetCollection
+---@param name `T` | Adore.BuiltInCollections
+---@return T
+---@return any[] # The array of assets
 function Loader.getCollection(name)
 	local collection = loadedCollections[name]
-	if not collection then
-		-- Check if the passed type is an alias
-		local alias = aliases[name:lower()]
-		if alias then
-			name = alias
-			collection = loadedCollections[alias]
-		end
-	end
 
 	if not collection then
 		-- This collection might not be loaded
-		local warning = collectionWarnings[name]
-		if warning then
-			-- Warn if we have a warning for this collection
-			print(debug.traceback(warning, 2))
-		end
-
-		-- Check if the passed type references an uninitialized collection, and load it
+		-- Check if the passed type references an uninitialized collection, and initialize it
 		if collectionTypeToModule[name] then
 			-- Instance it
 			collection = collectionTypeToModule[name]()
@@ -133,7 +80,7 @@ function Loader.getCollection(name)
 			-- Create a new collection from the associated functions
 			local handler = handlers[name]
 			if not handler then
-				error(("No alias/handler exists for '%s' for getting the asset collection; did you remember to add an alias/handler before loading an asset?"):format(name))
+				error(("No handler exists for '%s' for getting the asset collection; did you remember to add a handler before loading an asset?"):format(name))
 			end
 
 			local reloader = reloaders[name] or nil
@@ -185,18 +132,6 @@ function Loader.addDestructor(type, func, overwrite)
 	destructors[type] = func
 end
 
----Adds an alias for a given type. Aliases can be used to map certain names to a different type/handler.
----Will not overwrite existing aliases by default; pass in `true` as the last parameter to allow this.
----@param alias string
----@param realType string
----@param overwrite boolean? # Should we overwrite an existing alias?
-function Loader.addAlias(alias, realType, overwrite)
-	if not overwrite and aliases[alias] then
-		error(("Alias for '%s' already exists as '%s'"):format(alias, aliases[alias]))
-	end
-	aliases[alias] = realType
-end
-
 ---Adds a collection from a require path
 ---@param module Adore.AssetCollection
 ---@param overwrite boolean? # Should we overwrite existing collections and their aliases?
@@ -205,12 +140,7 @@ function Loader.addCollection(module, overwrite)
 	if not overwrite and collectionTypeToModule[type] then
 		error(("Collection '%s' already exists"):format(type))
 	end
-
 	collectionTypeToModule[type] = module
-	local cAliases = module.ALIASES
-	for i = 1, #cAliases do
-		Loader.addAlias(cAliases[i], type, overwrite)
-	end
 end
 
 return Loader

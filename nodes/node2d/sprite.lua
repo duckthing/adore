@@ -9,8 +9,6 @@ local min, max, floor = math.min, math.max, math.floor
 local Sprite = Node2d:extend()
 Sprite.CLASS_NAME = "Sprite"
 
-local TexCol = Adore.Loader.getCollection("TextureLoader")
-
 function Sprite:new(x, y, texture, rows, columns)
 	Sprite.super.new(self, x, y)
 

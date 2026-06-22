@@ -28,8 +28,6 @@ local AssetCollection = SimpleObject:extend()
 
 ---@type string # The type of this collection
 AssetCollection.TYPE = nil
----@type string[] # Any (lower-case) names this AssetCollection can go by
-AssetCollection.ALIASES = {}
 
 local CACHE_VERSION = 1
 

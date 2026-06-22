@@ -5,8 +5,7 @@ local RTA = Adore.Libraries("RTA")
 local tclear = Adore.Common("Structures").tableClear
 local AssetCollection = Adore.Common("Adore.AssetCollection")
 
----@type TextureLoader
-local textureCollection, _ = Loader.getCollection("TextureLoader")
+local TextureLoader = Loader.getCollection("TextureLoader")
 
 ---@class AtlasLoader.Manifest.Options
 ---@field atlasMode "dynamic" | "fixed" | nil
@@ -72,7 +71,6 @@ local textureCollection, _ = Loader.getCollection("TextureLoader")
 ---@class AtlasLoader: Adore.AssetCollection
 local AtlasLoader = AssetCollection:extend()
 AtlasLoader.TYPE = "AtlasLoader"
-AtlasLoader.ALIASES = {"atlasloader", "atlas", "atlassource"}
 
 local AtlasFrameSource = {}
 local AtlasFrameSourceMT = {__index = AtlasFrameSource}
@@ -262,13 +260,13 @@ function AtlasLoader:handler(requirePath)
 					-- Otherwise, only load it for us
 
 					---@type TextureSource
-					local tSource = textureCollection:has(assetPath)
+					local tSource = TextureLoader:has(assetPath)
 					---@type love.Texture
 					local image
 
 					if not tSource then
 						-- Doesn't exist, load a new image
-						tSource = textureCollection:handler(assetPath)
+						tSource = TextureLoader:handler(assetPath)
 						image = tSource.texture
 					end
 
@@ -303,7 +301,7 @@ function AtlasLoader:handler(requirePath)
 			else
 				for id, assetPath in ipairs(assets) do
 					-- Load it into the TextureCollection asset collection
-					local tSource, _ = textureCollection:get(assetPath)
+					local tSource = TextureLoader:get(assetPath)
 					atlas:add(tSource.texture, id, false)
 				end
 			end
@@ -427,11 +425,11 @@ function AtlasLoader:register(atlas, path)
 			fromId = 0,
 		}, AtlasFrameSourceMT)
 
-		if textureCollection.pathToId[assetPath] then
+		if TextureLoader.pathToId[assetPath] then
 			print(("[Adore.AtlasLoader] Found already loaded texture: '%s'"):format(assetPath))
 			print("[Adore.AtlasLoader] Overwriting...")
 		end
-		textureCollection:register(frameSource, assetPath)
+		TextureLoader:register(frameSource, assetPath)
 	end
 
 end

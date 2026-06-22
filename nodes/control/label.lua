@@ -2,11 +2,7 @@
 local Adore = require ""
 local Control = Adore.Nodes("Control")
 
----@type Adore.Loader
-local Loader = require "loader"
-local fontCollection = Loader.getCollection("FontLoader")
----@type love.Font[]
-local fontAssets = fontCollection.assets
+local FontLoader = Adore.Loader.getCollection("FontLoader")
 local max = math.max
 
 ---@alias Label.JustifyMode
@@ -19,9 +15,9 @@ local max = math.max
 ---@overload fun(text: string?): Label
 local Label = Control:extend()
 Label.CLASS_NAME = "Label"
-local defaultFont, defaultFontId = fontCollection:get("")
+local DEFAULT_FONT = FontLoader:get("")
 ---@type FontSource? # The overridden font
-Label._font = defaultFont
+Label._font = DEFAULT_FONT
 ---@type integer?
 Label._fontSize = 0
 ---@type love.AlignMode # The horizontal placement of the text
