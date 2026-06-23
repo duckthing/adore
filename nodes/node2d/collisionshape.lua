@@ -3,6 +3,7 @@ local Adore = require ""
 local Nodes = Adore.Nodes
 local Node2d = Nodes("Node2d")
 local Physical2d = Nodes("Physical2d")
+local Vec2 = Adore.Common("Vec2")
 
 ---`CollisionShape` nodes add a `love.Shape` to a parent `Physical2d` node.
 ---Any changes to the local transform will not be reflected; you must
@@ -13,6 +14,9 @@ local Physical2d = Nodes("Physical2d")
 local CollisionShape = Node2d:extend()
 CollisionShape.CLASS_NAME = "CollisionShape"
 
+---@type Vec2 # The direction used for one-way collisions
+CollisionShape.oneWayDirection = Vec2(0, 1)
+
 ---@param shape love.Shape?
 ---@param density number?
 function CollisionShape:new(shape, density)
@@ -20,6 +24,9 @@ function CollisionShape:new(shape, density)
 
 	---@type number # The default density of the shape
 	self._density = density or 1
+	---@type boolean # Whether physics objects can only collide with objects above this
+	self.oneWayCollision = false
+
 	---@type love.Shape? # The default shape of this CollisionShape
 	self._shape = shape
 	---@type love.Fixture? # The created fixture
@@ -62,6 +69,7 @@ function CollisionShape:_addFixture()
 			local shape = self._shape
 			if shape then
 				self._fixture = parent:_addShape(shape, self._density)
+				self._fixture:setUserData(self)
 			end
 		end
 	end
@@ -73,6 +81,7 @@ function CollisionShape:_destroyFixture()
 	local oldFixture = self._fixture
 	if oldFixture then
 		if not oldFixture:isDestroyed() then
+			oldFixture:setUserData()
 			oldFixture:destroy()
 		end
 		self._fixture = nil
@@ -93,6 +102,8 @@ end
 function CollisionShape._addDefinition(entry)
 	entry:newNumber("_density", 1, 0, nil, nil, "setDensity")
 	entry:newLoveObject("_shape", "Shape", "setShape")
+	entry:newBoolean("oneWayCollision", false)
+	entry:newVec2("oneWayDirection")
 end
 
 return CollisionShape

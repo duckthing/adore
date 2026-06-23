@@ -614,13 +614,50 @@ end
 ---| fun(a: love.Fixture, b: love.Fixture, coll: love.Contact)
 
 ---Returns the callbacks that should be set for the love.World object
+---@return Physical2d.WorldCallback beginContact
+---@return Physical2d.WorldCallback endContact
+---@return Physical2d.WorldCallback beginContact
 function Physical2d.getWorldCallbacks()
+	-- A table with weak keys
+	---@type {[love.Contact]: true} # Maps to `true` if we should ignore a Contact in preSolve, for one-way platforms
+	local ignoreMap = setmetatable({}, {__mode = "k"})
+
 	---@type Physical2d.WorldCallback
 	local function beginContact(a, b, coll)
 		---@type Physical2d, Physical2d
 		local ao, bo = a:getBody():getUserData(), b:getBody():getUserData()
 		ao:beginContact(a, b, coll)
 		bo:beginContact(b, a, coll)
+
+		-- Disable collisions for one-way platforms
+		---@type CollisionShape, CollisionShape
+		local aShape, bShape = a:getUserData(), b:getUserData()
+
+		if bShape and bShape.oneWayCollision then
+			-- A is colliding into B
+			local upDir = bShape.oneWayDirection
+			local upX, upY = upDir.x, upDir.y
+			local nx, ny = coll:getNormal()
+
+			if VecMath.dot(upX, upY, nx, ny) <= 0 then
+				coll:setEnabled(false)
+				ignoreMap[coll] = true
+				return
+			end
+		end
+
+		if aShape and aShape.oneWayCollision then
+			-- B is colliding into A
+			local upDir = aShape.oneWayDirection
+			local upX, upY = -upDir.x, -upDir.y
+			local nx, ny = coll:getNormal()
+
+			if VecMath.dot(upX, upY, nx, ny) <= 0 then
+				coll:setEnabled(false)
+				ignoreMap[coll] = true
+				return
+			end
+		end
 	end
 
 	---@type Physical2d.WorldCallback
@@ -629,11 +666,21 @@ function Physical2d.getWorldCallbacks()
 		local ao, bo = a:getBody():getUserData(), b:getBody():getUserData()
 		ao:endContact(a, b, coll)
 		bo:endContact(b, a, coll)
+		ignoreMap[coll] = nil
+	end
+
+	---@type Physical2d.WorldCallback
+	local function preSolve(a, b, coll)
+		if not coll:isTouching() or ignoreMap[coll] then
+			coll:setEnabled(false)
+			return
+		end
 	end
 
 	return
 		beginContact,
-		endContact
+		endContact,
+		preSolve
 end
 
 function Physical2d._addDefinition(entry)
