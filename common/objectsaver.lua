@@ -5,7 +5,6 @@ local StringBuffer
 local ffi = Adore.Common("ffilib")
 
 local ClassDB = Adore.Common("ClassDB")
-local nativefs = Adore.Libraries("NativeFS")
 local Serpent = Adore.Libraries("Serpent")
 local Properties = require "data.properties"
 
@@ -635,7 +634,7 @@ function ObjectSaver.saveToNativeFilePath(path, object, format)
 
 	-- Create the native file, and return if there's an issue
 	---@type love.File
-	local file = nativefs.newFile(path)
+	local file = Adore.Libraries("NativeFS").newFile(path)
 	do
 		local ok, err = file:open("w")
 		if not ok then

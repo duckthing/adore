@@ -64,10 +64,10 @@ do
 	-- Load submodules, and throw a good error if someone forgets
 	-- (done before doing relative requires, because they sometimes act weird)
 	local submoduleNames = {
-		"RTA",
 		"Expression",
 		-- The following are not submodules, they just act weird with relative requires:
 		"InputField",
+		-- RTA is excluded due to issues on web
 	}
 	local missingSubmoduleMessage = [[
 Failed to load submodule '%s' at path '%s'.
@@ -263,7 +263,7 @@ local deviceMap = {
 	iOS = "mobile",
 
 	--- love.js (https://github.com/Davidobot/love.js/issues/74)
-	web = "web",
+	Web = "web",
 }
 
 ---Returns the device type of this system.

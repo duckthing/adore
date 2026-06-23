@@ -158,7 +158,17 @@ function ProcLoader:handler(requirePath)
 		end
 
 		-- Render the texture
-		local canvas = love.graphics.newCanvas(newTSource.texture:getDimensions())
+		local tw, th = newTSource.texture:getDimensions()
+
+		local bestFormat = "rgba8"
+		if Adore.getDeviceType() == "web" then
+			-- TODO: Improve format usage when creating new canvases
+			-- Default canvases in love.js use rgba4, which cannot be turned back into an image
+			-- rgba8 isn't supported as an image format, either, but srba8 is
+			bestFormat = "srgba8"
+		end
+
+		local canvas = love.graphics.newCanvas(tw, th, {format = bestFormat})
 		love.graphics.push("all")
 		love.graphics.setCanvas(canvas)
 		love.graphics.setColor(1, 1, 1)
