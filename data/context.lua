@@ -1,5 +1,6 @@
 ---@type AdoreInit
 local Adore = require ""
+local tremove = table.remove
 
 local Object = Adore.Resources("Object")
 local Node = Adore.Nodes("Node")
@@ -69,6 +70,40 @@ function Context:pop()
 
 	-- Improperly removed
 	error("This Context could not be found in the RootNode's ContextStack (removed outside of :pop())")
+end
+
+---Setting a Context as a default will make it exist across scene reloads.
+---Specifically, it'll be inserted on `RootNode:resetInputContexts()`.
+---@param default boolean # [Default: `true`]
+---@param shouldPush boolean # Push this Context?
+function Context:setDefault(default, shouldPush)
+	if default == nil then default = true end
+
+	local root = Node._root
+	local defaultContexts = root._defaultContexts
+	local existingIndex = nil
+
+	-- Check if it's already in the default Context array
+	for i = 1, #defaultContexts do
+		if defaultContexts[i] == self then
+			existingIndex = i
+			break
+		end
+	end
+
+	if default then
+		if not existingIndex then
+			-- Should be default, but not inserted yet
+			defaultContexts[#defaultContexts+1] = self
+		end
+	else
+		if existingIndex then
+			-- Should remove as default, and already inserted
+			tremove(defaultContexts, existingIndex)
+		end
+	end
+
+	if shouldPush then self:push() end
 end
 
 ---Sets the priority of the Context.
