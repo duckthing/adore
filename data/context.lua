@@ -80,6 +80,7 @@ function Context:setDefault(default, shouldPush)
 	if default == nil then default = true end
 
 	local root = Node._root
+	assert(root, "Create a Root before calling `Context:setDefault`")
 	local defaultContexts = root._defaultContexts
 	local existingIndex = nil
 
