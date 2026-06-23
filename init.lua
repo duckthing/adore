@@ -145,7 +145,10 @@ Adore.Any = function(name)
 	return fallbackToOthers(name)
 end
 
----Adds user-specified paths so that ObjectLoaders can find them
+---Adds user-specified paths so that internal Adore operations can find them.
+---
+---For example, loading a custom `Player` class from a PackedScene requires
+---Adore to know where the class is.
 ---@param paths {[string]: string | false}
 function Adore.addUserPaths(paths)
 	local userPaths = User._paths
