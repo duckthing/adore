@@ -1,13 +1,19 @@
----@alias Adore.BuiltInCollections
+---"Exposed collections" are ones that are useful to developers.
+---Some collections, like TextureLoader, will automatically use hidden collections with certain assets.
+---@alias Adore.ExposedCollections
 ---| "TextureLoader"
----| "AtlasLoader"
----| "SheetLoader"
 ---| "FontLoader"
----| "ProcLoader"
+---| "ObjectLoader"
 ---| "love.Shader"
 ---| "StreamSound"
 ---| "StaticSound"
----| "ObjectLoader"
+
+---These collections are used automatically.
+---You may read from these collections if you'd like to debug your assets.
+---@alias Adore.HiddenCollections
+---| "AtlasLoader"
+---| "SheetLoader"
+---| "ProcLoader"
 
 ---@class Adore.Loader
 local Loader = {}
@@ -59,7 +65,7 @@ local collectionTypeToModule = {}
 
 ---(Creates if needed, and) returns a table of resources of `type`, as well as the array where you can look up assets by ID.
 ---@generic T: Adore.AssetCollection
----@param name `T` | Adore.BuiltInCollections
+---@param name `T` | Adore.ExposedCollections
 ---@return T
 ---@return any[] # The array of assets
 function Loader.getCollection(name)
