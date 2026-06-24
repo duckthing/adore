@@ -2,11 +2,9 @@
 local Adore = require ""
 local Rect2 = Adore.Common("Rect2")
 local Object = Adore.Resources("Object")
----@type Adore.Loader
-local Loader = require "loader"
-local shaderCollection, shaderAssets = Loader.getCollection("love.Shader")
+local ShaderLoader, shaderAssets = Adore.Loader.getCollection("ShaderLoader")
 
-local SHADOW_MESH_SHADER, _ = shaderCollection:get(("%s/shaders/screenshadowmesh.glsl"):format(
+local SHADOW_MESH_SHADER, _ = ShaderLoader:get(("%s/shaders/screenshadowmesh.glsl"):format(
 	(Adore.PATH):gsub("%.", "/")
 ))
 

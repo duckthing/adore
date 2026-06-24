@@ -4,7 +4,7 @@
 ---| "TextureLoader"
 ---| "FontLoader"
 ---| "ObjectLoader"
----| "love.Shader"
+---| "ShaderLoader"
 ---| "StreamSound"
 ---| "StaticSound"
 
@@ -29,20 +29,6 @@ local loadedCollections = {}
 
 ---@type {[string]: fun(path: string): (table | userdata | any)}
 local handlers = {
-	["love.Shader"] = function(path)
-		-- Reads from a file and puts it into a shader
-		-- Will also log any warning with the shader
-		local contents, errMessage = love.filesystem.read("string", path)
-		if contents == nil then error(errMessage) end
-		---@cast contents string
-		local shader = love.graphics.newShader(contents)
-		local warnings = shader:getWarnings()
-		if warnings ~= "vertex shader:\npixel shader:\n" then
-			-- Returned warnings are weird...
-			print(("[Adore.Loader:Shader (%s)]:\n%s"):format(path, warnings))
-		end
-		return shader
-	end,
 	["StreamSound"] = function(path)
 		-- Music, decoded when necessary
 		return love.audio.newSource(path, "stream")

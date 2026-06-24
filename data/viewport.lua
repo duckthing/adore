@@ -11,9 +11,8 @@ local Signal = Common("Signal")
 local Shash = Adore.Libraries("Shash")
 ---@type LightModel
 local LightModel = require "data.lightmodel"
-local Loader = Adore.Loader
 
-local _, shaderAssets = Loader.getCollection("love.Shader")
+local _, shaderAssets = Adore.Loader.getCollection("ShaderLoader")
 
 local min, max, floor, ceil, huge =
 	math.min, math.max, math.floor, math.ceil, math.huge

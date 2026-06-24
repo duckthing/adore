@@ -1,8 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local Node2d = Adore.Nodes("Node2d")
-local Loader = Adore.Loader
-local shaderCollection, _ = Loader.getCollection("love.Shader")
+local ShaderLoader, _ = Adore.Loader.getCollection("ShaderLoader")
 
 ---Base class of other lights
 ---@class Light2d: Node2d
@@ -11,7 +10,7 @@ local shaderCollection, _ = Loader.getCollection("love.Shader")
 local Light2d = Node2d:extend()
 Light2d.CLASS_NAME = "Light2d"
 Light2d.albedo = {1, 1, 1, 1}
-local LIGHT_SHADER = shaderCollection:get(("%s/shaders/lightshader.glsl"):format(
+local LIGHT_SHADER = ShaderLoader:get(("%s/shaders/lightshader.glsl"):format(
 	(Adore.PATH):gsub("%.", "/")
 ))
 ---@type love.BlendMode # "add" is the default, and provides normal light behavior

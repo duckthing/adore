@@ -2,7 +2,6 @@
 local Adore = require("")
 local Nodes = Adore.Nodes
 local Resources = Adore.Resources
-local Common = Adore.Common
 
 local Node = Nodes("Node")
 local Control = Nodes("Control")
@@ -14,7 +13,7 @@ local MainLoopContext = Resources("MainLoopContext")
 
 local min, max = math.min, math.max
 
-local _, shaderAssets = Adore.Loader.getCollection("love.Shader")
+local _, shaderAssets = Adore.Loader.getCollection("ShaderLoader")
 
 ---INTERNAL! Don't use this!
 

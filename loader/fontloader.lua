@@ -25,9 +25,9 @@ else
 end
 
 -- Fonts require a special handler; on top of a font path, they need a size to get something drawable
--- * `Loader:getCollection("love.Font"):get("")` will return the AssetID to this object
--- * `Loader:getCollection("love.Font").assets[id]` will return this object
--- * `Loader:getCollection("love.Font").assets[id][size]` FINALLY returns a `love.Font`
+-- * `Loader:getCollection("FontLoader"):get("")` will return the AssetID to this object
+-- * `Loader:getCollection("FontLoader").assets[id]` will return this object
+-- * `Loader:getCollection("FontLoader").assets[id][size]` FINALLY returns a `love.Font`
 local FontMT = {
 	---@param self FontSource
 	---@param k number
@@ -76,7 +76,7 @@ local FontMT = {
 
 function FontLoader:handler(path)
 	-- Returns a table that, when indexed with a number (font size), returns the love.Font that should be used
-	-- `Loader.getCollection("love.Font")[assetId][size]` => love.Font
+	-- `Loader.getCollection("FontLoader")[assetId][size]` => love.Font
 	local realPath, hinting = path:match("(.*)@(.*)")
 	if hinting then
 		path = realPath
