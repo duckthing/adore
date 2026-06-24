@@ -631,6 +631,7 @@ function ObjectSaver.saveToNativeFilePath(path, object, format)
 	elseif not StringBuffer and format == "binary" then
 		return "Binary format is not supported on this platform"
 	end
+	assert(ffi, "[ObjectSaver.savetoNativeFile] Lacking FFI; native files are not supported")
 
 	-- Create the native file, and return if there's an issue
 	---@type love.File
