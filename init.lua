@@ -62,14 +62,25 @@ end
 
 do
 	-- Load submodules, and throw a good error if someone forgets
-	-- (done before doing relative requires, because they sometimes act weird)
+	-- (also good for loading any library that acts strange when lazy loaded)
 	local submoduleNames = {
 		"Expression",
-		-- The following are not submodules, they just act weird with relative requires:
 		"InputField",
 		-- RTA is excluded due to issues on web
 	}
-	local missingSubmoduleMessage = [[
+
+	local missingSubmoduleMessage
+	if love.filesystem.isFused() then
+		-- Fused message
+		missingSubmoduleMessage = [[
+Failed to load submodule '%s' at path '%s'.
+
+Some automatic build tools don't include ignored git files (submodules).
+If using 'makelove', add "./adore/*" to the 'love_files' array.
+]]
+	else
+		-- Unfused message
+		missingSubmoduleMessage = [[
 Failed to load submodule '%s' at path '%s'.
 Did you forget to include the submodules in your Adore clone?
 
@@ -77,6 +88,7 @@ To fix, run this in your project root: git submodule update --init --recursive
 
 ...if you clone next time: git clone <url> --recursive
 ]]
+end
 
 	for i = 1, #submoduleNames do
 		local submoduleName = submoduleNames[i]
