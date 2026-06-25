@@ -82,7 +82,7 @@ end
 ---@param v Signal
 ---@return boolean
 function Signal:isDefault(v)
-	return #v.connections == 0
+	return v.connections and #v.connections == 0
 end
 
 return Signal
