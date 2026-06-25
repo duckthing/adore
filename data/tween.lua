@@ -117,7 +117,7 @@ end
 ---Calls a function at this step. If you're using an object's method, you should pass `self` manually.
 ---For example, if you wanted to set the visibility of a Node to `true`:
 ---`tween:tweenCallback(node.setVisible, node, true)`
----@param callback function
+---@param callback fun(...)
 ---@param ... unknown
 ---@return Tween
 function Tween:tweenCallback(callback, ...)

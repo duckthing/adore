@@ -58,7 +58,13 @@ function PropertyTweener:onEnter()
 		self.property
 
 	if not self.customStart then
-		property:rawSet(self, "_startValue", property:get(object, self.propertyName))
+		if self.delay <= 0 then
+			-- Get the _startValue if this Tweener runs immediately
+			property:rawSet(self, "_startValue", property:get(object, self.propertyName))
+		else
+			-- Set _startValue later in `:update`
+			rawset(self, "_startValue", nil)
+		end
 	else
 		property:rawSet(self, "_startValue", self.startValue)
 	end
@@ -94,6 +100,12 @@ function PropertyTweener:update(dt)
 			if self.duration > 0 and elapsedInTweener < self.duration then
 				progress = self.ease(elapsedInTweener / self.duration)
 			end
+
+			if not self._startValue then
+				-- Get the start value if it doesn't exist yet (for delays without a start value)
+				property:rawSet(self, "_startValue", property:get(object, self.propertyName))
+			end
+
 			property:set(object, propertyName, property:lerp(self._startValue, self._endValue, progress))
 		else
 			-- Done tweening, set it to the end point
