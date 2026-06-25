@@ -5,8 +5,8 @@
 ---| "FontLoader"
 ---| "ObjectLoader"
 ---| "ShaderLoader"
----| "StreamSound"
----| "StaticSound"
+---| "MusicLoader"
+---| "SFXLoader"
 
 ---These collections are used automatically.
 ---You may read from these collections if you'd like to debug your assets.
@@ -14,6 +14,14 @@
 ---| "AtlasLoader"
 ---| "SheetLoader"
 ---| "ProcLoader"
+
+---A virtual class used for autocomplete; contains audio sources
+---@class AudioSourceCollection: Adore.AssetCollection
+---@field assets love.Source[]
+---@field get fun(self: AudioSourceCollection, path: string): love.Source, AssetID
+
+---@class MusicLoader: AudioSourceCollection
+---@class SFXLoader: AudioSourceCollection
 
 ---@class Adore.Loader
 local Loader = {}
@@ -29,11 +37,11 @@ local loadedCollections = {}
 
 ---@type {[string]: fun(path: string): (table | userdata | any)}
 local handlers = {
-	["StreamSound"] = function(path)
+	["MusicLoader"] = function(path)
 		-- Music, decoded when necessary
 		return love.audio.newSource(path, "stream")
 	end,
-	["StaticSound"] = function(path)
+	["SFXLoader"] = function(path)
 		-- Sound FX, decoded entirely in memory
 		return love.audio.newSource(path, "static")
 	end,
