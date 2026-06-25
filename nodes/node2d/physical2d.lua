@@ -689,6 +689,10 @@ function Physical2d._addDefinition(entry)
 
 	-- Common override
 	entry:newBoolean("_transformRelativeToParent", false, "setRelativeTransform")
+
+	-- Disable problematic properties
+	entry:newVec2("_scale", nil, "setScaleVector")
+		:hide()
 end
 
 return Physical2d

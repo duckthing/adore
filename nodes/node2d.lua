@@ -35,6 +35,8 @@ function Node2d:new(x, y)
 
 	---@type Vec2 # Relative position, use :getPosition() instead
 	self._position = Vec2(x, y)
+	---@type Vec2 # Relative scale
+	self._scale = Vec2(1, 1)
 
 	---@type number # Relative rotation in radians, use :getRotation() instead
 	self._rotation = 0
@@ -119,7 +121,7 @@ end
 ---Called when this Node2d's local transform updates, which, in turn, updates the global transform. (Not from an emit)
 ---If you're looking to check when this Node2d moves at all, use :_onGlobalTransformChanged()
 function Node2d:_onLocalTransformUpdated()
-	self._localTransform:setTransformation(self._position.x, self._position.y, self._rotation)
+	self._localTransform:setTransformation(self._position.x, self._position.y, self._rotation, self._scale.x, self._scale.y)
 	self._globalTransform:setMatrix(self:getParentGlobalTransform():getMatrix()):apply(self._localTransform)
 	self:_onGlobalTransformChanged()
 end
@@ -185,6 +187,26 @@ function Node2d:getPosition(doGlobal)
 	else
 		return self._position.x, self._position.y
 	end
+end
+
+---Sets the relative scale
+---@param x number
+---@param y number
+---@return self self
+function Node2d:setScale(x, y)
+	self._scale.x, self._scale.y =
+		x, y
+	self:_onLocalTransformUpdated()
+	return self
+end
+
+---Copies the values of the passed Vec2 into the scale
+---@param vector Vec2
+---@return self self
+function Node2d:setScaleVector(vector)
+	self._scale:iCopyVector(vector)
+	self:_onLocalTransformUpdated()
+	return self
 end
 
 ---Rotates this Node2d, in radians
@@ -323,6 +345,7 @@ end
 
 function Node2d._addDefinition(entry)
 	entry:newVec2("_position", nil, "setPositionVector")
+	entry:newVec2("_scale", nil, "setScaleVector")
 	entry:newNumber("_rotation", 0, nil, nil, nil, "setRotation")
 	entry:newBoolean("_transformRelativeToParent", true, "setRelativeTransform")
 	entry:newColor("albedo")

@@ -1,6 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local Node2d = Adore.Nodes("Node2d")
+local Vec2 = Adore.Common("Vec2")
 
 ---@class Camera: Node2d
 ---@field super Node2d
@@ -13,8 +14,8 @@ function Camera:new(x, y)
 
 	---@type boolean # Whether we should base this off the center of the screen
 	self._center = true
-	---@type number # How zoomed out we are. Farther from 0 shows more.
-	self._scale = 1
+	---@type Vec2 # How zoomed out we are. Farther from 0 shows more.
+	self._zoom = Vec2(1, 1)
 	---@type boolean # Whether we should use the rotation included within the transform or not.
 	self._inheritRotation = true
 
@@ -39,14 +40,14 @@ function Camera:_updateCanvasTransform(w, h)
 		cTrans:setTransformation(self._globalTransform:transformPoint(0, 0)):rotate(self._rotation)
 	end
 
-	local scale = self._scale
+	local zoomX, zoomY = self._zoom.x, self._zoom.y
 	if self._center then
 		local nhalfW, nhalfH = w * -0.5, h * -0.5
-		self._canvasTransform = cTrans:scale(scale):translate(nhalfW, nhalfH):inverse()
-		self._localContentRect:iSetComponents(nhalfW * scale, nhalfH * scale, w * scale, h * scale)
+		self._canvasTransform = cTrans:scale(zoomX, zoomY):translate(nhalfW, nhalfH):inverse()
+		self._localContentRect:iSetComponents(nhalfW * zoomX, nhalfH * zoomY, w * zoomX, h * zoomY)
 	else
-		self._canvasTransform = cTrans:scale(scale):inverse()
-		self._localContentRect:iSetComponents(0, 0, w * scale, h * scale)
+		self._canvasTransform = cTrans:scale(zoomX, zoomY):inverse()
+		self._localContentRect:iSetComponents(0, 0, w * zoomX, h * zoomY)
 	end
 	self:_onGlobalBoundsChanged()
 end
@@ -85,10 +86,19 @@ function Camera:setCurrent()
 	self:getViewport()._activeCamera = self
 end
 
----Sets the scale of the Camera. A higher scale shows more of the world.
----@param scale number
-function Camera:setScale(scale)
-	self._scale = scale
+---Sets the zoom of the Camera. A higher zoom shows more of the world.
+---@param zoomX number
+---@param zoomY number
+function Camera:setZoom(zoomX, zoomY)
+	self._zoom.x, self._zoom.y = zoomX, zoomY
+	self._shouldUpdateTransform = true
+	self:getCanvasTransform()
+end
+
+---Sets the zoom of the Camera. A higher zoom shows more of the world.
+---@param zoom Vec2
+function Camera:setZoomVector(zoom)
+	self._zoom:iCopyVector(zoom)
 	self._shouldUpdateTransform = true
 	self:getCanvasTransform()
 end
@@ -128,7 +138,7 @@ function Camera:onViewportRemoved(oldViewport)
 end
 
 function Camera._addDefinition(entry)
-	entry:newNumber("_scale", 1, nil, nil, nil, "setScale")
+	entry:newVec2("_zoom", nil, "setZoomVector")
 	entry:newBoolean("_center", true, "setCentered")
 	entry:newBoolean("_inheritRotation", true, "setInheritRotation")
 end
