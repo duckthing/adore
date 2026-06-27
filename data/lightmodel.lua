@@ -84,8 +84,6 @@ local _lightsNoShadows = {1}
 local _lightsThatCastShadows = {1}
 ---An array of shadows, which goes {love.Transform, shouldFill, points, ...}; all shadows depend on the range of Light2ds; [1] is the length + 1
 local _shadows = {1}
----@type Rect2 # The scissor area for the Light2d, in screen-space
-local scissorRect = Rect2(0, 0, 0, 0)
 
 local forEachShadowLight
 do
@@ -159,6 +157,8 @@ end
 
 ---@type Rect2 # The bounds of all lights that overlap with the screen; used for choosing which shadows to include
 local lightRect = Rect2(0, 0, 0, 0)
+---@type Rect2 # The scissor area for the Light2d, in screen-space
+local scissorRect = Rect2(0, 0, 0, 0)
 
 local function lmssAddLightsToArr(light, withShadow, withoutShadow)
 	if light:isVisibleInTree() then
