@@ -84,19 +84,19 @@ local _lightsNoShadows = {1}
 local _lightsThatCastShadows = {1}
 ---An array of shadows, which goes {love.Transform, shouldFill, points, ...}; all shadows depend on the range of Light2ds; [1] is the length + 1
 local _shadows = {1}
+---@type Rect2 # The scissor area for the Light2d, in screen-space
+local scissorRect = Rect2(0, 0, 0, 0)
 
 local forEachShadowLight
 do
 local major = love.getVersion()
 if major == 11 then
 	local posArr = {0, 0}
-
 	-- Love 11.5, when there's no blending with the destination alpha
 	---@param light Light2d
-	---@param sMesh love.Mesh
-	function forEachShadowLight(light, sMesh)
+	---@param drawShadowMesh fun()
+	function forEachShadowLight(light, drawShadowMesh)
 		-- Draw the shadow mask into the stencil
-		-- TODO: Set scissor for light bounds
 		if light._shadows then
 			love.graphics.push("all")
 
@@ -108,9 +108,7 @@ if major == 11 then
 			-- Draw the shadow mesh to the stencil
 			love.graphics.setShader(SHADOW_MESH_SHADER)
 			love.graphics.setMeshCullMode("back")
-			love.graphics.stencil(function()
-				love.graphics.draw(sMesh)
-			end, "replace", 1, false)
+			love.graphics.stencil(drawShadowMesh, "replace", 1, false)
 			love.graphics.setStencilTest("notequal", 1)
 			love.graphics.setShader()
 			love.graphics.setMeshCullMode("none")
@@ -126,8 +124,8 @@ if major == 11 then
 else
 	local posArr = {0, 0}
 	---@param light Light2d
-	---@param sMesh love.Mesh
-	function forEachShadowLight(light, sMesh)
+	---@param drawShadowMesh fun()
+	function forEachShadowLight(light, drawShadowMesh)
 		-- TODO: [Love12] For blend state; multiply source color by destination alpha
 		-- Draw the shadow mask into the alpha channel
 		local hasShadows = light._shadows
@@ -144,7 +142,7 @@ else
 			-- love.graphics.setBlendMode("replace", "premultiplied")
 			love.graphics.setColor(1, 1, 1, 0)
 			love.graphics.setShader(SHADOW_MESH_SHADER)
-			love.graphics.draw(sMesh)
+			drawShadowMesh()
 
 			love.graphics.pop()
 		end
@@ -207,8 +205,9 @@ function lightModeScreenShadow(self, dst)
 	local bounds = viewport._boundingBox
 
 	-- Push the transform
+	local viewportTransform = viewport._viewportTransform
 	love.graphics.push("all")
-	love.graphics.applyTransform(viewport._viewportTransform)
+	love.graphics.applyTransform(viewportTransform)
 
 	-- Set the active canvas and stencil
 	_canvasSetup[1], _canvasSetup.depthstencil = dst, viewport._stencilCanvas
@@ -358,20 +357,32 @@ function lightModeScreenShadow(self, dst)
 			sMesh:setVertexAttribute(i, 1, x, y, 0)
 		end
 
+		-- The function used for the stencil test
+		local drawShadowMesh
+		do
+			local draw = love.graphics.draw
+			function drawShadowMesh()
+				draw(sMesh)
+			end
+		end
+
 		-- Draw all the lights with the shadows
 		for i = lightsWithShadows[1], 2, -1 do
 			local light = lightsWithShadows[i]
 			lightsWithShadows[i] = nil
-			forEachShadowLight(light, sMesh)
+			scissorRect:iCopyRect(light._globalContentRect):iTransformBox(viewportTransform)
+			love.graphics.setScissor(scissorRect.x, scissorRect.y, scissorRect.w, scissorRect.h)
+			forEachShadowLight(light, drawShadowMesh)
 		end
 		love.graphics.setStencilTest()
 	else
 		-- Since there was no shadows, we don't need to draw the shadow mesh
-
-		-- Draw all the lights with the shadows (but normally)
+		-- Draw all the lights with the shadows (but without the shadow mesh)
 		for i = lightsWithShadows[1], 2, -1 do
 			local light = lightsWithShadows[i]
 			lightsWithShadows[i] = nil
+			scissorRect:iCopyRect(light._globalContentRect):iTransformBox(viewportTransform)
+			love.graphics.setScissor(scissorRect.x, scissorRect.y, scissorRect.w, scissorRect.h)
 			light:_drawLight()
 		end
 	end
@@ -381,6 +392,8 @@ function lightModeScreenShadow(self, dst)
 	for i = lightsNoShadows[1], 2, -1 do
 		local light = lightsNoShadows[i]
 		lightsNoShadows[i] = nil
+		scissorRect:iCopyRect(light._globalContentRect):iTransformBox(viewportTransform)
+		love.graphics.setScissor(scissorRect.x, scissorRect.y, scissorRect.w, scissorRect.h)
 		light:_drawLight()
 	end
 
@@ -404,8 +417,9 @@ function lightModeScreen(self, dst)
 	local bounds = viewport._boundingBox
 
 	-- Push the transform
+	local viewportTransform = viewport._viewportTransform
 	love.graphics.push("all")
-	love.graphics.applyTransform(viewport._viewportTransform)
+	love.graphics.applyTransform(viewportTransform)
 	love.graphics.setCanvas(dst)
 
 	-- Clear the lightmap with the ambient light color
@@ -422,6 +436,8 @@ function lightModeScreen(self, dst)
 	for i = lights[1], 2, -1 do
 		local light = lights[i]
 		lights[i] = nil
+		scissorRect:iCopyRect(light._globalContentRect):iTransformBox(viewportTransform)
+		love.graphics.setScissor(scissorRect.x, scissorRect.y, scissorRect.w, scissorRect.h)
 		light:_drawLight()
 	end
 
