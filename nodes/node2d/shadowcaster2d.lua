@@ -2,7 +2,6 @@
 local Adore = require ""
 local Nodes = Adore.Nodes
 local Node2d = Nodes("Node2d")
-local DRect = Nodes("DebugRectangle")
 
 ---@class ShadowCaster2d: Node2d
 ---@field super Node2d

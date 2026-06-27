@@ -13,6 +13,8 @@ local Node2d = Node:extend()
 Node2d.CLASS_NAME = "Node2d"
 ---@type integer[] # The color of this Node2d
 Node2d.albedo = {1, 1, 1, 1}
+---@type love.BlendMode # [Default: "alpha"] How this Node2d blends with existing pixels
+Node2d._blendMode = "alpha"
 
 local DEFAULT_TRANSFORM = love.math.newTransform(0, 0)
 local PI = math.pi
@@ -47,6 +49,8 @@ function Node2d:new(x, y)
 	self._localContentRect = Rect2(0, 0, 0, 0)
 	---@type Rect2
 	self._globalContentRect = Rect2(0, 0, 0, 0)
+
+	self._blendMode = self._blendMode
 end
 
 ---Returns the global transform of the parent, if it exists
@@ -327,6 +331,7 @@ end
 
 function Node2d:_beforeDraw()
 	love.graphics.push("all")
+	love.graphics.setBlendMode(self._blendMode)
 	love.graphics.setColor(self.albedo)
 	love.graphics.applyTransform(self._localTransform)
 end
@@ -349,6 +354,7 @@ function Node2d._addDefinition(entry)
 	entry:newNumber("_rotation", 0, nil, nil, nil, "setRotation")
 	entry:newBoolean("_transformRelativeToParent", true, "setRelativeTransform")
 	entry:newColor("albedo")
+	entry:newString("_blendMode", "alpha")
 end
 
 return Node2d

@@ -10,17 +10,19 @@ local ShaderLoader, _ = Adore.Loader.getCollection("ShaderLoader")
 local Light2d = Node2d:extend()
 Light2d.CLASS_NAME = "Light2d"
 Light2d.albedo = {1, 1, 1, 1}
+Light2d._blendMode = "add"
 local LIGHT_SHADER = ShaderLoader:get(("%s/shaders/lightshader.glsl"):format(
 	(Adore.PATH):gsub("%.", "/")
 ))
----@type love.BlendMode # "add" is the default, and provides normal light behavior
-Light2d._lightBlendMode = "add"
 
 function Light2d:new(x, y)
 	Light2d.super.new(self, x, y)
 
 	---@type boolean # Whether this Light2d can cast shadows; does not work with the "screen" light mode
 	self._shadows = true
+
+	---@type integer # How high up this Light2d is relative to normal maps, in a range of 0 to 1
+	self._height = 0
 end
 
 function Light2d:_intDraw()
@@ -36,7 +38,7 @@ function Light2d:_drawLight()
 	-- Don't override; it calls `:draw()` when it's time to draw a light
 	love.graphics.push("all")
 	love.graphics.applyTransform(self._globalTransform)
-	love.graphics.setBlendMode(self._lightBlendMode, "alphamultiply")
+	love.graphics.setBlendMode(self._blendMode, "alphamultiply")
 	-- Did you get an error about a missing 7th argument?
 	-- You need `albedo` to have four components, and you probably missed the alpha component.
 	-- Do this: `{1, 1, 1, 1}`
@@ -66,6 +68,7 @@ end
 
 function Light2d._addDefinition(entry)
 	entry:newBoolean("_shadows", true)
+	entry:newNumber("_height", 0, 0, 1)
 end
 
 return Light2d
