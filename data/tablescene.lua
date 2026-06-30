@@ -164,7 +164,7 @@ end
 
 ---Returns a function that can be called to instantiate a TableScene's contents
 ---@return SceneFunction
-function TableScene:asFunction()
+function TableScene:asSceneFunction()
 	local func = self.instantiate
 	return function(parent)
 		return func(self, parent, false)

@@ -292,7 +292,7 @@ function Root:changeSceneTo(constructor)
 	if type(constructor) == "table" then
 		if not constructor.IS_NODE then
 			-- It's a SceneFactory, turn it into a function
-			constructor = constructor:asFunction()
+			constructor = constructor:asSceneFunction()
 		else
 			-- We got a Node?
 			---@cast constructor Node

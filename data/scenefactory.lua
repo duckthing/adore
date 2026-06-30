@@ -50,7 +50,7 @@ end
 
 ---Returns a function that can be called to instantiate a SceneFactory's contents
 ---@return SceneFunction
-function SceneFactory:asFunction()
+function SceneFactory:asSceneFunction()
 	local func = self.instantiate
 	return function(...)
 		return func(self, ...)

@@ -145,7 +145,7 @@ end
 
 ---Returns a function that can be called to instantiate a PackedScene's contents
 ---@return SceneFunction
-function PackedScene:asFunction()
+function PackedScene:asSceneFunction()
 	local func = self.instantiate
 	return function(parent)
 		return func(self, parent, false)
