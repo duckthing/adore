@@ -20,9 +20,6 @@ function Light2d:new(x, y)
 
 	---@type boolean # Whether this Light2d can cast shadows; does not work with the "screen" light mode
 	self._shadows = true
-
-	---@type integer # How high up this Light2d is relative to normal maps, in a range of 0 to 1
-	self._height = 0
 end
 
 function Light2d:_intDraw()
@@ -68,7 +65,6 @@ end
 
 function Light2d._addDefinition(entry)
 	entry:newBoolean("_shadows", true)
-	entry:newNumber("_height", 0, 0, 1)
 end
 
 return Light2d
