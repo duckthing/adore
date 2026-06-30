@@ -34,7 +34,7 @@ function MTrack:newKeyframe(time, method, args)
 	self:insertKeyframe({time = time, method = method, args = args})
 end
 
----Creates a new MethodTrack.Seeker, with NodePath resolving relative to `node`
+---Creates a new `MethodTrack.Seeker` tied to a `Node`
 ---@param node Node
 ---@return MethodTrack.Seeker
 function MTrack:newSeeker(node)

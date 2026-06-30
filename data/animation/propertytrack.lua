@@ -48,7 +48,7 @@ function PTrack:newKeyframe(time, value)
 	self:insertKeyframe({time = time, value = value})
 end
 
----Creates a new PropertyTrack.Seeker, with NodePath resolving relative to `node`
+---Creates a new `PropertyTrack.Seeker` tied to a `Node`
 ---@param node Node
 ---@return PropertyTrack.Seeker
 function PTrack:newSeeker(node)
