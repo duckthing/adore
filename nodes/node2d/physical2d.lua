@@ -635,8 +635,8 @@ function Physical2d.getWorldCallbacks()
 
 		if bShape and bShape.oneWayCollision then
 			-- A is colliding into B
-			local upDir = bShape.oneWayDirection
-			local upX, upY = upDir.x, upDir.y
+			local upDir = bShape.upDirection
+			local upX, upY = -upDir.x, -upDir.y
 			local nx, ny = coll:getNormal()
 
 			if VecMath.dot(upX, upY, nx, ny) <= 0 then
@@ -648,8 +648,8 @@ function Physical2d.getWorldCallbacks()
 
 		if aShape and aShape.oneWayCollision then
 			-- B is colliding into A
-			local upDir = aShape.oneWayDirection
-			local upX, upY = -upDir.x, -upDir.y
+			local upDir = aShape.upDirection
+			local upX, upY = upDir.x, upDir.y
 			local nx, ny = coll:getNormal()
 
 			if VecMath.dot(upX, upY, nx, ny) <= 0 then

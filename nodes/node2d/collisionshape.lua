@@ -14,8 +14,8 @@ local Vec2 = Adore.Common("Vec2")
 local CollisionShape = Node2d:extend()
 CollisionShape.CLASS_NAME = "CollisionShape"
 
----@type Vec2 # The direction used for one-way collisions
-CollisionShape.oneWayDirection = Vec2(0, 1)
+---@type Vec2 # The "up" direction used for one-way collisions; anything moving "down" will be blocked
+CollisionShape.upDirection = Vec2(0, -1)
 
 ---@param shape love.Shape?
 ---@param density number?
@@ -81,7 +81,6 @@ function CollisionShape:_destroyFixture()
 	local oldFixture = self._fixture
 	if oldFixture then
 		if not oldFixture:isDestroyed() then
-			oldFixture:setUserData()
 			oldFixture:destroy()
 		end
 		self._fixture = nil
@@ -103,7 +102,7 @@ function CollisionShape._addDefinition(entry)
 	entry:newNumber("_density", 1, 0, nil, nil, "setDensity")
 	entry:newLoveObject("_shape", "Shape", "setShape")
 	entry:newBoolean("oneWayCollision", false)
-	entry:newVec2("oneWayDirection")
+	entry:newVec2("upDirection", CollisionShape.upDirection)
 end
 
 return CollisionShape
