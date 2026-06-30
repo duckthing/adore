@@ -615,14 +615,17 @@ local function getMethodFromParameter(node, method)
 	end
 end
 
----Queues a method to be called when the Root is free to do so, usually after :update()
+---Queues a method to be called when not busy, which is usually before the end of `:update`.
+---If you queue a method in `:draw`, it won't take effect until the next frame.
+---You can queue any function if you go through the `RootNode` directly.
 ---@param method string | fun(self: self, ...: unknown)
 ---@param ... unknown
 function Node:queue(method, ...)
 	self:getRoot():queue(self, getMethodFromParameter(self, method), ...)
 end
 
----Queues a method to be called after certain amount of game time passes
+---Queues a method to be called after a certain amount of time, depending on the game's speed.
+---You can queue any function if you go through the `RootNode` directly.
 ---@param duration number
 ---@param method string | fun(self: self, ...: unknown)
 ---@param ... unknown
@@ -630,7 +633,8 @@ function Node:queueAfterGameTime(duration, method, ...)
 	self:getRoot():queueAfterGameTime(duration, self, getMethodFromParameter(self, method), ...)
 end
 
----Queues a method to be called after certain amount of real time passes
+---Queues a method to be called after a certain amount of time, depending on the real time passed.
+---You can queue any function if you go through the `RootNode` directly.
 ---@param duration number
 ---@param method string | fun(self: self, ...: unknown)
 ---@param ... unknown

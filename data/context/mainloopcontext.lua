@@ -106,16 +106,23 @@ local function runTimerMethods(queue, dt)
 	for i = currQueueLength, 1, -1 do
 		local request = queue[i]
 		-- 1: Remaining time
-		-- 2: Node
-		-- 3: Method
+		-- 2: Node (or `false`)
+		-- 3: Method (which is a function)
 		-- 4...: Parameters
 		local remainingTime = request[1] - dt
 		request[1] = remainingTime
 
 		if remainingTime < 0 then
 			local node = request[2]
-			if node._valid then
-				request[3](node, unpack(request, 4))
+			if node then
+				-- It's a Node...
+				if node._valid then
+					-- ...and it's valid
+					request[3](node, unpack(request, 4))
+				end
+			else
+				-- It's a function, just call it
+				request[3](unpack(request, 4))
 			end
 		end
 	end
@@ -129,6 +136,37 @@ local function runTimerMethods(queue, dt)
 
 	-- Sort afterwards
 	table.sort(queue, timerQueueSortCheck)
+end
+
+---Runs the queued methods. Returns `true` if it is completed with all queue work.
+---@param queue any[]
+---@return boolean completed
+local function runQueuedMethods(queue)
+	local n = #queue
+
+	if n == 0 then return true end
+
+	for i = n, 1, -1 do
+		local request = queue[i]
+		queue[i] = nil
+		-- 1: Node (or `false`)
+		-- 2: Method (which is a function)
+		-- 3...: Parameters
+		local node = request[1]
+		if node then
+			-- It's a Node...
+			if node._valid then
+				-- ...and it's valid
+				request[2](node, unpack(request, 3))
+			end
+		else
+			-- It's a function, just call it
+			request[2](unpack(request, 3))
+		end
+	end
+
+	-- Check the other queue now
+	return false
 end
 
 ---@param list Tween[]
@@ -177,25 +215,7 @@ function MainLoop:update(originalDelta)
 			for queueI = 1, 2 do
 				root._firstQueueActive = queueI == 2
 				local queue = (queueI == 1 and root.methodQueue1) or root.methodQueue2
-				local n = #queue
-
-				if n == 0 then
-					-- No more deferred methods
-					shouldBreak = true
-					break
-				end
-
-				for i = n, 1, -1 do
-					local request = queue[i]
-					queue[i] = nil
-					-- 1: Node
-					-- 2: Method
-					-- 3...: Parameters
-					local node = request[1]
-					if node._valid then
-						request[2](node, unpack(request, 3))
-					end
-				end
+				shouldBreak = runQueuedMethods(queue)
 			end
 
 			if shouldBreak then break end

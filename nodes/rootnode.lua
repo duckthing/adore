@@ -282,7 +282,10 @@ function Root:reloadCurrentScene()
 end
 
 ---Changes the scene to the PackedScene/SceneFactory by calling :instantiate() on it.
----Will also reset the pause mode and game speed.
+---Has the following effects on the game:
+---* Resets the pause mode and game speed
+---* Resets all queued methods
+---* Resets pushed input contexts to their default state
 ---@param constructor SceneFactory | SceneFunction
 function Root:changeSceneTo(constructor)
 	local makeLastScene = true
@@ -322,6 +325,27 @@ function Root:changeSceneTo(constructor)
 		self.lastScene = constructor
 	else
 		self.lastScene = nil
+	end
+
+	-- Clear the queued methods
+	for i = 1, 4 do
+		local queue = nil
+
+		-- Ugly but it works
+		if i == 1 then
+			queue = self.methodQueue1
+		elseif i == 2 then
+			queue = self.methodQueue2
+		elseif i == 3 then
+			queue = self.gameTimerMethods
+		else
+			queue = self.realTimerMethods
+		end
+
+		-- Clear this queue
+		for j = #queue, 1, -1 do
+			queue[j] = nil
+		end
 	end
 
 	self:resume()
@@ -761,34 +785,40 @@ function Root:uiSelectRight()
 	return false
 end
 
----Queues a method to be called
+---Queues a method to be called when not busy, which is usually before the end of `:update`.
+---If you queue a method in `:draw`, it won't take effect until the next frame.
+---You can queue any function if `node` is `false` or `nil`.
 ---@param node Node?
 ---@param method fun(self: unknown, ...: unknown)
 ---@param ... unknown
+---@overload fun(self: RootNode, node: false?, method: function, ...)
 function Root:queue(node, method, ...)
 	local queue = (self._firstQueueActive and self.methodQueue1) or self.methodQueue2
-	queue[#queue+1] = {node, method, ...}
+	queue[#queue+1] = {node or false, method, ...}
 end
 
----Queues a method to be called after a certain amount of time, depending on the game's speed
+---Queues a method to be called after a certain amount of time, depending on the game's speed.
+---You can queue any function if `node` is `false` or `nil`.
 ---@param duration number
 ---@param node Node
 ---@param method fun(self: unknown, ...: unknown)
 ---@param ... unknown
+---@overload fun(self: RootNode, duration: number, node: false?, method: function, ...)
 function Root:queueAfterGameTime(duration, node, method, ...)
-	-- TODO: Add queueing normal functions, not methods
 	local queue = self.gameTimerMethods
-	queue[#queue+1] = {duration, node, method, ...}
+	queue[#queue+1] = {duration, node or false, method, ...}
 end
 
----Queues a method to be called after a certain amount of time, depending on the real time passed
+---Queues a method to be called after a certain amount of time, depending on the real time passed.
+---You can queue any function if `node` is `false` or `nil`.
 ---@param duration number
 ---@param node Node
 ---@param method fun(self: unknown, ...: unknown)
 ---@param ... unknown
+---@overload fun(self: RootNode, duration: number, node: false?, method: function, ...)
 function Root:queueAfterRealTime(duration, node, method, ...)
 	local queue = self.realTimerMethods
-	queue[#queue+1] = {duration, node, method, ...}
+	queue[#queue+1] = {duration, node or false, method, ...}
 end
 
 ---Inserts a Node with a special `_pauseMode` into the top-level processors array
