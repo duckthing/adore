@@ -57,7 +57,7 @@ end
 ---@param percent number
 ---@return Rect2
 function Rect2P:lerp(from, to, percent)
-	return tempRect2:iCopyRect(to):iLerp(to, percent)
+	return tempRect2:iCopyRect(from):iLerp(to, percent)
 end
 
 function Rect2P:serialize(obj, propertyName, value)
