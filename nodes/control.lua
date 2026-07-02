@@ -44,9 +44,11 @@ Control.clipChildren = false
 ---@type Theme # Internally, the Theme used when calling :draw() on a Control. Don't read this manually.
 -- local _activeTheme = nil
 
----@type string # The subclass, chosen by the Control's logic. Can be set manually, but should be decided by the Control.
+---@type string # The subclass, as originally chosen by the Control's logic, set in :setSubclass()
+Control._currentOriginalSubclass = "normal"
+---@type string # The subclass, mapped from the original one in :setSubclass(), to a new one according to self.subclassMap
 Control._currentSubclass = ""
----@type {[string]: string} # When using :setSubclass(), this will map the passed subclass into something else. Can be used for different styles with the same logic.
+---@type {[string]: string} # When using :setSubclass(), this will map the original subclass into something else. Can be used for different styles with the same logic.
 Control.subclassMap = {
 	normal = "",
 }
@@ -346,14 +348,26 @@ function Control:setTheme(theme)
 	return self
 end
 
----Sets the subclass, from the subclass map
+---Sets the subclass, and maps it according to the subclass map
 ---@param subclass string
 ---@return self
 function Control:setSubclass(subclass)
+	self._currentOriginalSubclass = subclass
 	local newSubclass = self.subclassMap[subclass]
 	if self._currentSubclass ~= newSubclass then
 		self:deferRefreshSelf()
 		self._currentSubclass = newSubclass
+	end
+	return self
+end
+
+---Sets the subclass map. This table is responsible for mapping one subclass to another value.
+---@param subclassMap {[string]: string}
+---@return self
+function Control:setSubclassMap(subclassMap)
+	if self.subclassMap ~= subclassMap then
+		self.subclassMap = subclassMap
+		self:setSubclass(self._currentOriginalSubclass)
 	end
 	return self
 end
@@ -1125,6 +1139,8 @@ function Control._addDefinition(entry)
 	entry:newVec2("_scale", nil, "setScaleVec")
 	entry:newVec2("_minimumSize", nil, "setMinimumSizeVec")
 	entry:newVec2("_maximumSize", nil, "setMaximumSizeVec")
+	entry:newString("_currentOriginalSubclass", "normal", nil, nil, "setSubclass")
+	entry:newString("_currentSubclass", "", nil, nil, "setSubclass")
 	entry:newColor("albedo")
 end
 
