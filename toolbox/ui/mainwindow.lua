@@ -94,6 +94,7 @@ function MainWindow:new(toolbox)
 	-- gameActionBar:setSortMode("center")
 	gameActionBar:setMargin(4)
 	gameActionBar:setPadding(4)
+	gameActionBar:setVariant("topbar")
 
 	for i = 1, #gameActions do
 		local action = gameActions[i]
@@ -117,6 +118,7 @@ function MainWindow:new(toolbox)
 	)
 	menuBar:setMargin(4)
 	menuBar:setPadding(4)
+	menuBar:setVariant("topbar")
 
 	for i = 1, #menuActions do
 		local action = menuActions[i]

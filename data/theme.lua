@@ -18,16 +18,23 @@ function Theme:new(inheritsFrom)
 	---@type Theme[] # Any Themes that inherit from us
 	self._inherited = {}
 
-	---@type {[integer]: {[string]: DrawRequest}} # A map of a Class, to Subclass, to Drawable. Not calculated.
+	---@type {[integer]: {[string]: DrawRequest}} # A map of a class ID, to a subclass, to a Drawable. Not calculated.
 	self.drawablesForClass = nil
 
+	---@type {[integer]: {[string]: {[string]: string}}} # A map of a class ID, to a variant name, to a subclass map
+	self.variantsForClass = nil
+
 	if not inheritsFrom then
+		-- Initialize
 		self.drawablesForClass = {
 			[Control.CLASS_ID] = {
 				[""] = DrawRequest()
 			}
 		}
+
+		self.variantsForClass = {}
 	else
+		-- Inherit through using a metatable
 		inheritsFrom._inherited[#inheritsFrom._inherited+1] = self
 		self.drawablesForClass = setmetatable(
 			{
@@ -39,11 +46,25 @@ function Theme:new(inheritsFrom)
 				end
 			}
 		)
+
+		self.variantsForClass = setmetatable(
+			{
+				_inherit = inheritsFrom.variantsForClass
+			},
+			{
+				__index = function(t, k)
+					return rawget(t, "_inherit")[k]
+				end
+			}
+		)
 	end
 
-	---@type {[integer]: {[string]: DrawRequest}} # The calculated map, which uses the former to set inherited DrawRequests.
+	---@type {[integer]: {[string]: DrawRequest}} # The calculated map from class ID to Drawable, which uses the former to set inherited DrawRequests.
 	---Basically, it turns it into 1 lookup, versus n super class lookups for the overridden Drawable.
 	self._calculatedMap = {}
+
+	---@type {[integer]: {[string]: {[string]: string}}} # The calculated map from class ID to subclass shortcuts.
+	self._calculatedSM = {}
 
 	self._newControlEvent = Control.onNewControlInherited:connect(self, "_updateForClass")
 	self:_updateMap()
@@ -113,6 +134,25 @@ function Theme:setDrawable(class, subclass, drawable)
 	end
 
 	subclassToDrawable[subclass] = drawable
+	self:_updateForClass(class)
+end
+
+---Sets a named subclass map for a specific class, which is useful for variations of the same class.
+---This allows `Control:setVariant` to receive a string and get this map directly.
+---@param class Control
+---@param variationName string? # The name of the variation
+---@param subclassMap {[string]: string} # The subclass map
+function Theme:setVariant(class, variationName, subclassMap)
+	variationName = variationName or ""
+
+	local variantNameToMap = self.variantsForClass[class.CLASS_ID]
+	if not variantNameToMap then
+		-- Create it if it doesn't exist
+		variantNameToMap = {}
+		self.variantsForClass[class.CLASS_ID] = variantNameToMap
+	end
+
+	variantNameToMap[variationName] = subclassMap
 	self:_updateForClass(class)
 end
 

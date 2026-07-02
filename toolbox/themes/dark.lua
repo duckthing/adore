@@ -16,13 +16,17 @@ local function onRequire()
 	local dark = Theme(Resources("DefaultTheme")())
 
 	-- HBox
-	dark:setDrawable(HBox, nil, DrawRequest(
+	dark:setDrawable(HBox, "topbar", DrawRequest(
 		function(_, control)
 			local lcr = control._localContentRect
 			love.graphics.setColor(0.3, 0.3, 0.34)
 			love.graphics.rectangle("fill", lcr.x, lcr.y - 12, lcr.w, lcr.h + 12, 4)
 		end
 	))
+
+	dark:setVariant(HBox, "topbar", {
+		topbar = "topbar"
+	})
 
 	return dark
 end

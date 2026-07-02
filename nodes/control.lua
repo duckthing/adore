@@ -108,9 +108,10 @@ function Control:new()
 	self._topLevelNode = nil
 	---@type boolean # Whether we're in the Shash
 	self._inShash = false
-	---@type Theme? # The theme that is used for this Control and any children
+	---@type Theme? # The Theme that will be used on this Control and any children.
+	---This value can be `nil`; if you want to know what Theme will be applied right here, use `:getAppliedTheme()`.
 	self._theme = nil
-	---@type Theme # The calulated Theme used; in order of priority, it's `_theme`, then `parent._inheritedTheme`, then `Root:getDefaultTheme()`
+	---@type Theme # The applied Theme on this Control; in order of priority, it's `self._theme`, or `parent._inheritedTheme`, or `Root:getDefaultTheme()`
 	self._inheritedTheme = self:getRoot():getDefaultTheme()
 	---@type string # What subclass will be used (from the theme)
 	self._currentSubclass = self.subclassMap.normal
@@ -362,9 +363,47 @@ function Control:setSubclass(subclass)
 end
 
 ---Sets the subclass map. This table is responsible for mapping one subclass to another value.
----@param subclassMap {[string]: string}
+---Subclass maps are used to provide variations of the same Control.
+---@param subclassMap {[string]: string} | string # Either the map or the variation name as defined in the Theme
 ---@return self
-function Control:setSubclassMap(subclassMap)
+function Control:setVariant(subclassMap)
+	if type(subclassMap) == "string" then
+		-- Passed the name of the variant, search for the subclass map in the Theme
+		local theme = self._inheritedTheme
+
+		-- Get the class
+		local CurrClass = (rawget(self, "__index") and self) or getmetatable(self)
+
+		local newSubclassMap
+		local classIdToMap = theme.variantsForClass
+
+		-- While we're looking at a Control...
+		while CurrClass.INHERITS_CONTROL do
+			-- Check for any variations
+			local variantMap = classIdToMap[CurrClass.CLASS_ID]
+			if variantMap then
+				-- This class has variations
+				local classVariants = variantMap[subclassMap]
+				if classVariants then
+					-- The variations include the requested one
+					newSubclassMap = classVariants
+					break
+				end
+			end
+
+			-- Go to the parent class
+			CurrClass = getmetatable(CurrClass)
+		end
+
+		if not newSubclassMap then
+			-- Couldn't find it
+			error(("Subclass '%s' is not found in this Theme"):format(subclassMap))
+		end
+
+		subclassMap = newSubclassMap
+	end
+
+	-- Check if it's different from the currently set one
 	if self.subclassMap ~= subclassMap then
 		self.subclassMap = subclassMap
 		self:setSubclass(self._currentOriginalSubclass)
