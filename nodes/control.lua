@@ -368,6 +368,7 @@ end
 ---@return self
 function Control:setVariant(subclassMap)
 	if type(subclassMap) == "string" then
+		-- TODO: On Theme change, should variants be kept?
 		-- Passed the name of the variant, search for the subclass map in the Theme
 		local theme = self._inheritedTheme
 
