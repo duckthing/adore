@@ -25,7 +25,7 @@ local function onRequire()
 	))
 
 	dark:setVariant(HBox, "topbar", {
-		topbar = "topbar"
+		normal = "topbar"
 	})
 
 	return dark

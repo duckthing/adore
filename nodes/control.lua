@@ -41,17 +41,18 @@ Control.albedo = {1, 1, 1, 1}
 ---@type boolean # Whether this Control should prevent children from being drawn out of bounds
 Control.clipChildren = false
 
----@type Theme # Internally, the Theme used when calling :draw() on a Control. Don't read this manually.
--- local _activeTheme = nil
-
+-- The default variant can also be found underneath Theme[Control.CLASS_ID][""]
+local DEFAULT_SUBCLASS_MAP = {
+	normal = "",
+}
 ---@type string # The subclass, as originally chosen by the Control's logic, set in :setSubclass()
 Control._currentOriginalSubclass = "normal"
 ---@type string # The subclass, mapped from the original one in :setSubclass(), to a new one according to self.subclassMap
 Control._currentSubclass = ""
+---@type string # The name of this variant, which is where the subclass map came from. Set through :setVariantName().
+Control._variantName = ""
 ---@type {[string]: string} # When using :setSubclass(), this will map the original subclass into something else. Can be used for different styles with the same logic.
-Control.subclassMap = {
-	normal = "",
-}
+Control.subclassMap = DEFAULT_SUBCLASS_MAP
 
 ---@type Control.FocusMode # What input can focus on the Control?
 Control.focusMode = "none"
@@ -356,58 +357,65 @@ function Control:setSubclass(subclass)
 	self._currentOriginalSubclass = subclass
 	local newSubclass = self.subclassMap[subclass]
 	if self._currentSubclass ~= newSubclass then
-		self:deferRefreshSelf()
 		self._currentSubclass = newSubclass
+		self:deferRefreshSelf()
 	end
 	return self
 end
 
 ---Sets the subclass map. This table is responsible for mapping one subclass to another value.
 ---Subclass maps are used to provide variations of the same Control.
----@param subclassMap {[string]: string} | string # Either the map or the variation name as defined in the Theme
+---It's recommended to create your variation inside of a Theme and call `:setVariant` instead.
+---@param subclassMap {[string]: string} # The map
 ---@return self
-function Control:setVariant(subclassMap)
-	if type(subclassMap) == "string" then
-		-- TODO: On Theme change, should variants be kept?
-		-- Passed the name of the variant, search for the subclass map in the Theme
-		local theme = self._inheritedTheme
-
-		-- Get the class
-		local CurrClass = (rawget(self, "__index") and self) or getmetatable(self)
-
-		local newSubclassMap
-		local classIdToMap = theme.variantsForClass
-
-		-- While we're looking at a Control...
-		while CurrClass.INHERITS_CONTROL do
-			-- Check for any variations
-			local variantMap = classIdToMap[CurrClass.CLASS_ID]
-			if variantMap then
-				-- This class has variations
-				local classVariants = variantMap[subclassMap]
-				if classVariants then
-					-- The variations include the requested one
-					newSubclassMap = classVariants
-					break
-				end
-			end
-
-			-- Go to the parent class
-			CurrClass = getmetatable(CurrClass)
-		end
-
-		if not newSubclassMap then
-			-- Couldn't find it
-			error(("Subclass '%s' is not found in this Theme"):format(subclassMap))
-		end
-
-		subclassMap = newSubclassMap
-	end
-
-	-- Check if it's different from the currently set one
+function Control:setSubclassMap(subclassMap)
 	if self.subclassMap ~= subclassMap then
 		self.subclassMap = subclassMap
 		self:setSubclass(self._currentOriginalSubclass)
+	end
+	return self
+end
+
+---Sets the variant/subclass map of this Control through the name.
+---When the applied Theme changes, the variant name will be used to get the variation specific to that Theme.
+---@param name string
+---@return self
+function Control:setVariant(name)
+	if self._variantName == name then return self end
+	self._variantName = name
+
+	-- Get the class
+	local CurrClass = (rawget(self, "__index") and self) or getmetatable(self)
+
+	local theme = self._inheritedTheme
+	local classIdToMap = theme.variantsForClass
+
+	-- While we're looking at a Control...
+	local newSubclassMap
+	while CurrClass:is(Control) or CurrClass == Control do
+		-- Check for any variations
+		local variantMap = classIdToMap[CurrClass.CLASS_ID]
+		if variantMap then
+			-- This class has variations
+			local classVariants = variantMap[name]
+			if classVariants then
+				-- The variations include the requested one
+				newSubclassMap = classVariants
+				break
+			end
+		end
+
+		-- Go to the parent class
+		CurrClass = getmetatable(CurrClass)
+	end
+
+	if not newSubclassMap then
+		-- Couldn't find it
+		print(("[Control:setVariantName] Variant name '%s' is not found in this Theme"):format(name))
+		self:setSubclassMap(classIdToMap[Control.CLASS_ID][""] or DEFAULT_SUBCLASS_MAP)
+	else
+		-- Set the subclass map
+		self:setSubclassMap(newSubclassMap)
 	end
 	return self
 end
@@ -956,6 +964,9 @@ function Control:_eOnThemeChanged()
 		local parent = self.parent
 		self._inheritedTheme = (parent and parent._inheritedTheme) or self:getRoot():getDefaultTheme()
 
+		-- Get the new subclass variant
+		self:setVariant(self._variantName)
+
 		if self._inheritedTheme ~= inheritedTheme then
 			-- The inherited theme changed
 			self:shallowEmit("_eOnThemeChanged")
@@ -1181,6 +1192,7 @@ function Control._addDefinition(entry)
 	entry:newVec2("_maximumSize", nil, "setMaximumSizeVec")
 	entry:newString("_currentOriginalSubclass", "normal", nil, nil, "setSubclass")
 	entry:newString("_currentSubclass", "", nil, nil, "setSubclass")
+	entry:newString("_variantName", "", nil, nil, "setVariant")
 	entry:newColor("albedo")
 end
 

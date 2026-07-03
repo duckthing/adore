@@ -32,7 +32,13 @@ function Theme:new(inheritsFrom)
 			}
 		}
 
-		self.variantsForClass = {}
+		self.variantsForClass = {
+			[Control.CLASS_ID] = {
+				[""] = {
+					normal = ""
+				}
+			}
+		}
 	else
 		-- Inherit through using a metatable
 		inheritsFrom._inherited[#inheritsFrom._inherited+1] = self
@@ -153,7 +159,6 @@ function Theme:setVariant(class, variationName, subclassMap)
 	end
 
 	variantNameToMap[variationName] = subclassMap
-	self:_updateForClass(class)
 end
 
 ---Gets the DrawRequest that will be used for a control
