@@ -376,12 +376,10 @@ function Control:setSubclassMap(subclassMap)
 	return self
 end
 
----Sets the variant/subclass map of this Control through the name.
----When the applied Theme changes, the variant name will be used to get the variation specific to that Theme.
+---Sets the variant without checking if it's a duplicate; called on Theme change
+---@param self Control
 ---@param name string
----@return self
-function Control:setVariant(name)
-	if self._variantName == name then return self end
+local function forceSetVariant(self, name)
 	self._variantName = name
 
 	-- Get the class
@@ -417,6 +415,15 @@ function Control:setVariant(name)
 		-- Set the subclass map
 		self:setSubclassMap(newSubclassMap)
 	end
+end
+
+---Sets the variant/subclass map of this Control through the name.
+---When the applied Theme changes, the variant name will be used to get the variation specific to that Theme.
+---@param name string
+---@return self
+function Control:setVariant(name)
+	if self._variantName == name then return self end
+	forceSetVariant(self, name)
 	return self
 end
 
@@ -965,7 +972,7 @@ function Control:_eOnThemeChanged()
 		self._inheritedTheme = (parent and parent._inheritedTheme) or self:getRoot():getDefaultTheme()
 
 		-- Get the new subclass variant
-		self:setVariant(self._variantName)
+		forceSetVariant(self, self._variantName)
 
 		if self._inheritedTheme ~= inheritedTheme then
 			-- The inherited theme changed
