@@ -56,8 +56,11 @@ end
 ---@return love.Transform
 function Camera:getCanvasTransform()
 	if self._shouldUpdateTransform then
-		self._shouldUpdateTransform = false
-		self:_updateCanvasTransform(self:getViewport():getDimensions())
+		local viewport = self:getViewport()
+		if viewport then
+			self._shouldUpdateTransform = false
+			self:_updateCanvasTransform(viewport:getDimensions())
+		end
 	end
 	return self._canvasTransform
 end

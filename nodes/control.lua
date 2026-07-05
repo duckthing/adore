@@ -1198,7 +1198,6 @@ function Control._addDefinition(entry)
 	entry:newVec2("_minimumSize", nil, "setMinimumSizeVec")
 	entry:newVec2("_maximumSize", nil, "setMaximumSizeVec")
 	entry:newString("_currentOriginalSubclass", "normal", nil, nil, "setSubclass")
-	entry:newString("_currentSubclass", "", nil, nil, "setSubclass")
 	entry:newString("_variantName", "", nil, nil, "setVariant")
 	entry:newColor("albedo")
 end

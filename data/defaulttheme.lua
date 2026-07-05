@@ -50,6 +50,12 @@ local function onRequire()
 		default:setDrawable(BaseButton, "", DrawBaseButton(buttonColors.normal, 4))
 		default:setDrawable(BaseButton, "hovered", DrawBaseButton(buttonColors.hovered, 4))
 		default:setDrawable(BaseButton, "pressed", DrawBaseButton(buttonColors.pressed, 4))
+		default:setVariant(BaseButton, "", {
+			normal = "",
+			hovered = "hovered",
+			pressed = "pressed",
+			focused = "hovered",
+		})
 
 		-- Button (with contents)
 		default:setDrawable(Button, "", DrawButton(buttonColors.normal, 4, nil, buttonColors.normalText))
@@ -59,6 +65,7 @@ local function onRequire()
 		default:setVariant(Button, "flat", {
 			normal = "flatnormal",
 			hovered = "flathovered",
+			focused = "flathovered",
 			pressed = "flatpressed",
 		})
 		default:setDrawable(Button, "flatnormal", DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText))
