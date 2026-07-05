@@ -40,35 +40,48 @@ local function onRequire()
 			normal =  {0.21, 0.21, 0.25},
 			hovered =  {0.3, 0.3, 0.32},
 			pressed =  {0.15, 0.15, 0.17},
+			transparent = {1, 1, 1, 0},
+			normalText = {1, 1, 1, 0.75},
+			hoveredText = {1, 1, 1, 1},
+			pressedText = {1, 1, 1, 0.5},
 		}
 
 		-- Base button (no contents)
-		default:setDrawable(BaseButton, nil, DrawBaseButton(buttonColors.normal, 4))
+		default:setDrawable(BaseButton, "", DrawBaseButton(buttonColors.normal, 4))
 		default:setDrawable(BaseButton, "hovered", DrawBaseButton(buttonColors.hovered, 4))
 		default:setDrawable(BaseButton, "pressed", DrawBaseButton(buttonColors.pressed, 4))
 
 		-- Button (with contents)
-		default:setDrawable(Button, nil, DrawButton(buttonColors.normal, 4, nil, {1, 1, 1, 0.75}))
-		default:setDrawable(Button, "hovered", DrawButton(buttonColors.hovered, 4))
-		default:setDrawable(Button, "pressed", DrawButton(buttonColors.pressed, 4, nil, {1, 1, 1, 0.5}))
+		default:setDrawable(Button, "", DrawButton(buttonColors.normal, 4, nil, buttonColors.normalText))
+		default:setDrawable(Button, "hovered", DrawButton(buttonColors.hovered, 4, nil, buttonColors.hoveredText))
+		default:setDrawable(Button, "pressed", DrawButton(buttonColors.pressed, 4, nil, buttonColors.pressedText))
+
+		default:setVariant(Button, "flat", {
+			normal = "flatnormal",
+			hovered = "flathovered",
+			pressed = "flatpressed",
+		})
+		default:setDrawable(Button, "flatnormal", DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText))
+		default:setDrawable(Button, "flathovered", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
+		default:setDrawable(Button, "flatpressed", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
 
 		-- TextureButton
-		default:setDrawable(TextureButton, nil, DrawTextureButton(buttonColors.normal, 4, nil, {1, 1, 1, 0.75}))
+		default:setDrawable(TextureButton, "", DrawTextureButton(buttonColors.normal, 4, nil, {1, 1, 1, 0.75}))
 		default:setDrawable(TextureButton, "hovered", DrawTextureButton(buttonColors.hovered, 4))
 		default:setDrawable(TextureButton, "pressed", DrawTextureButton(buttonColors.pressed, 4, nil, {1, 1, 1, 0.5}))
 
 		-- LineEdit
-		default:setDrawable(LineEdit, nil, DrawLineEdit(buttonColors.normal))
+		default:setDrawable(LineEdit, "", DrawLineEdit(buttonColors.normal))
 
 		-- TabBar
-		default:setDrawable(TabBar, nil, DrawTabBar())
+		default:setDrawable(TabBar, "", DrawTabBar())
 
 		-- TabContainer
-		default:setDrawable(TabContainer, nil, DrawTabContainer())
+		default:setDrawable(TabContainer, "", DrawTabContainer())
 	end
 
-	default:setDrawable(Label, nil, DrawLabel())
-	default:setDrawable(TextureRect, nil, DrawTexture())
+	default:setDrawable(Label, "", DrawLabel())
+	default:setDrawable(TextureRect, "", DrawTexture())
 
 	return default
 end
