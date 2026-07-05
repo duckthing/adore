@@ -354,7 +354,15 @@ function Node2d._addDefinition(entry)
 	entry:newNumber("_rotation", 0, nil, nil, nil, "setRotation")
 	entry:newBoolean("_transformRelativeToParent", true, "setRelativeTransform")
 	entry:newColor("albedo")
-	entry:newString("_blendMode", "alpha")
+
+	local blendModeMap = {
+		alpha = true,
+		replace = true,
+		screen = true,
+		add = true,
+		subtract = true,
+	}
+	entry:newEnum("_blendMode", blendModeMap, "alpha")
 end
 
 return Node2d
