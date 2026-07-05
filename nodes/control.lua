@@ -49,7 +49,7 @@ local DEFAULT_SUBCLASS_MAP = {
 Control._currentOriginalSubclass = "normal"
 ---@type string # The subclass, mapped from the original one in :setSubclass(), to a new one according to self.subclassMap
 Control._currentSubclass = ""
----@type string # The name of this variant, which is where the subclass map came from. Set through :setVariantName().
+---@type string # The name of this variant, which is where the subclass map came from. Set through :setVariant().
 Control._variantName = ""
 ---@type {[string]: string} # When using :setSubclass(), this will map the original subclass into something else. Can be used for different styles with the same logic.
 Control.subclassMap = DEFAULT_SUBCLASS_MAP
@@ -409,7 +409,7 @@ local function forceSetVariant(self, name)
 
 	if not newSubclassMap then
 		-- Couldn't find it
-		print(("[Control:setVariantName] Variant name '%s' is not found in this Theme"):format(name))
+		print(("[Control:setVariant] Variant '%s' is not found in this Theme"):format(name))
 		self:setSubclassMap(classIdToMap[Control.CLASS_ID][""] or DEFAULT_SUBCLASS_MAP)
 	else
 		-- Set the subclass map
