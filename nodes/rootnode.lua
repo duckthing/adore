@@ -398,11 +398,6 @@ function Root:focusOnControl(control, isMouse)
 	local oldFocused = self._focusedControl
 	if oldFocused then
 		-- Unfocus the old Control
-		if oldFocused._hovered then
-			-- Unhover
-			oldFocused:uiExited()
-			oldFocused._hovered = false
-		end
 		oldFocused:uiFocusLost()
 		self._focusedControl = nil
 	end
