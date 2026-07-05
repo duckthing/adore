@@ -104,13 +104,13 @@ function BaseButton:mousereleased(x, y, button)
 	end
 end
 
-function BaseButton:uiEntered(x, y)
-	BaseButton.super.uiEntered(self, x, y)
+function BaseButton:uiMouseEntered(x, y)
+	BaseButton.super.uiMouseEntered(self, x, y)
 	self:_updateSubclass()
 end
 
-function BaseButton:uiExited()
-	BaseButton.super.uiExited(self)
+function BaseButton:uiMouseExited()
+	BaseButton.super.uiMouseExited(self)
 	self:_updateSubclass()
 end
 

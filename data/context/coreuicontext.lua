@@ -155,7 +155,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 				-- Viewports in CanvasLayers all rely on the RootNode's Viewport, no matter what
 				-- Make the points relative to the Viewport the Control belongs to
 				local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
-				---@type boolean? # Was uiEntered handled?
+				---@type boolean? # Was uiMouseEntered handled?
 				local uiEnterOrLeftHandled = false
 
 				-- Send mousemoved events to focused Control, even if there's no overlap with the Control
@@ -164,13 +164,13 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 				if focused:doesPointOverlap(focusedX, focusedY) then
 					if not focused._hovered then
 						-- Cursor just entered the element
-						uiEnterOrLeftHandled = focused:uiEntered(focusedX, focusedY)
+						uiEnterOrLeftHandled = focused:uiMouseEntered(focusedX, focusedY)
 						focused._hovered = true
 					end
 				else
 					if focused._hovered then
 						-- Cursor just left the element
-						uiEnterOrLeftHandled = focused:uiExited()
+						uiEnterOrLeftHandled = focused:uiMouseExited()
 						focused._hovered = false
 					end
 				end
@@ -189,11 +189,11 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		-- If we're here, they're different
 		root._hoveredControl = newControl
 		if oldControl then
-			oldControl:uiExited()
+			oldControl:uiMouseExited()
 		end
 
 		if newControl then
-			newControl:uiEntered(nx, ny)
+			newControl:uiMouseEntered(nx, ny)
 		end
 	end
 
@@ -346,7 +346,7 @@ function CoreUIContext:mousefocus(inWindow)
 		local root = self.root
 		local oldControl = root._hoveredControl
 		if oldControl then
-			oldControl:uiExited()
+			oldControl:uiMouseExited()
 			root._hoveredControl = nil
 			return false -- TODO: Should mousefocus get sunk?
 		end

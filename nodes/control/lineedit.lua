@@ -272,11 +272,11 @@ end
 if love.mouse.isCursorSupported() then
 	local ibeamCursor = love.mouse.getSystemCursor("ibeam")
 
-	function LineEdit:uiEntered(x, y)
+	function LineEdit:uiMouseEntered(x, y)
 		love.mouse.setCursor(ibeamCursor)
 	end
 
-	function LineEdit:uiExited()
+	function LineEdit:uiMouseExited()
 		love.mouse.setCursor()
 	end
 end

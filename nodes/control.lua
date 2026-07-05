@@ -1060,26 +1060,26 @@ function Control:hasFocus()
 	return self:getRoot()._focusedControl == self
 end
 
----Called when the UI is gains focus OR is hovered
+---Called when the mouse enters this Control
 ---@param x integer
 ---@param y integer
-function Control:uiEntered(x, y)
+function Control:uiMouseEntered(x, y)
 	self._hovered = true
 end
 
----Called when the UI loses its focused OR hovered status
-function Control:uiExited()
+---Called when the mouse leaves this Control
+function Control:uiMouseExited()
 	self._hovered = false
 end
 
----Called when the UI gains focus, such as through keyboard navigation
+---Called when this Control gains focus, such as through keyboard navigation
 ---@param isMouse boolean
 function Control:uiFocused(isMouse)
 	self._focused = true
 	self:shallowBubble("_focusOnChild", self)
 end
 
----Called when the UI loses focus, such as the keyboard navigating elsewhere or clicking somewhere else
+---Called when this Control loses focus, such as the keyboard navigating elsewhere or clicking somewhere else
 function Control:uiFocusLost()
 	self._focused = false
 end
