@@ -27,7 +27,7 @@ function BaseButton:new()
 	---@type boolean # If the button is 'down'
 	self._pressed = false
 	---@type boolean # If the button should not be pressable or focusable
-	self.disabled = false
+	self._disabled = false
 
 	---@type Signal # Triggered whenever the button is pressed, NOT RELEASED.
 	self.pressed = self:newSignal()
@@ -38,7 +38,7 @@ function BaseButton:new()
 end
 
 function BaseButton:canFocus(isMouse)
-	return not self.disabled and BaseButton.super.canFocus(self, isMouse)
+	return not self._disabled and BaseButton.super.canFocus(self, isMouse)
 end
 
 ---Connects a simple Callable to the BaseButton.
@@ -56,15 +56,15 @@ end
 ---@param disabled boolean
 ---@return self
 function BaseButton:setDisabled(disabled)
-	if self.disabled ~= disabled then
-		self.disabled = disabled
+	if self._disabled ~= disabled then
+		self._disabled = disabled
 		self:_updateSubclass()
 	end
 	return self
 end
 
 function BaseButton:_updateSubclass()
-	if self.disabled then
+	if self._disabled then
 		self:setSubclass("disabled")
 	elseif self._pressed then
 		self:setSubclass("pressed")
@@ -81,7 +81,7 @@ end
 ---@param y integer
 ---@param button integer
 function BaseButton:mousepressed(x, y, button)
-	if not self.disabled and not self._pressed and bit.band(self.buttonFilter, bit.lshift(1, button - 1)) > 0 then
+	if not self._disabled and not self._pressed and bit.band(self.buttonFilter, bit.lshift(1, button - 1)) > 0 then
 		self._pressed = true
 		self:grabFocus(true)
 		self.pressed:fire(self, button)
@@ -97,7 +97,7 @@ function BaseButton:mousereleased(x, y, button)
 		self._pressed = false
 		self:releaseFocus()
 		self.released:fire(self, button)
-		if not self.disabled and self:doesPointOverlap(x, y) then
+		if not self._disabled and self:doesPointOverlap(x, y) then
 			self.clicked:fire(self, button)
 		end
 		self:_updateSubclass()
@@ -127,7 +127,7 @@ end
 
 function BaseButton:uiActivate()
 	BaseButton.super.uiActivate(self)
-	if not self.disabled then
+	if not self._disabled then
 		self._pressed = true
 		self.pressed:fire(self)
 		self:_updateSubclass()
@@ -136,7 +136,7 @@ end
 
 function BaseButton:uiDeactivate()
 	BaseButton.super.uiDeactivate(self)
-	if not self.disabled then
+	if not self._disabled then
 		self._pressed = false
 		self.released:fire(self)
 		self.clicked:fire(self, 1)
@@ -156,7 +156,7 @@ function BaseButton:forceDestroy(recursive)
 end
 
 function BaseButton._addDefinition(entry)
-	entry:newBoolean("disabled", false, "setDisabled")
+	entry:newBoolean("_disabled", false, "setDisabled")
 end
 
 return BaseButton
