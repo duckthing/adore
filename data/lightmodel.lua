@@ -499,7 +499,12 @@ end
 
 function LightModel._addDefinition(entry)
 	entry:newObject("_viewport", "Viewport", "%_viewportOptionsChanged")
-	entry:newString("_lightMode", "none", nil, nil, "%_viewportOptionsChanged")
+	local lightModeMap = {
+		none = true,
+		screen = true,
+		screenshadow = true,
+	}
+	entry:newEnum("_lightMode", lightModeMap, "none", "%_viewportOptionsChanged")
 	entry:newBoolean("_postProcessing", false, "%_viewportOptionsChanged")
 end
 

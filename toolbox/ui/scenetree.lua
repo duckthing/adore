@@ -29,7 +29,6 @@ local labelXOffset = 2
 ---@param toolbox Toolbox
 function SceneTreeViewer:new(toolbox)
 	SceneTreeViewer.super.new(self)
-	self:setVariant("panel")
 
 	self.toolbox = toolbox
 

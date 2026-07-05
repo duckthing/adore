@@ -131,21 +131,40 @@ function MainWindow:new(toolbox)
 		menuBar:addChild(button)
 	end
 
-	local sceneTree = SceneTreeViewer(toolbox)
-	self.sceneTree = sceneTree
-	sceneTree:setAnchorsAndOffsets(
-		0, 0, 0, 1,
-		0, 40, 252, 0
-	)
+	do
+		local sceneTree = SceneTreeViewer(toolbox)
+		self.sceneTree = sceneTree
+		sceneTree:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			0, 36, 0, 0
+		)
 
-	local inspector = Inspector(toolbox, sceneTree)
+		local sceneTreeContainer = Nodes("Control")()
+		self.sceneTreeContainer = sceneTreeContainer
+		sceneTreeContainer:setAnchorsAndOffsets(
+			0, 0, 0, 1,
+			0, 40, 252, 0
+		)
+		sceneTreeContainer:setVariant("panel")
+		sceneTreeContainer:addChild(sceneTree)
+
+		local label = Nodes("Label")("Scene Tree")
+			:setAnchors(0, 0, 1, 0)
+			:setOffsets(5, 0, 0, 30)
+			:setAlign("left")
+			:setJustify("center")
+			:setFontSize(16)
+		sceneTreeContainer:addChild(label)
+	end
+
+	local inspector = Inspector(toolbox, self.sceneTree)
 	self.inspector = inspector
 	inspector:setAnchorsAndOffsets(
 		1, 0, 1, 1,
 		-252, 40, 0, 0
 	)
 
-	editor:addChild(sceneTree)
+	editor:addChild(self.sceneTreeContainer)
 	editor:addChild(inspector)
 	editor:addChild(gameActionBar)
 	editor:addChild(menuBar)
