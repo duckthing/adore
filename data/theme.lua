@@ -137,6 +137,12 @@ function Theme:setDrawable(class, subclass, drawable)
 		-- Create it if it doesn't exist
 		subclassToDrawable = {}
 		self.drawablesForClass[class.CLASS_ID] = subclassToDrawable
+
+		local inheritsFrom = self._inheritsFrom
+		if inheritsFrom then
+			-- If we're inheriting, also search there
+			setmetatable(subclassToDrawable, {__index = inheritsFrom.drawablesForClass[class.CLASS_ID]})
+		end
 	end
 
 	subclassToDrawable[subclass] = drawable
@@ -156,6 +162,12 @@ function Theme:setVariant(class, variationName, subclassMap)
 		-- Create it if it doesn't exist
 		variantNameToMap = {}
 		self.variantsForClass[class.CLASS_ID] = variantNameToMap
+
+		local inheritsFrom = self._inheritsFrom
+		if inheritsFrom then
+			-- If we're inheriting, also search there
+			setmetatable(variantNameToMap, {__index = inheritsFrom.variantsForClass[class.CLASS_ID]})
+		end
 	end
 
 	variantNameToMap[variationName] = subclassMap
