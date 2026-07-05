@@ -107,7 +107,6 @@ end
 function Label._addDefinition(entry)
 	entry:newString("_text", "", nil, nil, "setText")
 	entry:newInteger("_fontSize", 0, nil, nil, nil, "setFontSize")
-
 	local alignMap = {
 		left = true,
 		center = true,
@@ -115,7 +114,6 @@ function Label._addDefinition(entry)
 		justify = true,
 	}
 	entry:newEnum("_align", alignMap, "left", "setAlign")
-
 	local justifyMap = {
 		top = true,
 		center = true,
