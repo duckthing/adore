@@ -56,8 +56,8 @@ local function onRequire()
 		default:setVariant(BaseButton, "", {
 			normal = "",
 			hovered = "hovered",
-			pressed = "pressed",
 			focused = "hovered",
+			pressed = "pressed",
 			disabled = "disabled",
 		})
 
@@ -75,14 +75,15 @@ local function onRequire()
 			disabled = "flatdisabled",
 		})
 		default:setDrawable(Button, "flatnormal", DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText))
-		default:setDrawable(Button, "flathovered", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
+		default:setDrawable(Button, "flathovered", DrawButton(buttonColors.transparent, 4, nil, buttonColors.hoveredText))
 		default:setDrawable(Button, "flatpressed", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
 		default:setDrawable(Button, "flatdisabled", DrawButton(buttonColors.transparent, 4, nil, buttonColors.disabledText))
 
 		-- TextureButton
-		default:setDrawable(TextureButton, "", DrawTextureButton(buttonColors.normal, 4, nil, {1, 1, 1, 0.75}))
-		default:setDrawable(TextureButton, "hovered", DrawTextureButton(buttonColors.hovered, 4))
-		default:setDrawable(TextureButton, "pressed", DrawTextureButton(buttonColors.pressed, 4, nil, {1, 1, 1, 0.5}))
+		default:setDrawable(TextureButton, "", DrawTextureButton(buttonColors.normal, 4, nil, buttonColors.normalText))
+		default:setDrawable(TextureButton, "hovered", DrawTextureButton(buttonColors.hovered, 4, buttonColors.hoveredText))
+		default:setDrawable(TextureButton, "pressed", DrawTextureButton(buttonColors.pressed, 4, nil, buttonColors.pressedText))
+		default:setDrawable(TextureButton, "disabled", DrawTextureButton(buttonColors.disabled, 4, nil, buttonColors.disabledText))
 
 		-- LineEdit
 		default:setDrawable(LineEdit, "", DrawLineEdit(buttonColors.normal))
