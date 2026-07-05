@@ -40,37 +40,44 @@ local function onRequire()
 			normal =  {0.21, 0.21, 0.25},
 			hovered =  {0.3, 0.3, 0.32},
 			pressed =  {0.15, 0.15, 0.17},
+			disabled =  {0.12, 0.12, 0.14},
 			transparent = {1, 1, 1, 0},
 			normalText = {1, 1, 1, 0.75},
 			hoveredText = {1, 1, 1, 1},
 			pressedText = {1, 1, 1, 0.5},
+			disabledText = {1, 1, 1, 0.4},
 		}
 
 		-- Base button (no contents)
 		default:setDrawable(BaseButton, "", DrawBaseButton(buttonColors.normal, 4))
 		default:setDrawable(BaseButton, "hovered", DrawBaseButton(buttonColors.hovered, 4))
 		default:setDrawable(BaseButton, "pressed", DrawBaseButton(buttonColors.pressed, 4))
+		default:setDrawable(BaseButton, "disabled", DrawBaseButton(buttonColors.disabled, 4))
 		default:setVariant(BaseButton, "", {
 			normal = "",
 			hovered = "hovered",
 			pressed = "pressed",
 			focused = "hovered",
+			disabled = "disabled",
 		})
 
 		-- Button (with contents)
 		default:setDrawable(Button, "", DrawButton(buttonColors.normal, 4, nil, buttonColors.normalText))
 		default:setDrawable(Button, "hovered", DrawButton(buttonColors.hovered, 4, nil, buttonColors.hoveredText))
 		default:setDrawable(Button, "pressed", DrawButton(buttonColors.pressed, 4, nil, buttonColors.pressedText))
+		default:setDrawable(Button, "disabled", DrawButton(buttonColors.disabled, 4, nil, buttonColors.disabledText))
 
 		default:setVariant(Button, "flat", {
 			normal = "flatnormal",
 			hovered = "flathovered",
 			focused = "flathovered",
 			pressed = "flatpressed",
+			disabled = "flatdisabled",
 		})
 		default:setDrawable(Button, "flatnormal", DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText))
 		default:setDrawable(Button, "flathovered", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
 		default:setDrawable(Button, "flatpressed", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
+		default:setDrawable(Button, "flatdisabled", DrawButton(buttonColors.transparent, 4, nil, buttonColors.disabledText))
 
 		-- TextureButton
 		default:setDrawable(TextureButton, "", DrawTextureButton(buttonColors.normal, 4, nil, {1, 1, 1, 0.75}))
