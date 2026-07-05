@@ -30,6 +30,7 @@ end
 ---@param sceneTree Toolbox.SceneTree
 function Inspector:new(toolbox, sceneTree)
 	Inspector.super.new(self)
+	self:setVariant("panel")
 
 	self.toolbox = toolbox
 	self.sceneTree = sceneTree
