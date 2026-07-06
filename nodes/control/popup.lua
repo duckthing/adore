@@ -13,6 +13,8 @@ Popup._mouseMode = "sink"
 Popup._drawOnTop = true
 ---@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
 Popup._unfocusToClose = true
+---@type boolean # Should former modals be drawn as well, in the event multiple are pushed?
+Popup._drawPreviousModals = false
 
 function Popup:new()
 	Popup.super.new(self)
@@ -95,6 +97,7 @@ end
 function Popup._addDefinition(entry)
 	entry:newBoolean("_drawOnTop", true)
 	entry:newBoolean("_unfocusToClose", true)
+	entry:newBoolean("_drawFormerModals", false)
 end
 
 return Popup
