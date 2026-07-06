@@ -19,21 +19,31 @@ function Popup:new()
 	self:addChild(Adore.Nodes("ColorRect")():setAnchors(0, 0, 1, 1))
 end
 
-function Popup:popup(x, y, w, h)
+---Updates the dimensions of the Popup to be accurate
+---@param self Popup
+local function updateDimensions(self)
+	local targetW, targetH = 0, 0
+	if self._drawOnTop then
+		local viewport = self:getViewport()
+		assert(viewport, "Cannot popup centered outside of a tree")
+		targetW, targetH = viewport:getDimensions()
+	end
+
+	local x, y, w, h = self:_getRectFromParentSize(targetW, targetH)
 	self:_setModalRect(x, y, w, h)
-	self:pushModal()
 end
 
-function Popup:popupCentered(w, h)
-	w, h = w or 160, h or 120
-	local viewport = self:getViewport()
-	assert(viewport, "Cannot popup centered outside of a tree")
-	local vw, vh = viewport:getDimensions()
-	self:popup((vw - w) * 0.5, (vh - h) * 0.5, w, h)
+function Popup:popup()
+	updateDimensions(self)
+	self:pushModal()
 end
 
 function Popup:close()
 	self:popModal()
+end
+
+function Popup:onRefreshed()
+	Popup.super.onRefreshed(self)
 end
 
 ---Disabled for Popup
