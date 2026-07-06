@@ -56,12 +56,26 @@ local actions = {
 		return context.root:uiSelectPrevious()
 	end,
 	uiUnfocus = function(context)
-		local root = context.root
 		-- TODO: Default unfocus check is in shortcut action, while default focus check is in navigation method.
 		-- Should these be moved together?
+
+		local root = context.root
 		if root.allowUnfocus then
-			return root:uiUnfocus()
+			-- Can unfocus Controls
+			if root._focusedControl then
+				-- A Control is focused; unfocus it
+				return root:uiUnfocus()
+			end
 		end
+
+		-- Close modals when trying to unfocus a non-existent Control
+		---@type Popup?
+		local modal = root._modalStack[#root._modalStack]
+		if modal and modal._unfocusToClose then
+			modal:close()
+			return context.sinkHandledInput
+		end
+
 		return false
 	end,
 

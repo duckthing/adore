@@ -11,6 +11,8 @@ Popup._mouseMode = "sink"
 
 ---@type boolean # Should this be drawn on the root Viewport?
 Popup._drawOnTop = true
+---@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
+Popup._unfocusToClose = true
 
 function Popup:new()
 	Popup.super.new(self)
