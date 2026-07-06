@@ -1114,7 +1114,11 @@ function Root:pushControlModal(control)
 		control._pushedAsModal = true
 		self._modalStack[#self._modalStack+1] = control
 
-		-- Unfocus the last element
+		-- Unfocus and unhover the last element
+		if self._hoveredControl then
+			self._hoveredControl:uiMouseExited()
+		end
+
 		if self._focusedControl then
 			control._previousFocused = self._focusedControl
 			self._focusedControl:releaseFocus()
@@ -1336,11 +1340,20 @@ end
 
 -- local appleCakeProfileDTV
 
+---@param modalStack Popup[]
+local function drawModals(modalStack)
+	local popup = modalStack[#modalStack]
+	if popup and popup._drawOnTop then
+		popup:_intModalDraw()
+	end
+end
+
 ---This method draws the contents of the RootNode into the Viewport.
 ---It's already handled in `RootNode:draw()`.
 function Root:drawToViewport()
 	-- appleCakeProfileDTV = AppleCake.profile("Root:drawToViewport", nil, appleCakeProfileDTV)
 	local viewport = self._viewport
+	local modalStack = self._modalStack
 
 	viewport:push(true)
 
@@ -1374,6 +1387,7 @@ function Root:drawToViewport()
 			end
 		end
 
+		layerWantsNoProcessing = layerWantsNoProcessing or modalStack[#modalStack] ~= nil
 		viewport:pop(true)
 
 		-- And then draw everything else that doesn't want post-processing
@@ -1390,6 +1404,7 @@ function Root:drawToViewport()
 					viewport:applyToBuffer(layer.albedo, (shaderId and shaderAssets[shaderId]))
 				end
 			end
+			drawModals(modalStack)
 			viewport:pop(false)
 		end
 	else
@@ -1403,6 +1418,7 @@ function Root:drawToViewport()
 				viewport:applyToBuffer(layer.albedo)
 			end
 		end
+		drawModals(modalStack)
 		viewport:pop(false)
 	end
 

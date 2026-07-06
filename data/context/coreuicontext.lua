@@ -147,7 +147,22 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 	local rx, ry = rootViewport:windowToViewportPoint(x, y)
 
 	do
-		-- Handle focused first
+		-- Send to modal first
+		local modal = root._modalStack[#root._modalStack]
+		if modal then
+			local mMouseMoved = modal.mousemoved
+			if mMouseMoved then
+				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
+
+				if mMouseMoved(modal, modalX, modalY) then
+					return self.sinkHandledInput
+				end
+			end
+		end
+	end
+
+	do
+		-- Send to focused second
 		local focused = root._focusedControl
 		if focused then
 			local fMouseMoved = focused.mousemoved

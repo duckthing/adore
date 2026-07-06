@@ -224,7 +224,15 @@ end
 ---@return T
 function Node:addChild(child)
 	assert(child ~= self, "Can't add self to self")
-	assert(child._valid, "Child is not valid (was destroyed)")
+	if not child._valid then
+		if rawget(child, "CLASS_ID") then
+			-- Passed a class without calling it (and instancing the Node)
+			error("Child is not an instance (did you forget to initialize it?)")
+		else
+			-- It was destroyed
+			error("Child is not valid (was destroyed)")
+		end
+	end
 
 	local oldParent = child.parent
 	if oldParent then

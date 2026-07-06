@@ -88,6 +88,8 @@ local nodePaths = {
 			TabBar = "nodes.control.tabbar",
 			---@type TabContainer
 			TabContainer = "nodes.control.tabcontainer",
+			---@type Popup
+			Popup = "nodes.control.popup",
 		---@type CanvasLayer
 		CanvasLayer = "nodes.canvaslayer",
 
