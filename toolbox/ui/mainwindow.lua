@@ -26,12 +26,18 @@ local gameActions = {
 
 local menuActions = {
 	{
-		"Save",
-		"saveScene",
+		"Scene",
+		{
+			{label = "Save Scene"},
+			{label = "Load Scene"},
+			{label = "Reload Scene"},
+			{label = ""},
+			{label = "Quit"},
+		}
 	},
 	{
-		"Load",
-		"loadScene",
+		"Project",
+		{}
 	},
 }
 
@@ -82,10 +88,13 @@ function MainWindow:new(toolbox)
 		end
 	end
 
+	--======== EDITOR
 	local editor = Nodes("Control")()
 	editor:setAnchors(0, 0, 1, 1)
 	self.editor = editor
 
+
+	--======== MENU BAR
 	local menuBar = Nodes("HBox")()
 	menuBar:setAnchorsAndOffsets(
 		0, 0, 1, 0,
@@ -100,18 +109,26 @@ function MainWindow:new(toolbox)
 		local button = Nodes("Button")(action[1])
 		button:setAnchorsAndOffsets(
 			0, 0, 0, 1,
-			0, -2, 80, -4
+			0, -2, 60, -4
 		)
-		button.clicked:connect(self, action[2])
+		local popupMenu = Nodes("PopupMenu")(action[2])
+		popupMenu._resizeWithParent = false
+		popupMenu:setAnchors(0, 1, 0, 1)
+		button:addChild(popupMenu)
+
+		button.clicked:connectCallable(function(...)
+			popupMenu:popup()
+		end)
+
 		menuBar:addChild(button)
 	end
 
+	--======== GAME BAR
 	local gameActionBar = Nodes("HBox")()
 	gameActionBar:setAnchorsAndOffsets(
 		1, 0, 1, 0,
 		-176, 0, 4, 32
 	)
-	-- gameActionBar:setSortMode("center")
 	gameActionBar:setMargin(4)
 	gameActionBar:setVariant("topbar")
 
@@ -126,6 +143,7 @@ function MainWindow:new(toolbox)
 		gameActionBar:addChild(button)
 	end
 
+	--======== SCENE TREE
 	do
 		local sceneTree = SceneTreeViewer(toolbox)
 		self.sceneTree = sceneTree
@@ -152,6 +170,7 @@ function MainWindow:new(toolbox)
 		sceneTreeContainer:addChild(label)
 	end
 
+	--======== INSPECTOR
 	local inspector = Inspector(toolbox, self.sceneTree)
 	self.inspector = inspector
 	inspector:setAnchorsAndOffsets(
