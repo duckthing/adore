@@ -31,13 +31,13 @@ local function updateDimensions(self)
 		-- Draw on the Root
 		local viewport = self:getRoot():getViewport()
 		assert(viewport, "Cannot popup outside of the tree")
-		targetW, targetH = viewport:getDimensions()
+		offsetX, offsetY, targetW, targetH = viewport:getSafeArea()
 	else
 		if self._topLevelNode == self then
 			-- Top-level node, resize according to the Viewport this Popup belongs to
 			local viewport = self:getViewport()
 			assert(viewport, "Cannot popup outside of the tree")
-			targetW, targetH = viewport:getDimensions()
+			offsetX, offsetY, targetW, targetH = viewport:getSafeArea()
 		else
 			-- Not top-level, resize according to the parent Control
 			---@type Control
@@ -62,9 +62,15 @@ function Popup:close()
 	self:hide()
 end
 
-function Popup:onRefreshed()
-	Popup.super.onRefreshed(self)
+function Popup:mousepressed(mx, my, button, isTouch, pressCount)
+	if button == 1 and not self:doesPointOverlap(mx, my) then
+		-- Clicked out of bounds; close the popup
+		self:close()
+	end
+	return true
 end
+
+function Popup:mousemoved(mx, my) return true end
 
 ---Disabled for Popup
 function Popup:_setCanonRect() end
@@ -78,21 +84,10 @@ function Popup:_intDraw()
 	end
 end
 
-function Popup:mousepressed(mx, my, button, isTouch, pressCount)
-	if button == 1 and not self:doesPointOverlap(mx, my) then
-		-- Clicked out of bounds; close the popup
-		self:close()
-	end
-	return true
-end
-
-function Popup:mousemoved(mx, my) return true end
-
 ---Draws the modal like normal; you should override :draw like normal
 Popup._intModalDraw = Popup.super._intDraw
 
-function Popup:draw()
-end
+function Popup:draw() end
 
 function Popup._addDefinition(entry)
 	entry:newBoolean("_drawOnTop", true)
