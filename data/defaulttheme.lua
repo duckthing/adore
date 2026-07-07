@@ -80,10 +80,10 @@ local function onRequire()
 		default:setDrawable(Button, "flatdisabled", DrawButton(buttonColors.transparent, 4, nil, buttonColors.disabledText))
 
 		-- TextureButton
-		default:setDrawable(TextureButton, "", DrawTextureButton(buttonColors.normal, 4, nil, buttonColors.normalText))
-		default:setDrawable(TextureButton, "hovered", DrawTextureButton(buttonColors.hovered, 4, buttonColors.hoveredText))
-		default:setDrawable(TextureButton, "pressed", DrawTextureButton(buttonColors.pressed, 4, nil, buttonColors.pressedText))
-		default:setDrawable(TextureButton, "disabled", DrawTextureButton(buttonColors.disabled, 4, nil, buttonColors.disabledText))
+		default:setDrawable(TextureButton, "", DrawTextureButton(nil, 4, buttonColors.normalText))
+		default:setDrawable(TextureButton, "hovered", DrawTextureButton(nil, 4, buttonColors.hoveredText))
+		default:setDrawable(TextureButton, "pressed", DrawTextureButton(nil, 4, buttonColors.pressedText))
+		default:setDrawable(TextureButton, "disabled", DrawTextureButton(nil, 4, buttonColors.disabledText))
 
 		-- LineEdit
 		default:setDrawable(LineEdit, "", DrawLineEdit(buttonColors.normal))

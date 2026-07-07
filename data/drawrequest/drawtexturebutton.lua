@@ -15,8 +15,8 @@ function DrawTextureButton:new(backgroundColor, angle, textureAlbedo)
 
 	---@type number
 	self.angle = angle or 8
-	---@type integer[] # The background color, will be mixed with the Control's albedo
-	self.backgroundColor = backgroundColor or {1, 1, 1}
+	---@type integer[]? # The background color, will be mixed with the Control's albedo
+	self.backgroundColor = backgroundColor
 	---@type integer[]
 	self.textureAlbedo = textureAlbedo or {1, 1, 1, 1}
 end
@@ -40,8 +40,10 @@ function DrawTextureButton:draw(texButton)
 	love.graphics.intersectScissor(x, y, w, h)
 
 	-- Draw the button's background
-	love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.backgroundColor, 1, 4)))
-	love.graphics.rectangle("fill", x, y, w, h, self.angle)
+	if self.backgroundColor then
+		love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.backgroundColor, 1, 4)))
+		love.graphics.rectangle("fill", x, y, w, h, self.angle)
+	end
 
 	local tSource = texButton._texture
 	if tSource then
