@@ -97,7 +97,7 @@ function Popup:draw() end
 
 function Popup._addDefinition(entry)
 	entry:newBoolean("_drawOnTop", true)
-	entry:newBoolean("_drawFormerModals", false)
+	entry:newBoolean("_drawPreviousModals", false)
 	entry:newBoolean("_unfocusToClose", true)
 	entry:newInteger("_offClickToClose", 3, 0)
 end
