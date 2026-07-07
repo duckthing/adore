@@ -1,6 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local Control = Adore.Nodes("Control")
+local bit = Adore.Common("bitlib")
 
 ---@class Popup: Control
 ---@field super Control
@@ -11,10 +12,15 @@ Popup._mouseMode = "sink"
 
 ---@type boolean # Should this be drawn on the root Viewport?
 Popup._drawOnTop = true
----@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
-Popup._unfocusToClose = true
 ---@type boolean # Should former modals be drawn as well, in the event multiple are pushed?
 Popup._drawPreviousModals = false
+---@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
+Popup._unfocusToClose = true
+---@type integer # Allows closing the Popup when the button index matches bitwise.
+---The default is `3`, which means left clicks (`1`) and right clicks (`2`) that are outside
+---of the Popup will close it. `1 + 2 + 4` will close on middle-click as well.
+---See `BaseButton.buttonFilter`.
+Popup._offClickToClose = 3
 
 function Popup:new()
 	Popup.super.new(self)
@@ -63,7 +69,7 @@ function Popup:close()
 end
 
 function Popup:mousepressed(mx, my, button, isTouch, pressCount)
-	if button == 1 and not self:doesPointOverlap(mx, my) then
+	if bit.band(self._offClickToClose, bit.lshift(1, button - 1)) > 0 and not self:doesPointOverlap(mx, my) then
 		-- Clicked out of bounds; close the popup
 		self:close()
 	end
@@ -91,8 +97,9 @@ function Popup:draw() end
 
 function Popup._addDefinition(entry)
 	entry:newBoolean("_drawOnTop", true)
-	entry:newBoolean("_unfocusToClose", true)
 	entry:newBoolean("_drawFormerModals", false)
+	entry:newBoolean("_unfocusToClose", true)
+	entry:newInteger("_offClickToClose", 3, 0)
 end
 
 return Popup
