@@ -90,6 +90,8 @@ local nodePaths = {
 			TabContainer = "nodes.control.tabcontainer",
 			---@type Popup
 			Popup = "nodes.control.popup",
+				---@type PopupMenu
+				PopupMenu = "nodes.control.popup.popupmenu",
 		---@type CanvasLayer
 		CanvasLayer = "nodes.canvaslayer",
 

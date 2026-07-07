@@ -18,6 +18,7 @@ local function onRequire()
 	local LineEdit = Nodes("LineEdit")
 	local TabBar = Nodes("TabBar")
 	local TabContainer = Nodes("TabContainer")
+	local PopupMenu = Nodes("PopupMenu")
 
 	local Box = Resources("DrawRequest.Box")
 	local DrawLabel = Resources("DrawRequest.Label")
@@ -29,6 +30,7 @@ local function onRequire()
 	local DrawNinePatchRect = Resources("DrawRequest.NinePatchRect")
 	local DrawTabBar = Resources("DrawRequest.TabBar")
 	local DrawTabContainer = Resources("DrawRequest.TabContainer")
+	local DrawPopupMenu = Resources("DrawRequest.PopupMenu")
 
 	local default = Theme()
 
@@ -93,6 +95,9 @@ local function onRequire()
 
 		-- TabContainer
 		default:setDrawable(TabContainer, "", DrawTabContainer())
+
+		-- PopupMenu
+		default:setDrawable(PopupMenu, "", DrawPopupMenu())
 	end
 
 	default:setDrawable(Label, "", DrawLabel())

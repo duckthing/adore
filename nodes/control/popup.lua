@@ -14,6 +14,8 @@ Popup._mouseMode = "sink"
 Popup._drawOnTop = true
 ---@type boolean # Should former modals be drawn as well, in the event multiple are pushed?
 Popup._drawPreviousModals = false
+---@type boolean # Should this Popup be resized according to a parent Control?
+Popup._resizeWithParent = false
 ---@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
 Popup._unfocusToClose = true
 ---@type integer # Allows closing the Popup when the button index matches bitwise.
@@ -24,7 +26,6 @@ Popup._offClickToClose = 3
 
 function Popup:new()
 	Popup.super.new(self)
-	self:addChild(Adore.Nodes("ColorRect")():setAnchors(0, 0, 1, 1))
 	self:hide()
 end
 
@@ -33,13 +34,13 @@ end
 local function updateDimensions(self)
 	local offsetX, offsetY = 0, 0
 	local targetW, targetH = 0, 0
-	if self._drawOnTop then
-		-- Draw on the Root
+	if self._drawOnTop and self._resizeWithParent then
+		-- Resize according to the Root Viewport
 		local viewport = self:getRoot():getViewport()
 		assert(viewport, "Cannot popup outside of the tree")
 		offsetX, offsetY, targetW, targetH = viewport:getSafeArea()
 	else
-		if self._topLevelNode == self then
+		if self._topLevelNode == self and self._resizeWithParent then
 			-- Top-level node, resize according to the Viewport this Popup belongs to
 			local viewport = self:getViewport()
 			assert(viewport, "Cannot popup outside of the tree")
@@ -93,11 +94,10 @@ end
 ---Draws the modal like normal; you should override :draw like normal
 Popup._intModalDraw = Popup.super._intDraw
 
-function Popup:draw() end
-
 function Popup._addDefinition(entry)
 	entry:newBoolean("_drawOnTop", true)
 	entry:newBoolean("_drawPreviousModals", false)
+	entry:newBoolean("_resizeWithParent", true)
 	entry:newBoolean("_unfocusToClose", true)
 	entry:newInteger("_offClickToClose", 3, 0)
 end
