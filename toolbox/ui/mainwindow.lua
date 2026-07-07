@@ -86,38 +86,13 @@ function MainWindow:new(toolbox)
 	editor:setAnchors(0, 0, 1, 1)
 	self.editor = editor
 
-	local gameActionBar = Nodes("HBox")()
-	gameActionBar:setAnchorsAndOffsets(
-		1, 0, 1, 0,
-		-176, 0, -4, 32
-	)
-	-- gameActionBar:setSortMode("center")
-	gameActionBar:setMargin(4)
-	gameActionBar:setPadding(4)
-	gameActionBar:setVariant("topbar")
-
-	for i = 1, #gameActions do
-		local action = gameActions[i]
-		local button = Nodes("Button")("")
-		button:setAnchorsAndOffsets(
-			0, 0, 0, 1,
-			0, 0, 32, 0
-		)
-		button:setIcon(action[1])
-		button:setIconExpand(true)
-		button:setIconJustify("center")
-		button:setIconAlign("center")
-		button.clicked:connect(self, action[2])
-		gameActionBar:addChild(button)
-	end
-
 	local menuBar = Nodes("HBox")()
 	menuBar:setAnchorsAndOffsets(
 		0, 0, 1, 0,
-		4, 0, -180, 32
+		-4, 0, -180, 32
 	)
 	menuBar:setMargin(4)
-	menuBar:setPadding(4)
+	menuBar:setPadding(12)
 	menuBar:setVariant("topbar")
 
 	for i = 1, #menuActions do
@@ -129,6 +104,26 @@ function MainWindow:new(toolbox)
 		)
 		button.clicked:connect(self, action[2])
 		menuBar:addChild(button)
+	end
+
+	local gameActionBar = Nodes("HBox")()
+	gameActionBar:setAnchorsAndOffsets(
+		1, 0, 1, 0,
+		-176, 0, 4, 32
+	)
+	-- gameActionBar:setSortMode("center")
+	gameActionBar:setMargin(4)
+	gameActionBar:setVariant("topbar")
+
+	for i = 1, #gameActions do
+		local action = gameActions[i]
+		local button = Nodes("TextureButton")(action[1])
+		button:setAnchorsAndOffsets(
+			0, 0, 0, 1,
+			0, 0, 32, 0
+		)
+		button.clicked:connect(self, action[2])
+		gameActionBar:addChild(button)
 	end
 
 	do
@@ -175,14 +170,14 @@ function MainWindow:new(toolbox)
 	self:addChild(subWindow)
 end
 
----@param button Button?
+---@param button TextureButton?
 function MainWindow:togglePause(button)
 	local toolbox = self.toolbox
 	local c = toolbox.subrootContext
 	c.running = not c.running
 
 	if button then
-		button:setIcon(c.running and Assets.Pause or Assets.Play)
+		button:setTexture(c.running and Assets.Pause or Assets.Play)
 	end
 end
 
