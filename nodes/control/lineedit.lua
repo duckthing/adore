@@ -192,6 +192,19 @@ function LineEdit:mousereleased(mx, my, button)
 	self._inputField:mousereleased(mx - lcr.x - pos.x, my - lcr.y - pos.y, button)
 end
 
+---From a key, returns `true` if it's going to be considered in `:textinput`
+---@param key love.KeyConstant
+---@return boolean isInput
+local function isKeyValidTextInput(key)
+	local length = #key
+	-- All keys with 1 character are text input
+	if length == 1 then return true end
+	-- Numpad input
+	if key:find("^kp") then return true end
+	-- Space and return
+	return length == 5 and (key == "space" or key == "return")
+end
+
 function LineEdit:keypressed(key, scancode, isRepeat)
 	if key == "escape" then
 		if self:isTextDifferent() then
@@ -222,7 +235,9 @@ function LineEdit:keypressed(key, scancode, isRepeat)
 			self._text = newText
 			self:deferRefreshSelf()
 		end
-		return handled
+
+		-- If a key might edit the LineEdit later, we should consider it handled
+		return handled or isKeyValidTextInput(key)
 	end
 	return false
 end
