@@ -109,8 +109,9 @@ function MainWindow:new(toolbox)
 		local button = Nodes("Button")(action[1])
 		button:setAnchorsAndOffsets(
 			0, 0, 0, 1,
-			0, -2, 60, -4
+			0, 0, 60, 0
 		)
+		button:setVariant("flat")
 		local popupMenu = Nodes("PopupMenu")(action[2])
 		popupMenu._resizeWithParent = false
 		popupMenu:setAnchors(0, 1, 0, 1)
