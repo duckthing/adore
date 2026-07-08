@@ -1,10 +1,9 @@
 ---@type AdoreInit
 local Adore = require ""
 local Popup = Adore.Nodes("Popup")
-local Vec2 = Adore.Common("Vec2")
 
 local FontLoader = Adore.Loader.getCollection("FontLoader")
-local max = math.max
+local ceil = math.ceil
 
 ---@class PopupMenu: Popup
 ---@overload fun(items: PopupMenu.Item[]?): PopupMenu
@@ -30,6 +29,8 @@ function PopupMenu:new(items)
 
 	---@type PopupMenu.Item[]
 	self._items = nil
+	---@type integer # The index of the element that is being hovered over
+	self._hoveredIndex = 0
 
 	self.itemSelected = self:newSignal()
 
@@ -63,6 +64,20 @@ function PopupMenu:setItems(items)
 	end
 
 	self:setMinimumSize(minWidth + padding * 2, minHeight + padding * 2)
+end
+
+function PopupMenu:mousemoved(mx, my)
+	if not self:doesPointOverlap(mx, my) then return true end
+
+	local _, ly = self:toLocal(mx, my)
+	local padding, margin = self._padding, self._margin
+
+	local font = self._font[self._fontSize]
+	local itemHeight = font:getHeight() + margin
+
+	self._hoveredIndex = ceil((ly - padding) / (itemHeight))
+
+	return true
 end
 
 return PopupMenu

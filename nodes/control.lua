@@ -1030,6 +1030,28 @@ function Control:onRefreshed()
 	self:forceRefresh()
 end
 
+---Converts a global point into a local one
+---@param gx number
+---@param gy number
+---@return number lx
+---@return number ly
+function Control:toLocal(gx, gy)
+	local lx, ly = self._globalTransform:inverseTransformPoint(gx, gy)
+	local lcr = self._localContentRect
+	return lx - lcr.x, ly - lcr.y
+end
+
+---Converts a local point into a global one
+---@param lx number
+---@param ly number
+---@return number gx
+---@return number gy
+function Control:toGlobal(lx, ly)
+	local gx, gy = self._globalTransform:transformPoint(lx, ly)
+	local lcr = self._localContentRect
+	return gx + lcr.x, gy + lcr.y
+end
+
 ---Checks if a point overlaps with this Control, but NOT if the point is clipped by a parent
 ---@param gx integer
 ---@param gy integer
