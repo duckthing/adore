@@ -994,6 +994,7 @@ local function shashForEachControlWithCheck(obj, mouseX, mouseY, check, ...)
 
 		if objDepth > deepestDepth then
 			-- Found the new deepest object
+			-- print("woah", obj, obj:canReceiveInput(true, mouseX, mouseY), obj:doesPointOverlap(mouseX, mouseY))
 			if check(obj, ...) and obj:canReceiveInput(true, mouseX, mouseY) and obj:doesPointOverlap(mouseX, mouseY) then
 				deepestDepth = objDepth
 				deepestLayer = layerDepth
@@ -1052,7 +1053,27 @@ function Root:getControlAtPoint(x, y, check, ...)
 	local tx, ty = rootViewport:windowToViewportPoint(x, y)
 	local fx, fy = nil, nil
 
+	local modal = self._modalStack[#self._modalStack]
+	if modal then
+		-- If there's a modal, we only check the Viewport that it is in
+		local viewport = modal:getViewport()
+		local lx, ly = tx, ty
+		if viewport ~= rootViewport then
+			---@diagnostic disable-next-line: need-check-nil
+			lx, ly = viewport:windowToViewportPoint(tx, ty)
+			---@cast viewport Viewport
+		end
+		local shash = viewport._controlShash
+		shash:each(lx, ly, 1, 1, shashForEachControlWithCheck, lx, ly, check or noop, ...)
+		if deepestElement then
+			return deepestElement, lx, ly
+		else
+			return
+		end
+	end
+
 	for i = #self._canvasLayers, 1, -1 do
+		-- Check all layers for the best Control
 		local layer = self._canvasLayers[i]
 		local viewport = layer._viewport
 		local lx, ly = tx, ty

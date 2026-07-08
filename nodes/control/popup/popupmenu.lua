@@ -80,4 +80,9 @@ function PopupMenu:mousemoved(mx, my)
 	return true
 end
 
+function PopupMenu:uiMouseExited()
+	self._hoveredIndex = 0
+	PopupMenu.super.uiMouseExited(self)
+end
+
 return PopupMenu

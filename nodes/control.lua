@@ -899,6 +899,23 @@ function Control:canReceiveInput(isMouse, gx, gy)
 	if self._inputMode == "ignore" then return false end
 	if isMouse and self._mouseInputMode == "ignore" then return false end
 
+	---@type boolean # If we're not blocked by a modal, by either being directly under or not having one active
+	local allowedByModal = true
+	---@type Control?
+	local modal
+	do
+		local modalStack = self:getRoot()._modalStack
+		modal = modalStack[#modalStack]
+		if modal then
+			-- Blocked, until we find this modal
+			allowedByModal = modal == self
+			if allowedByModal then
+				-- Ancestors can't block mouse input when this Control is a modal
+				isMouse = false
+			end
+		end
+	end
+
 	-- Check the top-level node if it's being drawn (it's commonly hidden entirely)
 	local topLevelNode = self._topLevelNode
 	if not topLevelNode or not topLevelNode._visible then return false end
@@ -931,6 +948,12 @@ function Control:canReceiveInput(isMouse, gx, gy)
 			break
 		end
 
+		if currNode == modal then
+			-- Found the modal
+			-- Also disable blocking mouse input beyond this point
+			isMouse = false
+			allowedByModal = allowedByModal or currNode == modal
+		end
 		currNode = currNode.parent
 	end
 
@@ -939,12 +962,14 @@ function Control:canReceiveInput(isMouse, gx, gy)
 		if not currNode._visible then
 			return false
 		end
+
+		allowedByModal = allowedByModal or currNode == modal
 		currNode = currNode.parent
 	end
 
 	-- Check if this Control is running with the current process mode
 	-- TODO: Do this while iterating through each parent
-	return self:getRoot():isRunning(self)
+	return allowedByModal and self:getRoot():isRunning(self)
 end
 
 ---Grabs the focus, if possible

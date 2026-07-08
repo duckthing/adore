@@ -161,22 +161,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 	local rx, ry = rootViewport:windowToViewportPoint(x, y)
 
 	do
-		-- Send to modal first
-		local modal = root._modalStack[#root._modalStack]
-		if modal then
-			local mMouseMoved = modal.mousemoved
-			if mMouseMoved then
-				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
-
-				if mMouseMoved(modal, modalX, modalY) then
-					return self.sinkHandledInput
-				end
-			end
-		end
-	end
-
-	do
-		-- Send to focused second
+		-- Send to focused
 		local focused = root._focusedControl
 		if focused then
 			local fMouseMoved = focused.mousemoved
@@ -211,6 +196,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		end
 	end
 
+	-- Check if we're hovering a different Control
 	local oldControl = root._hoveredControl
 	local newControl, nx, ny = root:getControlAtPoint(x, y)
 
@@ -226,13 +212,24 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		end
 	end
 
-	do
-		-- Send to the new hovered control
-		if newControl then
-			local ncMouseMoved = newControl.mousemoved
-			-- The "new control" might be the same as the old one
-			if ncMouseMoved and ncMouseMoved(newControl, nx, ny) then
-				return self.sinkHandledInput
+	-- Send to the new hovered control
+	if newControl then
+		local ncMouseMoved = newControl.mousemoved
+		-- The "new control" might be the same as the old one
+		if ncMouseMoved and ncMouseMoved(newControl, nx, ny) then
+			return self.sinkHandledInput
+		end
+	else
+		-- Send to modal
+		local modal = root._modalStack[#root._modalStack]
+		if modal then
+			local mMouseMoved = modal.mousemoved
+			if mMouseMoved then
+				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
+
+				if mMouseMoved(modal, modalX, modalY) then
+					return self.sinkHandledInput
+				end
 			end
 		end
 	end
@@ -245,21 +242,6 @@ function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 	local rootViewport = root._viewport
 
 	local rx, ry = rootViewport:windowToViewportPoint(x, y)
-
-	do
-		-- Send to modal
-		local modal = root._modalStack[#root._modalStack]
-		if modal then
-			local mMousePressed = modal.mousepressed
-			if mMousePressed then
-				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
-
-				if mMousePressed(modal, modalX, modalY, button, isTouch, pressCount) then
-					return self.sinkHandledInput
-				end
-			end
-		end
-	end
 
 	-- Send to hovered
 	local hovered = root._hoveredControl
@@ -285,14 +267,32 @@ function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 		end
 	end
 
-	local focused = root._focusedControl
-	if focused then
-		local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
+	do
+		-- Send to focused
+		local focused = root._focusedControl
+		if focused then
+			local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
 
-		if not focused:doesPointOverlap(focusedX, focusedY) then
-			-- Clicked out of bounds, release focus
-			focused:releaseFocus()
-			return self.sinkHandledInput
+			if not focused:doesPointOverlap(focusedX, focusedY) then
+				-- Clicked out of bounds, release focus
+				focused:releaseFocus()
+				return self.sinkHandledInput
+			end
+		end
+	end
+
+	do
+		-- Send to modal
+		local modal = root._modalStack[#root._modalStack]
+		if modal then
+			local mMousePressed = modal.mousepressed
+			if mMousePressed then
+				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
+
+				if mMousePressed(modal, modalX, modalY, button, isTouch, pressCount) then
+					return self.sinkHandledInput
+				end
+			end
 		end
 	end
 
@@ -306,6 +306,7 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 	local rx, ry = rootViewport:windowToViewportPoint(x, y)
 
 	do
+		-- Send to focused
 		local focused = root._focusedControl
 		if focused then
 			local fMouseReleased = focused.mousereleased
@@ -317,6 +318,7 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 	end
 
 	do
+		-- Send to modal
 		local modal = root._modalStack[#root._modalStack]
 		if modal then
 			local mMouseReleased = modal.mousereleased
@@ -330,6 +332,7 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 		end
 	end
 
+	-- Send to hovered
 	local hovered = root._hoveredControl
 	if hovered then
 		local hMouseReleased = hovered.mousereleased

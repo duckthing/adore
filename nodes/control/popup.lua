@@ -8,7 +8,6 @@ local bit = Adore.Common("bitlib")
 ---@overload fun(): Popup
 local Popup = Control:extend()
 Popup.CLASS_NAME = "Popup"
-Popup._mouseMode = "sink"
 
 ---@type boolean # Should this be drawn on the root Viewport?
 Popup._drawOnTop = true
