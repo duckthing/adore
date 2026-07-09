@@ -319,11 +319,11 @@ function Node:removeChild(child, shouldDestroy)
 	end
 end
 
----Removes all children from this Node.
+---Removes all children from this Node
 ---@param shouldDestroy boolean?
 function Node:clearChildren(shouldDestroy)
 	for i = #self.children, 1, -1 do
-		self:removeChildAtIndex(1, shouldDestroy)
+		self:removeChildAtIndex(i, shouldDestroy)
 	end
 end
 

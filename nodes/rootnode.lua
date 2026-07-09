@@ -86,6 +86,8 @@ function Root:new(rootOptions, defaultTheme)
 
 	---@type (fun(parent: Node?, ...): Node?)? # When reloading the current scene, what will be used?
 	self.lastScene = nil
+	---@type Node # The instanced Node from the scene; destroyed when reloading or switching scenes
+	self._instancedScene = nil
 
 	---@type number # What deltatime should be multiplied by before passed to `:update()`.
 	---Important notes:
@@ -226,22 +228,22 @@ function Root:new(rootOptions, defaultTheme)
 
 	self:resetInputContexts()
 
-	if rootOptions then
-		if not rootOptions.hideSceneWarning then
-			-- Create a Timer that warns if a scene hasn't been loaded
-			local timer = Timer(1, true, true)
-			timer.completed:connectCallable(function()
-				print("[Adore.Root] No scene after 1 second; did you forget to call 'root:changeSceneTo()'?")
-				print("[Adore.Root] Disable this message by setting 'hideSceneWarning' to true in the Root initialization")
-				timer:queueDestroy(true)
-			end, true)
-			self:addChild(timer)
-		end
+	if not rootOptions or not rootOptions.hideSceneWarning then
+		-- Create a Timer that warns if a scene hasn't been loaded
+		local timer = Timer(1, true, true)
+		timer.completed:connectCallable(function()
+			print("[Adore.Root] No scene after 1 second; did you forget to call 'root:changeSceneTo()'?")
+			print("[Adore.Root] Disable this message by setting 'hideSceneWarning' to true in the Root initialization")
+			timer:queueDestroy(true)
+		end, true)
+		-- Add the timer as the instanced scene (so changing scenes will destroy it)
+		self._instancedScene = timer
+		self:addChild(timer)
+	end
 
-		if rootOptions.drawControlDebug then
-			-- Gives all Controls without a DrawRequest an outline
-			defaultTheme:setDrawable(Control, nil, Resources("DrawRequest.DebugBox")())
-		end
+	if rootOptions and rootOptions.drawControlDebug then
+		-- Gives all Controls without a DrawRequest an outline
+		defaultTheme:setDrawable(Control, nil, Resources("DrawRequest.DebugBox")())
 	end
 end
 
@@ -312,7 +314,14 @@ function Root:changeSceneTo(constructor)
 
 	self:uiUnfocus()
 	while self:popControlModal() do end
-	self:clearChildren(true)
+
+	if self._instancedScene then
+		-- Destroy the old scene
+		self._instancedScene:forceDestroy(true)
+		self._instancedScene = nil
+	end
+
+	-- Reset to a playable state
 	self:resetInputContexts()
 	self:setPauseMode("pausable")
 	self.gameSpeed = 1
@@ -321,6 +330,7 @@ function Root:changeSceneTo(constructor)
 		albedo[1], albedo[2], albedo[3], albedo[4] =
 			1, 1, 1, 1
 	end
+
 	if makeLastScene then
 		self.lastScene = constructor
 	else
@@ -351,7 +361,14 @@ function Root:changeSceneTo(constructor)
 	self:resume()
 
 	local result = constructor(self)
-	if result and result.parent ~= self then self:addChild(result) end
+	if result then
+		-- Set the new instanced scene
+		self._instancedScene = result
+		-- Add it to the Root if it's not already
+		if result.parent ~= self then
+			self:addChild(result)
+		end
+	end
 end
 
 ---Sends an event to a Context, and returns `true` if any of them handled it.
