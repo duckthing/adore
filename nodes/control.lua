@@ -1055,7 +1055,7 @@ function Control:onRefreshed()
 	self:forceRefresh()
 end
 
----Converts a global point into a local one
+---Converts a Viewport point into a local one
 ---@param gx number
 ---@param gy number
 ---@return number lx
@@ -1066,7 +1066,7 @@ function Control:toLocal(gx, gy)
 	return lx - lcr.x, ly - lcr.y
 end
 
----Converts a local point into a global one
+---Converts a local point into a Viewport one
 ---@param lx number
 ---@param ly number
 ---@return number gx
