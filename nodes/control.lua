@@ -29,9 +29,9 @@ local TEMP_TRANSFORM = love.math.newTransform()
 ---@field mousepressed fun(self, mx: integer, my: integer, button: integer, isTouch: boolean, pressCount: integer): boolean? handled
 ---@field mousereleased fun(self, mx: integer, my: integer, button: integer): boolean? handled
 ---@field wheelmoved fun(self, wx: integer, wy: integer): boolean? handled
----@field keypressed fun(self, key: love.KeyConstant, scancode: love.Scancode, isRepeat: boolean): boolean? handler
----@field keyreleased fun(self, key: love.KeyConstant, scancode: love.Scancode): boolean? handler
----@field textinput fun(self, text: string): boolean? handler
+---@field keypressed fun(self, key: love.KeyConstant, scancode: love.Scancode, isRepeat: boolean): boolean? handled
+---@field keyreleased fun(self, key: love.KeyConstant, scancode: love.Scancode): boolean? handled
+---@field textinput fun(self, text: string): boolean? handled
 ---@overload fun(): Control
 local Control = Node:extend()
 Control.CLASS_NAME = "Control"
@@ -1072,9 +1072,9 @@ end
 ---@return number gx
 ---@return number gy
 function Control:toGlobal(lx, ly)
-	local gx, gy = self._globalTransform:transformPoint(lx, ly)
 	local lcr = self._localContentRect
-	return gx + lcr.x, gy + lcr.y
+	local gx, gy = self._globalTransform:transformPoint(lx + lcr.x, ly + lcr.y)
+	return gx, gy
 end
 
 ---Checks if a point overlaps with this Control, but NOT if the point is clipped by a parent
