@@ -32,6 +32,8 @@ function PopupMenu:new(items)
 	self._items = nil
 	---@type integer # The index of the element that is being hovered over
 	self._hoveredIndex = 0
+	---@type boolean # If something is 'pressed' on this PopupMenu, but not selected yet
+	self._pressed = false
 
 	---@type Signal # Fired when an item is selected, with (PopupMenu, itemIndex, item)
 	self.itemSelected = self:newSignal()
@@ -96,10 +98,21 @@ function PopupMenu:mousemoved(mx, my)
 end
 
 function PopupMenu:mousepressed(mx, my, button, isTouch, pressCount)
+	if button == 1 then
+		self._pressed = true
+	end
+	return PopupMenu.super.mousepressed(self, mx, my, button, isTouch, pressCount)
+end
+
+function PopupMenu:mousereleased(mx, my, button)
 	if not self:doesPointOverlap(mx, my) then
 		-- Handle off-screen clicks here
-		return PopupMenu.super.mousepressed(self, mx, my, button, isTouch, pressCount)
+		self._pressed = false
+		return true
 	end
+
+	if not self._pressed or button ~= 1 then return true end
+	self._pressed = false
 
 	local itemIndex = self._hoveredIndex
 	if itemIndex == 0 then return true end
