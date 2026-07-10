@@ -12,6 +12,7 @@ PopupMenu.CLASS_NAME = "PopupMenu"
 
 ---@class PopupMenu.Item
 ---@field label string?
+---@field separator boolean? # Make `true` to use this item as a separator
 
 local DEFAULT_FONT = FontLoader:get("")
 ---@type FontSource? # The overridden font
@@ -32,6 +33,7 @@ function PopupMenu:new(items)
 	---@type integer # The index of the element that is being hovered over
 	self._hoveredIndex = 0
 
+	---@type Signal # Fired when an item is selected, with (PopupMenu, itemIndex, item)
 	self.itemSelected = self:newSignal()
 
 	self:setItems(items or {})
@@ -69,14 +71,45 @@ end
 function PopupMenu:mousemoved(mx, my)
 	if not self:doesPointOverlap(mx, my) then return true end
 
-	local _, ly = self:toLocal(mx, my)
-	local padding, margin = self._padding, self._margin
+	local itemCount = #self._items
+	if itemCount > 0 then
+		local _, ly = self:toLocal(mx, my)
+		local padding, margin = self._padding, self._margin
 
-	local font = self._font[self._fontSize]
-	local itemHeight = font:getHeight() + margin
+		local font = self._font[self._fontSize]
+		local itemHeight = font:getHeight() + margin
 
-	self._hoveredIndex = ceil((ly - padding) / (itemHeight))
+		local index = ceil((ly - padding) / (itemHeight))
+		if index > 0 and index <= itemCount then
+			-- Within bounds
+			self._hoveredIndex = index
+		else
+			-- Outside of valid indices
+			self._hoveredIndex = 0
+		end
+	else
+		-- No items
+		self._hoveredIndex = 0
+	end
 
+	return true
+end
+
+function PopupMenu:mousepressed(mx, my, button, isTouch, pressCount)
+	if not self:doesPointOverlap(mx, my) then
+		-- Handle off-screen clicks here
+		return PopupMenu.super.mousepressed(self, mx, my, button, isTouch, pressCount)
+	end
+
+	local itemIndex = self._hoveredIndex
+	if itemIndex == 0 then return true end
+	local item = self._items[itemIndex]
+	if not item then return true end
+
+	-- If it's a separator, do nothing
+	if item.separator then return true end
+	self.itemSelected:fire(self, itemIndex, item)
+	self:close()
 	return true
 end
 

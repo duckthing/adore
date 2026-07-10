@@ -51,6 +51,13 @@ function DrawPopupMenu:draw(menu)
 	t2[1], t2[2], t2[3], t2[4] = mixRGBA(r, g, b, a, unpack(self.hoveredText))
 
 	local hoveredIndex = menu._hoveredIndex
+	do
+		local hoveredItem = items[hoveredIndex]
+		if not (hoveredItem and not hoveredItem.separator) then
+			-- It can't be highlighted
+			hoveredIndex = 0
+		end
+	end
 
 	-- Draw each item
 	for i = 1, #items do

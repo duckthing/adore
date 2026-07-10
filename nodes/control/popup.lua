@@ -57,12 +57,14 @@ local function updateDimensions(self)
 	self:_setModalRect(x + offsetX, y + offsetY, w, h)
 end
 
+---Calculates the position and size of the Popup, and shows it
 function Popup:popup()
 	updateDimensions(self)
 	self:pushModal()
 	self:show()
 end
 
+---Closes the Popup
 function Popup:close()
 	self:popModal()
 	self:hide()
