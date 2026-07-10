@@ -31,7 +31,7 @@ local menuActions = {
 			{label = "Save Scene"},
 			{label = "Load Scene"},
 			{label = "Reload Scene"},
-			{label = ""},
+			{label = "", separator = true},
 			{label = "Quit"},
 		}
 	},
