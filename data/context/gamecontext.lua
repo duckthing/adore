@@ -145,6 +145,9 @@ end
 ---@return number y
 function GameContext:getVector(pairName)
 	local pair = self.pairs[pairName]
+	if not pair then
+		error(("Pair '%s' does not exist"):format(pairName))
+	end
 	local actions = self.actionValues
 	local x, y =
 		actions[pair[2]] - actions[pair[1]],
@@ -173,6 +176,9 @@ end
 ---@return number
 function GameContext:getAxis(pairName)
 	local pair = self.pairs[pairName]
+	if not pair then
+		error(("Pair '%s' does not exist"):format(pairName))
+	end
 	local actions = self.actionValues
 	local axis = actions[pair[2]] - actions[pair[1]]
 
