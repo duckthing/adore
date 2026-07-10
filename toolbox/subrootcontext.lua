@@ -73,6 +73,7 @@ function SubrootC:mousepressed(x, y, button, isTouch, presses)
 	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, _, _ = self:pointToWindow(x, y)
+
 	if lx then
 		toolbox:pushSubroot()
 		toolbox.subRoot:mousepressed(lx, ly, button, isTouch, presses)
@@ -88,11 +89,6 @@ function SubrootC:mousereleased(x, y, button, isTouch, presses)
 	local subroot = toolbox.subRoot
 	local lx, ly, _, _ = self:pointToWindow(x, y)
 
-	-- If we're pressing a button, make sure it receives mousereleased when outside the window
-	if subroot and subroot._focusedControl then
-		lx, ly = subroot.mouseX, subroot.mouseY
-	end
-
 	if lx then
 		toolbox:pushSubroot()
 		subroot:mousereleased(lx, ly, button, isTouch, presses)
@@ -106,6 +102,7 @@ function SubrootC:touchmoved(id, x, y, dx, dy, pressure)
 	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
+
 	if lx then
 		toolbox:pushSubroot()
 		toolbox.subRoot:touchmoved(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
@@ -119,6 +116,7 @@ function SubrootC:touchpressed(id, x, y, dx, dy, pressure)
 	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
+
 	if lx then
 		toolbox:pushSubroot()
 		toolbox.subRoot:touchpressed(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
@@ -132,6 +130,7 @@ function SubrootC:touchreleased(id, x, y, dx, dy, pressure)
 	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
+
 	if lx then
 		toolbox:pushSubroot()
 		toolbox.subRoot:touchreleased(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
