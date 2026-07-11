@@ -228,7 +228,11 @@ end
 ---Returns a new Vec2 that is the inverse of this Vec2
 ---@return Vec2
 function Vec2:getInverse()
-	return Vec2C(1 / self.x, 1 / self.y)
+	local x, y = self.x, self.y
+	return Vec2C(
+		(x ~= 0 and (1 / x)) or 0,
+		(x ~= 0 and (1 / y)) or 0
+	)
 end
 
 ---Returns a new Vec2 that is equal to this Vec2 rotated by an angle, in radians
@@ -440,9 +444,17 @@ end
 ---[IN PLACE] Turns this Vec2 into an inverse of itself. (1 / vector)
 ---@return Vec2 self
 function Vec2:iInverse()
-	self.x, self.y =
-		1 / self.x,
-		1 / self.y
+	local x, y = self.x, self.y
+	if x ~= 0 then
+		self.x = 1 / x
+	else
+		self.x = 0
+	end
+	if y ~= 0 then
+		self.y = 1 / y
+	else
+		self.y = 0
+	end
 	return self
 end
 

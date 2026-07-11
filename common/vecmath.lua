@@ -1,12 +1,8 @@
----@type AdoreInit
-local Adore = require ""
-
 ---@class VecMath
 local VecMath = {}
----@type Vec2
-local Vec2 = Adore.Common("Vec2")
 local sqrt = math.sqrt
 local min, max = math.min, math.max
+local sin, cos = math.sin, math.cos
 
 ---Returns the squared length of a vector. Faster, due to not square rooting the result.
 ---@param x number
@@ -128,6 +124,43 @@ local function lerp(ax, ay, bx, by, percent)
 		ay + dy * percent
 end
 
+---Reflects vector (x, y) off of (nx, ny)
+---@param x number
+---@param y number
+---@param nx number
+---@param ny number
+---@return number rx
+---@return number ry
+local function reflect(x, y, nx, ny)
+	local dnx, dny = dot(x, y, nx, ny)
+	return x - 2 * dnx * nx,
+		y - 2 * dny * ny
+end
+
+---Returns the inverse of (x, y), which will equal (1, 1) when multiplied by (x, y)
+local function inverse(x, y)
+	local ix, iy = 0, 0
+	if x ~= 0 then
+		ix = 1 / x
+	end
+	if y ~= 0 then
+		iy = 1 / y
+	end
+	return ix, iy
+end
+
+---Rotates a vector (x, y) by `angle`, in radians
+---@param x number
+---@param y number
+---@param angle number
+local function rotated(x, y, angle)
+	local sinResult, cosResult =
+		sin(angle),
+		cos(angle)
+	return x * cosResult - y * sinResult,
+		x * sinResult + y * cosResult
+end
+
 VecMath.length2 = length2
 VecMath.length = length
 VecMath.distance2 = distance2
@@ -137,5 +170,8 @@ VecMath.normalize = normalize
 VecMath.dot = dot
 VecMath.step = step
 VecMath.lerp = lerp
+VecMath.reflect = reflect
+VecMath.inverse = inverse
+VecMath.rotated = rotated
 
 return VecMath
