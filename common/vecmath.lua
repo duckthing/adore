@@ -101,8 +101,8 @@ local function step(ax, ay, bx, by, amount)
 		amount = max(0, min(amount, len))
 		local percent = amount / len
 		return
-			ax + (bx * percent),
-			ay + (bx * percent)
+			ax + (dx * percent),
+			ay + (dy * percent)
 	end
 	return ax, ay
 end

@@ -254,13 +254,14 @@ end
 ---@return Vec2
 function Vec2:getSteppedTowards(to, amount)
 	tempVec2:iCopyVector(to):iSub(self)
-	local length = tempVec2:getLength()
-	if length ~= 0 then
-		amount = max(0, min(amount, length))
-		return self + tempVec2:iMult(amount / length)
+	local len2 = tempVec2:getLength2()
+	if len2 ~= 0 then
+		-- Length is not 0, we can step
+		local len = sqrt(len2)
+		amount = max(0, min(amount, len))
+		return self + tempVec2:iMult(amount / len)
 	else
-		-- Length is 0, can't step
-		return Vec2C(0, 0)
+		return Vec2C(self.x, self.y)
 	end
 end
 
@@ -491,12 +492,12 @@ end
 ---@return Vec2 self
 function Vec2:iStep(to, amount)
 	tempVec2:iCopyVector(to):iSub(self) -- the difference
-	local length2 = tempVec2:getLength2()
-	if length2 ~= 0 then
+	local len2 = tempVec2:getLength2()
+	if len2 ~= 0 then
 		-- Length is not 0, we can step
-		local length = sqrt(length2)
-		amount = max(0, min(amount, length))
-		self:iAdd(tempVec2:iMult(amount / length))
+		local len = sqrt(len2)
+		amount = max(0, min(amount, len))
+		self:iAdd(tempVec2:iMult(amount / len))
 	end
 	return self
 end
