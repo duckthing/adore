@@ -608,7 +608,6 @@ end
 function Control:_setCanonRect(x, y, w, h)
 	local lcr = self._localContentRect
 	if lcr.x ~= x or lcr.y ~= y or lcr.w ~= w or lcr.h ~= h then
-		print(self, lcr.x, x, lcr.y, y, lcr.w, w, lcr.h, h)
 		lcr.x, lcr.y, lcr.w, lcr.h =
 			x, y, w, h
 		self:deferRefreshSelf()
