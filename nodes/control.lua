@@ -600,7 +600,7 @@ function Control:translate(x, y)
 	self:deferRefreshSelf()
 end
 
----Sets the calculated position and size from the parent.
+---Sets the calculated position and size from the parent, and defers a self refresh
 ---@param x integer
 ---@param y integer
 ---@param w integer
@@ -608,6 +608,7 @@ end
 function Control:_setCanonRect(x, y, w, h)
 	local lcr = self._localContentRect
 	if lcr.x ~= x or lcr.y ~= y or lcr.w ~= w or lcr.h ~= h then
+		print(self, lcr.x, x, lcr.y, y, lcr.w, w, lcr.h, h)
 		lcr.x, lcr.y, lcr.w, lcr.h =
 			x, y, w, h
 		self:deferRefreshSelf()
@@ -713,8 +714,9 @@ function Control:forceRefreshSelf()
 	if self._topLevelNode == self then
 		-- This Control does not rely on what is above it; it can calculate its dimensions itself
 		local x, y, w, h = self:getViewport():getSafeArea()
-		self._localContentRect.x, self._localContentRect.y = x, y
-		self:_simpleRefresh(self, w, h)
+		local childX, childY, childW, childH = self:_getRectFromParentSize(w, h)
+		self:_setCanonRect(childX + x, childY + y, childW, childH)
+		self:onRefreshed()
 	else
 		-- This Control relies on the parent to calculate the new position
 		self:shallowBubble("forceRefresh")
@@ -892,7 +894,7 @@ function Control:canFocus(isMouse)
 	return mode == "all" or (mode == "click" and isMouse)
 end
 
----Checks if we can receive this input.
+---Checks if we can receive this input
 ---@overload fun(self, isMouse: false): boolean
 ---@overload fun(self, isMouse: true, gx: integer, gy: integer): boolean
 function Control:canReceiveInput(isMouse, gx, gy)
@@ -1032,7 +1034,8 @@ function Control:getCanvasLayerUsed()
 	return nil
 end
 
----Called when the parent refreshes this Control
+---Called when the parent force refreshes this Control.
+---This usually occurs at the end of the frame.
 function Control:onRefreshed()
 	local pivot, scale, rotation =
 		self._pivot, self._scale, self._rotation
