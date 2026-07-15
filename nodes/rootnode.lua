@@ -935,8 +935,8 @@ function Root:getViewportSize()
 	return self._viewport:getDimensions()
 end
 
----Returns the Viewport relative mouse position that is used for processing.
----If you want to get the mouse position in the world, use `RootNode:getWorldMousePosition()`
+---Returns the window-relative mouse position that is used for processing.
+---If you want to get the mouse position in the world, use `self:getViewport():getWorldMousePosition()`
 ---@return integer x
 ---@return integer y
 function Root:getMousePosition()
@@ -1501,7 +1501,7 @@ end
 ---@return boolean handled
 function Root:mousemoved(x, y, dx, dy, isTouch)
 	self.mouseX, self.mouseY =
-		self:screenToViewportPoint(x, y)
+		x, y
 
 	return self:isContextHandled("mousemoved", x, y, dx, dy, isTouch)
 end
