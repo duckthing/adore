@@ -84,7 +84,9 @@ end
 function Physical2d:setActive(status)
 	if self._active ~= status then
 		self._active = status
-		self.body:setActive(self._inTree and self._valid and status)
+		if self.body then
+			self.body:setActive(self._inTree and self._valid and status)
+		end
 	end
 end
 
