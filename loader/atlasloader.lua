@@ -379,7 +379,6 @@ function AtlasLoader:handler(requirePath)
 			modifiedTimes[manifestFilePath] = manifestFileInfo.modtime
 		end
 
-
 		-- Render the texture
 		local canvas = love.graphics.newCanvas(atlasTexture:getDimensions())
 		love.graphics.push("all")
@@ -430,7 +429,6 @@ function AtlasLoader:register(atlas, path)
 		end
 		TextureLoader:register(frameSource, assetPath)
 	end
-
 end
 
 -- TODO: Add atlas reloading
