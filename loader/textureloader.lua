@@ -29,12 +29,13 @@ local EXTENSION_TO_COLLECTION = {
 }
 
 ---Calls `method` on the collections. Either `handler` or `get`.
+---@param self TextureLoader
 ---@param method "handler" | "get"
 ---@param path string
 ---@param ... unknown
 ---@return TextureSource
 ---@return integer AssetID
-local function genericHandle(method, path, ...)
+local function genericHandle(self, method, path, ...)
 	-- TextureLoader is not real; it is like a 'base class'
 	-- Other collections load their assets into the TextureLoader.
 	-- It points to the relevant resource loader or 'ImageLoader' when the asset is not loaded.
@@ -42,9 +43,11 @@ local function genericHandle(method, path, ...)
 
 	---@type string?
 	local extension = path:match("%.(.*)$")
+	local parentPath = path
 	if extension and extension:find("@") then
 		-- Remove the @ part after the @ sign
 		extension = extension:match("(.*)@")
+		parentPath = path:match("(.*)@")
 	end
 
 	if extension == "lua" then
@@ -75,8 +78,15 @@ local function genericHandle(method, path, ...)
 	end
 
 	-- Use that collection
+	---@type Adore.AssetCollection
 	local collection = Loader.getCollection(collectionName)
-	return collection[method](collection, path)
+	if parentPath ~= path and not collection:has(parentPath) then
+		-- Get the parent path first
+		collection:get(parentPath)
+		return self:get(path)
+	end
+	local a, b = collection[method](collection, path)
+	return a, b
 end
 
 ---@param path string
@@ -87,8 +97,7 @@ function TextureLoader:handler(path, ...)
 	-- Other collections load their assets into the TextureLoader.
 	-- It points to the relevant resource loader or 'ImageLoader' when the asset is not loaded.
 	-- Load your atlases and sheets before using TextureLoader.
-
-	return genericHandle("handler", path, ...)
+	return genericHandle(self, "handler", path, ...)
 end
 
 ---@param path string
@@ -107,7 +116,7 @@ function TextureLoader:get(path, ...)
 	if id then
 		return self.assets[id], id
 	end
-	return genericHandle("get", path, ...)
+	return genericHandle(self, "get", path, ...)
 end
 
 ---@param collection Adore.AssetCollection

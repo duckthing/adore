@@ -271,7 +271,7 @@ function AtlasLoader:handler(requirePath)
 					end
 
 					-- TextureSources may be a region of a bigger texture.
-					-- In that case, we should make load a new image instead.
+					-- In that case, we should make a new image per source instead.
 					local tw, th = tSource.texture:getDimensions()
 					local qx, qy, qw, qh = tSource.quad:getViewport()
 					if qx == 0 and qy == 0 and qw == tw and qh == th then
