@@ -85,8 +85,7 @@ local function genericHandle(self, method, path, ...)
 		collection:get(parentPath)
 		return self:get(path)
 	end
-	local a, b = collection[method](collection, path)
-	return a, b
+	return collection[method](collection, path)
 end
 
 ---@param path string
