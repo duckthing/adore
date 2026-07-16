@@ -40,7 +40,13 @@ local function genericHandle(method, path, ...)
 	-- It points to the relevant resource loader or 'ImageLoader' when the asset is not loaded.
 	-- Load your atlases and sheets before using TextureLoader.
 
+	---@type string?
 	local extension = path:match("%.(.*)$")
+	if extension and extension:find("@") then
+		-- Remove the @ part after the @ sign
+		extension = extension:match("(.*)@")
+	end
+
 	if extension == "lua" then
 		-- It's a Lua module, load it with the relevant loader
 		local requirePath = path:gsub("%.lua$", ""):gsub("[/\\]", ".")
@@ -90,6 +96,13 @@ end
 ---@return TextureSource
 ---@return AssetID
 function TextureLoader:get(path, ...)
+	-- If it's a sub-asset, make sure to load the parent first
+	local parentPath = path
+	if parentPath:find("@") then
+		parentPath = parentPath:match("(.*)@")
+		self:get(parentPath)
+	end
+
 	local id = self.pathToId[path]
 	if id then
 		return self.assets[id], id
@@ -116,6 +129,13 @@ function TextureLoader:reloader(collection, path, ...)
 	local from = tSource.from
 	local fromCollection = Loader.getCollection(from.collectionName)
 	tSource.from.reloader(fromCollection, fromCollection.idToPath[tSource.fromId])
+end
+
+---Adds an `AssetCollection`'s name for the given file extension, so texture assets can be handled
+---@param collection string
+---@param extension string
+function TextureLoader:addExtension(collection, extension)
+	EXTENSION_TO_COLLECTION[extension] = collection
 end
 
 Loader.addCollection(TextureLoader)

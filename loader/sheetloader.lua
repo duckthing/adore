@@ -109,7 +109,6 @@ local function createEvenFrames(manifestPath, manifest)
 				fromId = 0,
 			}, FrameSourceMT)
 			frames[frameI] = frameSource
-			frameSource.fromId = TextureLoader:register(frameSource, assetPrefix..frameI)
 		end
 	end
 
@@ -174,7 +173,6 @@ local function createDynamicFrames(manifestPath, manifest)
 			fromId = 0,
 		}, FrameSourceMT)
 		frames[frameI] = frameSource
-		frameSource.fromId = TextureLoader:register(frameSource, assetPrefix..frameI)
 	end
 
 	return tSource, frames
@@ -210,29 +208,49 @@ function SheetLoader:handler(assetPath)
 	return sheetSource
 end
 
+local EMPTY_TABLE = {}
+
 ---@param sheetSource SheetSource
 ---@param assetPath string
+---@return AssetID id
 function SheetLoader:register(sheetSource, assetPath)
-	local luaRequirePath = assetPath:match("(.*)%.lua$"):gsub("[/\\]", ".")
-	---@type SheetLoader.Manifest.Even | SheetLoader.Manifest.Dynamic
-	local manifest = require(luaRequirePath)
+	local extension = assetPath:match("%.(.*)$")
+	local path = assetPath
 
-	local names = manifest.names
-	if names then
-		-- Add the alternate names, if they exist
-		sheetSource.names = names
-		local assetPrefix = manifest.path.."@"
-		local frames = sheetSource.frames
-		for altName, frameI in pairs(names) do
-			local frame = frames[frameI]
-			if not frame then
-				error(("[Adore.SheetLoader] Frame '%d' doesn't exist inside of Sheet '%s'"):format(frameI, assetPath))
-			end
+	if extension == "lua" then
+		-- We check the extension, in case the asset came from somewhere else
+		local luaRequirePath = assetPath:match("(.*)%.lua$"):gsub("[/\\]", ".")
+		---@type SheetLoader.Manifest.Even | SheetLoader.Manifest.Dynamic
+		local manifest = require(luaRequirePath)
+		path = manifest.path
 
-			-- Register the alternate name
-			TextureLoader:register(frame, assetPrefix..altName)
-		end
+		sheetSource.names = manifest.names
 	end
+
+	local names = sheetSource.names or EMPTY_TABLE
+	local assetPrefix = path.."@"
+	local frames = sheetSource.frames
+
+	-- Register the numbered frames
+	for i = 1, #frames do
+		local frame = frames[i]
+		frame.fromId = TextureLoader:register(frame, assetPrefix..tostring(i))
+	end
+
+	-- Add the alternate names, if they exist
+	sheetSource.names = names
+
+	for altName, frameI in pairs(names) do
+		local frame = frames[frameI]
+		if not frame then
+			error(("[Adore.SheetLoader] Frame '%d' doesn't exist inside of Sheet '%s'"):format(frameI, assetPath))
+		end
+
+		-- Register the alternate name
+		TextureLoader:register(frame, assetPrefix..altName)
+	end
+
+	return SheetLoader.super.register(self, sheetSource, assetPath)
 end
 
 ---@param collection Adore.AssetCollection

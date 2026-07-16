@@ -379,7 +379,6 @@ function AtlasLoader:handler(requirePath)
 			modifiedTimes[manifestFilePath] = manifestFileInfo.modtime
 		end
 
-		local texturePath = self:getCachePath(requirePath, "_tex.png")
 
 		-- Render the texture
 		local canvas = love.graphics.newCanvas(atlasTexture:getDimensions())
@@ -395,6 +394,7 @@ function AtlasLoader:handler(requirePath)
 		local imgData = canvas:newImageData()
 		canvas:release()
 		self:ensureCacheDir()
+		local texturePath = self:getCachePath(requirePath, "_tex.png")
 		imgData:encode("png", texturePath)
 		imgData:release()
 
@@ -426,8 +426,7 @@ function AtlasLoader:register(atlas, path)
 		}, AtlasFrameSourceMT)
 
 		if TextureLoader.pathToId[assetPath] then
-			print(("[Adore.AtlasLoader] Found already loaded texture: '%s'"):format(assetPath))
-			print("[Adore.AtlasLoader] Overwriting...")
+			print(("[Adore.AtlasLoader] Overwriting already loaded texture: '%s'"):format(assetPath))
 		end
 		TextureLoader:register(frameSource, assetPath)
 	end

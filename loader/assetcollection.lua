@@ -267,8 +267,25 @@ function AssetCollection:get(path, ...)
 	local id = self.pathToId[path]
 	if not id then
 		-- Doesn't exist; create it
-		local asset = self:handler(path, ...)
-		return asset, self:register(asset, path)
+		if path:match("@") then
+			-- Requesting a sub-asset ("asset.png@1")
+			-- If the parent doesn't exist, create it
+			-- If not, the sub-asset doesn't exist
+			local filepath = path:match("(.*)@")
+			if not self.pathToId[filepath] then
+				-- Parent exists, create it and try again
+				local asset = self:handler(filepath, ...)
+				self:register(asset, filepath)
+				return self:get(path, ...)
+			else
+				-- Parent asset exists, sub-asset doesn't
+				error(("Sub-asset '%s' doesn't exist on %s"):format(path, self.TYPE))
+			end
+		else
+			-- Create this asset
+			local asset = self:handler(path, ...)
+			return asset, self:register(asset, path)
+		end
 	else
 		-- Returns the existing ID
 		return self.assets[id], id
