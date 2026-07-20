@@ -208,8 +208,6 @@ function SheetLoader:handler(assetPath)
 	return sheetSource
 end
 
-local EMPTY_TABLE = {}
-
 ---@param sheetSource SheetSource
 ---@param assetPath string
 ---@return AssetID id
@@ -227,7 +225,7 @@ function SheetLoader:register(sheetSource, assetPath)
 		sheetSource.names = manifest.names
 	end
 
-	local names = sheetSource.names or EMPTY_TABLE
+	local names = sheetSource.names
 	local assetPrefix = path.."@"
 	local frames = sheetSource.frames
 
@@ -240,14 +238,16 @@ function SheetLoader:register(sheetSource, assetPath)
 	-- Add the alternate names, if they exist
 	sheetSource.names = names
 
-	for altName, frameI in pairs(names) do
-		local frame = frames[frameI]
-		if not frame then
-			error(("[Adore.SheetLoader] Frame '%d' doesn't exist inside of Sheet '%s'"):format(frameI, assetPath))
-		end
+	if names then
+		for altName, frameI in pairs(names) do
+			local frame = frames[frameI]
+			if not frame then
+				error(("[Adore.SheetLoader] Frame '%d' doesn't exist inside of Sheet '%s'"):format(frameI, assetPath))
+			end
 
-		-- Register the alternate name
-		TextureLoader:register(frame, assetPrefix..altName)
+			-- Register the alternate name
+			TextureLoader:register(frame, assetPrefix..altName)
+		end
 	end
 
 	return SheetLoader.super.register(self, sheetSource, assetPath)

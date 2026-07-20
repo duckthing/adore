@@ -353,4 +353,8 @@ function AssetCollection:getAssetPath(asset)
 	-- Not found
 end
 
+function AssetCollection:__tostring()
+	return ("AssetCollection (%s)"):format(self.TYPE)
+end
+
 return AssetCollection

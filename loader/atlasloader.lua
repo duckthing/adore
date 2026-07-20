@@ -6,6 +6,7 @@ local tclear = Adore.Common("Structures").tableClear
 local AssetCollection = Adore.Common("Adore.AssetCollection")
 
 local TextureLoader = Loader.getCollection("TextureLoader")
+local SheetLoader = Loader.getCollection("SheetLoader")
 
 ---@class AtlasLoader.Manifest.Options
 ---@field atlasMode "dynamic" | "fixed" | nil
@@ -43,8 +44,13 @@ local TextureLoader = Loader.getCollection("TextureLoader")
 ---@class AtlasLoader.Manifest.Cache
 ---@field checkMode AtlasLoader.Manifest.CacheCheckMode
 
+---@class AtlasLoader.SheetInfo
+---@field frames integer[][] # A map of frame indices to their quad viewport
+---@field names {[string]: integer}? # A map of names to the frame index
+
 ---@class AtlasLoader.CacheInfo: Adore.Loader.CacheInfo
 ---@field quadInfo {[string]: integer[]} # A map of asset names to their quad regions
+---@field sheetInfo {[string]: AtlasLoader.SheetInfo} # A map of asset names to their sheet info
 ---@field minFilter love.FilterMode
 ---@field magFilter love.FilterMode
 ---@field ATLAS_LOADER_VERSION integer # The version of the atlas loader used, in case of compatibility issues
@@ -67,6 +73,7 @@ local TextureLoader = Loader.getCollection("TextureLoader")
 ---@field quads love.Quad[]
 ---@field image love.Image
 ---@field assets string[] # Added by the handler
+---@field sheetInfo {[string]: AtlasLoader.SheetInfo} # Added by the handler
 
 ---@class AtlasLoader: Adore.AssetCollection
 local AtlasLoader = AssetCollection:extend()
@@ -96,12 +103,12 @@ local function collectPathsFromPatterns(manifest)
 	if not patternPaths or not next(patternPaths) then return setAssets or {} end
 
 	---@type {[string]: true} # A map of paths to `true`
-	local assets = tempMap
+	local foundAssets = tempMap
 
 	if setAssets then
 		-- Add existing assets from the normal array into the map
 		for i = 1, #setAssets do
-			assets[setAssets[i]] = true
+			foundAssets[setAssets[i]] = true
 		end
 	end
 
@@ -127,7 +134,7 @@ local function collectPathsFromPatterns(manifest)
 					local info = love.filesystem.getInfo(fullPath)
 					if info then
 						-- It's a valid file, add it into the map
-						assets[fullPath] = item
+						foundAssets[fullPath] = item
 					end
 				end
 			end
@@ -138,11 +145,11 @@ local function collectPathsFromPatterns(manifest)
 	---@type string[]
 	local assetArr = {}
 	local i = 1
-	for asset, _ in pairs(assets) do
+	for asset, _ in pairs(foundAssets) do
 		assetArr[i] = asset
 		i = i + 1
 	end
-	tclear(assets)
+	tclear(foundAssets)
 	return assetArr
 end
 
@@ -151,6 +158,31 @@ local function ignoreManifest(filepath, reason)
 		return false
 	end
 	return true
+end
+
+---Gets any sheet information from the TextureSource and inserts it into the cache info
+---@param sheetInfo AtlasLoader.SheetInfo
+---@param assetPath string
+---@param tSource TextureSource | SheetSource
+local function insertSheetCacheInfo(sheetInfo, assetPath, tSource)
+	if tSource.frames then
+		-- This TextureSource is actually a SheetSource, store more info
+		-- Get the frame viewports and put them in the array
+		local frameQuads = {}
+		local frames = tSource.frames
+		for i = 1, #frames do
+			local frame = frames[i]
+			frameQuads[i] = {frame.quad:getViewport()}
+		end
+
+		-- Create the info for this sheet, and insert it
+		---@type AtlasLoader.SheetInfo
+		local info = {
+			names = tSource.names,
+			frames = frameQuads
+		}
+		sheetInfo[assetPath] = info
+	end
 end
 
 ---@param requirePath string # The require path (ex. "assets.resource")
@@ -182,7 +214,7 @@ function AtlasLoader:handler(requirePath)
 	local cacheCheckMode = cacheOptions.checkMode
 
 	---@type string[]
-	local assets
+	local assetPaths
 
 	---@type Atlas
 	local atlas
@@ -203,16 +235,16 @@ function AtlasLoader:handler(requirePath)
 				self:doCacheFilesExist(cacheInfo)
 			then
 				-- Check passed
-				assets = collectPathsFromPatterns(manifest)
+				assetPaths = collectPathsFromPatterns(manifest)
 				usingCache = true
 			end
 		else -- "onChange"
 			-- Check if the cache needs to be updated
 			if cacheInfo then
-				assets = collectPathsFromPatterns(manifest)
+				assetPaths = collectPathsFromPatterns(manifest)
 				if
 					ATLAS_LOADER_VERSION == cacheInfo.ATLAS_LOADER_VERSION and
-					self:areSourceFilesChanged(assets, cacheInfo, ignoreManifest)
+					self:areSourceFilesChanged(assetPaths, cacheInfo, ignoreManifest)
 				then
 					-- Load the atlas
 					usingCache = true
@@ -225,6 +257,9 @@ function AtlasLoader:handler(requirePath)
 		end
 	end
 
+	---A map of sheet paths to their frame info
+	---@type {[string]: {names: {[string]: string}, frames: {[integer]: integer[]}}}
+	local sheetInfo
 	if not usingCache then
 		-- Create a new atlas, instead of using the cache (if it exists)
 		local mode = options.atlasMode or "dynamic"
@@ -251,11 +286,13 @@ function AtlasLoader:handler(requirePath)
 			atlas:setMaxSize(options.maxWidth, options.maxHeight)
 		end
 
-		assets = assets or collectPathsFromPatterns(manifest)
+		assetPaths = assetPaths or collectPathsFromPatterns(manifest)
+		sheetInfo = {}
 
-		if assets then
+		if assetPaths then
 			if not options.loadImagesIntoAdore then
-				for id, assetPath in ipairs(assets) do
+				-- The assets will not be registered into TextureLoader
+				for id, assetPath in ipairs(assetPaths) do
 					-- Check if already loaded somewhere else, and use it
 					-- Otherwise, only load it for us
 
@@ -296,12 +333,18 @@ function AtlasLoader:handler(requirePath)
 						canvas:release()
 					end
 
+					insertSheetCacheInfo(sheetInfo, assetPath, tSource)
+
 					atlas:add(image, id, false)
 				end
 			else
-				for id, assetPath in ipairs(assets) do
+				-- The assets are registered into TextureLoader
+				for id, assetPath in ipairs(assetPaths) do
 					-- Load it into the TextureCollection asset collection
 					local tSource = TextureLoader:get(assetPath)
+
+					insertSheetCacheInfo(sheetInfo, assetPath, tSource)
+
 					atlas:add(tSource.texture, id, false)
 				end
 			end
@@ -312,11 +355,13 @@ function AtlasLoader:handler(requirePath)
 		else
 			atlas:bake(options.sortBy)
 		end
-		atlas.assets = assets
+		atlas.assets = assetPaths
+		atlas.sheetInfo = sheetInfo
 	else
 		-- Create the atlas from the cache
 		---@cast cacheInfo AtlasLoader.CacheInfo
 		local texturePath = cacheInfo.cacheFiles[1]
+		sheetInfo = cacheInfo.sheetInfo
 
 		---@cast cacheInfo AtlasLoader.CacheInfo
 
@@ -329,14 +374,15 @@ function AtlasLoader:handler(requirePath)
 		atlas = {
 			image = texture,
 			quads = quads,
-			assets = assets,
+			assets = assetPaths,
+			sheetInfo = sheetInfo
 		}
 
 		local cachedQuads = cacheInfo.quadInfo
 		local sw, sh = texture:getDimensions()
-		for i = 1, #assets do
+		for i = 1, #assetPaths do
 			-- Create the quads
-			local q = cachedQuads[assets[i]]
+			local q = cachedQuads[assetPaths[i]]
 			quads[i] = love.graphics.newQuad(q[1], q[2], q[3], q[4], sw, sh)
 		end
 	end
@@ -355,14 +401,15 @@ function AtlasLoader:handler(requirePath)
 			modifiedTimes = modifiedTimes,
 			cacheFiles = cacheFiles,
 			quadInfo = quadInfo,
+			sheetInfo = sheetInfo,
 			minFilter = minFilter,
 			magFilter = magFilter,
 			ATLAS_LOADER_VERSION = ATLAS_LOADER_VERSION,
 		}
 
 		-- Insert relevant info
-		for i = 1, #assets do
-			local assetPath = assets[i]
+		for i = 1, #assetPaths do
+			local assetPath = assetPaths[i]
 
 			-- Store the last modified time
 			local fileInfo = love.filesystem.getInfo(assetPath, "file")
@@ -415,19 +462,61 @@ function AtlasLoader:register(atlas, path)
 
 	-- Add each frame into TextureSource
 	local atlasTexture = atlas.image
+	local pathToSheetInfo = atlas.sheetInfo
+
 	for id, assetPath in ipairs(atlas.assets) do
 		local quad = atlas.quads[id]
+		local sheetInfo = pathToSheetInfo[assetPath]
+		---@type TextureSource[]?
+		local frames = nil
+
+		if sheetInfo then
+			-- This asset is a sheet, create its individual frames
+			frames = {}
+			local sheetQuads = sheetInfo.frames
+			local assetPrefix = assetPath.."@"
+
+			-- Register each frame
+			local fx, fy = quad:getViewport()
+			for i = 1, #sheetQuads do
+				local qx, qy, qw, qh = unpack(sheetQuads[i])
+				local frameSource = {
+					texture = atlasTexture,
+					quad = love.graphics.newQuad(qx + fx, qy + fy, qw, qh, atlasTexture),
+					from = SheetLoader,
+					fromId = 0
+				}
+				frameSource.fromId = TextureLoader:register(frameSource, assetPrefix..tostring(i))
+				frames[i] = frameSource
+			end
+
+			-- Add the alternate names, if they exist
+			local sheetFrameNames = sheetInfo.names
+			if sheetFrameNames then
+				for altName, frameI in pairs(sheetFrameNames) do
+					local frame = frames[frameI]
+					if not frame then
+						error(("[Adore.AtlasLoader:register] Frame '%d' doesn't exist inside of Sheet '%s'"):format(frameI, assetPath))
+					end
+
+					-- Register the alternate name
+					TextureLoader:register(frame, assetPrefix..altName)
+				end
+			end
+		end
+
 		---@type TextureSource
-		local frameSource = setmetatable({
+		local atlasFrameSource = setmetatable({
 			texture = atlasTexture,
 			quad = quad,
+			frames = frames,
 			fromId = 0,
 		}, AtlasFrameSourceMT)
 
 		if TextureLoader.pathToId[assetPath] then
 			print(("[Adore.AtlasLoader] Overwriting already loaded texture: '%s'"):format(assetPath))
 		end
-		TextureLoader:register(frameSource, assetPath)
+		atlasFrameSource.fromId = TextureLoader:register(atlasFrameSource, assetPath)
 	end
 end
 
