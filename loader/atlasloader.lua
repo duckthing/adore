@@ -477,12 +477,12 @@ function AtlasLoader:register(atlas, path)
 			local assetPrefix = assetPath.."@"
 
 			-- Register each frame
-			local fx, fy = quad:getViewport()
+			local offsetX, offsetY = quad:getViewport()
 			for i = 1, #sheetQuads do
 				local qx, qy, qw, qh = unpack(sheetQuads[i])
 				local frameSource = {
 					texture = atlasTexture,
-					quad = love.graphics.newQuad(qx + fx, qy + fy, qw, qh, atlasTexture),
+					quad = love.graphics.newQuad(qx + offsetX, qy + offsetY, qw, qh, atlasTexture),
 					from = SheetLoader,
 					fromId = 0
 				}

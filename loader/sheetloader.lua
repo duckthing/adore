@@ -188,7 +188,7 @@ function SheetLoader:handler(assetPath)
 
 	if manifest.type ~= "SheetLoader" then
 		-- In case it's missing the type
-		error(("Resource of type '%s' at '%s' does not match expected type '%s'"):format(manifest.type, assetPath, "SheetLoader"))
+		error(("[Adore.SheetLoader] Resource of type '%s' at '%s' does not match expected type '%s'"):format(manifest.type, assetPath, "SheetLoader"))
 	end
 
 	local sheetSource, frames
