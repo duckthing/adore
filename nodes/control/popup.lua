@@ -17,6 +17,8 @@ Popup._drawPreviousModals = false
 Popup._resizeWithParent = false
 ---@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
 Popup._unfocusToClose = true
+---@type boolean # Should this Popup get destroyed when closed?
+Popup._destroyOnClose = false
 ---@type integer # Allows closing the Popup when the button index matches bitwise.
 ---The default is `3`, which means left clicks (`1`) and right clicks (`2`) that are outside
 ---of the Popup will close it. `1 + 2 + 4` will close on middle-click as well.
@@ -68,6 +70,9 @@ end
 function Popup:close()
 	self:popModal()
 	self:hide()
+	if self._destroyOnClose then
+		self:queueDestroy(true)
+	end
 end
 
 function Popup:mousepressed(mx, my, button, isTouch, pressCount)
@@ -100,6 +105,7 @@ function Popup._addDefinition(entry)
 	entry:newBoolean("_drawPreviousModals", false)
 	entry:newBoolean("_resizeWithParent", true)
 	entry:newBoolean("_unfocusToClose", true)
+	entry:newBoolean("_destroyOnClose", false)
 	entry:newInteger("_offClickToClose", 3, 0)
 end
 
