@@ -61,13 +61,13 @@ local FrameSourceMT = {__index = FrameSource}
 ---@param manifestPath string
 ---@param manifest SheetLoader.Manifest.Even
 ---@return SheetSource.Even
----@return FrameSource[]
 local function createEvenFrames(manifestPath, manifest)
 	local rows, columns =
 		manifest.rows or 1, manifest.columns or 1
 
 	local texturePath = manifest.path
 	local tSource = TextureLoader:get(texturePath)
+	---@cast tSource SheetSource.Even
 
 	local ox, oy, ow, oh = tSource.quad:getViewport()
 
@@ -88,7 +88,6 @@ local function createEvenFrames(manifestPath, manifest)
 	---@type FrameSource[]
 	local frames = tnew(rows * columns, 0)
 	tSource.frames = frames
-	local assetPrefix = texturePath.."@"
 	local texture = tSource.texture
 
 	for row = 1, rows do
@@ -112,27 +111,26 @@ local function createEvenFrames(manifestPath, manifest)
 		end
 	end
 
-	return tSource, frames
+	return tSource
 end
 
 ---Creates and returns the frames for even sheets
 ---@param manifestPath string
 ---@param manifest SheetLoader.Manifest.Dynamic
 ---@return SheetSource.Dynamic
----@return FrameSource[]
 local function createDynamicFrames(manifestPath, manifest)
 	local quads = manifest.quads
 	local numQuads = #quads
 
 	local texturePath = manifest.path
 	local tSource = TextureLoader:get(texturePath)
+	---@cast tSource SheetSource.Dynamic
 
 	local ox, oy, ow, oh = tSource.quad:getViewport()
 
 	---@type FrameSource[]
 	local frames = tnew(numQuads, 0)
 	tSource.frames = frames
-	local assetPrefix = texturePath.."@"
 	local texture = tSource.texture
 
 	for frameI = 1, numQuads do
@@ -175,7 +173,7 @@ local function createDynamicFrames(manifestPath, manifest)
 		frames[frameI] = frameSource
 	end
 
-	return tSource, frames
+	return tSource
 end
 
 ---@param assetPath string
@@ -191,15 +189,15 @@ function SheetLoader:handler(assetPath)
 		error(("[Adore.SheetLoader] Resource of type '%s' at '%s' does not match expected type '%s'"):format(manifest.type, assetPath, "SheetLoader"))
 	end
 
-	local sheetSource, frames
+	local sheetSource
 	if manifest.columns or manifest.rows then
 		-- It's for SheetSource.Even
 		---@cast manifest SheetLoader.Manifest.Even
-		sheetSource, frames = createEvenFrames(assetPath, manifest)
+		sheetSource = createEvenFrames(assetPath, manifest)
 	elseif manifest.quads then
 		-- It's for SheetSource.Dynamic
 		---@cast manifest SheetLoader.Manifest.Dynamic
-		sheetSource, frames = createDynamicFrames(assetPath, manifest)
+		sheetSource = createDynamicFrames(assetPath, manifest)
 	else
 		-- It's ambiguous/missing fields
 		error(("[Adore.SheetLoader] Missing required fields in '%s'"):format(assetPath))
