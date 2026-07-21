@@ -6,6 +6,7 @@ local Nodes = Adore.Nodes
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
+local FileBrowser = require(ADORE_PATH..".toolbox.ui.filebrowser")
 local Assets = require(ADORE_PATH..".toolbox.assets")
 
 ---@class Toolbox.MainWindow: Control
@@ -93,7 +94,6 @@ function MainWindow:new(toolbox)
 	editor:setAnchors(0, 0, 1, 1)
 	self.editor = editor
 
-
 	--======== MENU BAR
 	local menuBar = Nodes("HBox")()
 	menuBar:setAnchorsAndOffsets(
@@ -179,8 +179,18 @@ function MainWindow:new(toolbox)
 		-252, 40, 0, 0
 	)
 
+	--======== FILE BROWSER
+	local fileBrowser = FileBrowser(toolbox)
+	self.fileBrowser = fileBrowser
+	fileBrowser:setAnchorsAndOffsets(
+		0, 1, 1, 1,
+		264, -233, -264, 0
+	)
+
+	--======== SCENE STRUCTURE
 	editor:addChild(self.sceneTreeContainer)
 	editor:addChild(inspector)
+	editor:addChild(fileBrowser)
 	editor:addChild(gameActionBar)
 	editor:addChild(menuBar)
 	editor:addChild(tabContainer)
