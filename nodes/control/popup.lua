@@ -14,8 +14,8 @@ Popup.CLASS_NAME = "Popup"
 Popup._drawOnTop = true
 ---@type boolean # Should former modals be drawn as well, in the event multiple are pushed?
 Popup._drawPreviousModals = false
----@type boolean # Should this Popup be resized according to a parent Control?
-Popup._resizeWithParent = false
+---@type boolean # Should this Popup be resized according to a parent Control (if below one)?
+Popup._resizeWithParent = true
 ---@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
 Popup._unfocusToClose = true
 ---@type boolean # Should this Popup get destroyed when closed?
@@ -33,6 +33,7 @@ function Popup:new()
 	self:hide()
 end
 
+---Gets the target Viewport according to the set properties
 ---@param self Popup
 ---@return Viewport
 local function getTargetViewport(self)
@@ -51,23 +52,15 @@ local function updateDimensions(self)
 	-- Get the safe area where this Popup can exist in
 	local offsetX, offsetY = 0, 0
 	local targetW, targetH = 0, 0
-	local viewport = getTargetViewport(self)
-	local safeX, safeY, safeW, safeH = viewport:getSafeArea()
-	if self._drawOnTop and self._resizeWithParent then
-		-- Resize according to the Root Viewport
-		offsetX, offsetY, targetW, targetH =
-			safeX, safeY, safeW, safeH
+	if self._resizeWithParent and self._topLevelNode ~= self then
+		-- Resize according to the parent
+		---@type Control
+		local parent = assert(self.parent, "Cannot popup outside of the tree")
+		offsetX, offsetY, targetW, targetH = parent._localContentRect:unpack()
 	else
-		if self._topLevelNode == self and self._resizeWithParent then
-			-- Top-level node, resize according to the Viewport this Popup belongs to
-			offsetX, offsetY, targetW, targetH =
-				safeX, safeY, safeW, safeH
-		else
-			-- Not top-level, resize according to the parent Control
-			---@type Control
-			local parent = assert(self.parent, "Cannot popup outside of the tree")
-			offsetX, offsetY, targetW, targetH = parent._localContentRect:unpack()
-		end
+		-- Resize according to the Viewport safe area
+		local viewport = getTargetViewport(self)
+		offsetX, offsetY, targetW, targetH = viewport:getSafeArea()
 	end
 
 	-- Clamping happens in :onRefreshed
