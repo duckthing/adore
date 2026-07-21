@@ -33,13 +33,25 @@ function Popup:new()
 	self:hide()
 end
 
+---@param self Popup
+---@return Viewport
+local function getTargetViewport(self)
+	local viewport
+	if self._drawOnTop then
+		viewport = self:getRoot():getViewport()
+	else
+		viewport = self:getViewport()
+	end
+	return assert(viewport, "Cannot popup outside of the tree")
+end
+
 ---Updates the dimensions of the Popup to be accurate
 ---@param self Popup
 local function updateDimensions(self)
 	-- Get the safe area where this Popup can exist in
 	local offsetX, offsetY = 0, 0
 	local targetW, targetH = 0, 0
-	local viewport = assert(self:getRoot():getViewport(), "Cannot popup outside of the tree")
+	local viewport = getTargetViewport(self)
 	local safeX, safeY, safeW, safeH = viewport:getSafeArea()
 	if self._drawOnTop and self._resizeWithParent then
 		-- Resize according to the Root Viewport
@@ -58,17 +70,10 @@ local function updateDimensions(self)
 		end
 	end
 
+	-- Clamping happens in :onRefreshed
 	local x, y, w, h = self:_getRectFromParentSize(targetW, targetH)
-	x, y = x + offsetX, y + offsetY
 
-	if self._clampToSafeArea then
-		-- Clamp to the given area
-		x, y =
-			max(safeX, min(x, safeW - w)),
-			max(safeY, min(y, safeH - h))
-	end
-
-	self:_setModalRect(x, y, w, h)
+	self:_setModalRect(x + offsetX, y + offsetY, w, h)
 end
 
 ---Calculates the position and size of the Popup, and shows it
@@ -84,6 +89,20 @@ function Popup:close()
 	self:hide()
 	if self._destroyOnClose then
 		self:queueDestroy(true)
+	end
+end
+
+function Popup:onRefreshed()
+	Popup.super.onRefreshed(self)
+	if self._clampToSafeArea then
+		-- Clamp to the safe area
+		local viewport = getTargetViewport(self)
+		local safeX, safeY, safeW, safeH = viewport:getSafeArea()
+		local x, y, w, h = self._localContentRect:unpack()
+		x, y =
+			max(safeX, min(x, safeW - w)),
+			max(safeY, min(y, safeH - h))
+		self:_setModalRect(x, y, w, h)
 	end
 end
 

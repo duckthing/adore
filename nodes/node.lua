@@ -15,7 +15,6 @@ local tinsert = table.insert
 
 ---@class Node: Object
 ---@field super Node
----@field windowResized (fun(newW: integer, newH: integer): boolean?)? # Called when the window resizes
 ---@field _adoreSource string? # If this `Node` was instantiated from as a scene, this contains the filepath it came from
 ---@overload fun(): Node
 local Node = Object:extend()
