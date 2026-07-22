@@ -18,6 +18,9 @@ function TabBar:new()
 	TabBar.super.new(self)
 	self._margin = 4
 
+	---@type integer # How much wider a tab should be
+	self._tabPadding = 12
+
 	---@type TabBar.TabInfo[]
 	self._tabs = {}
 	---@type integer # The current tab index

@@ -33,7 +33,7 @@ function TabContainer:new()
 	self._internalTabBar = TabBar()
 	self._internalTabBar:setAnchorsAndOffsets(
 		0, 0, 1, 0,
-		0, 0, 0, 26
+		0, 0, 0, self._tabBarHeight
 	)
 	self._internalTabBar._adorePersist = false
 	self._internalTabBar.tabSelected:connect(self, "_onTabSelected")

@@ -4,6 +4,7 @@ local DrawRequest = Adore.Resources("DrawRequest")
 local mixRGBA = Adore.Common("Color").mixRGBA
 
 ---@class DrawRequest.PopupMenu: DrawRequest
+---@overload fun(angle: number, normalBackground: integer[], hoveredBackground: integer[], pressedBackground: integer[], normalText: integer[], hoveredText: integer[], pressedText: integer[]): DrawRequest.PopupMenu
 local DrawPopupMenu = DrawRequest:extend()
 DrawPopupMenu.CLASS_NAME = "DrawPopupMenu"
 
