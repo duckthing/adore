@@ -113,7 +113,6 @@ function MainWindow:new(toolbox)
 		)
 		button:setVariant("flat")
 		local popupMenu = Nodes("PopupMenu")(action[2])
-		popupMenu._resizeWithParent = false
 		popupMenu:setAnchors(0, 1, 0, 1)
 		button:addChild(popupMenu)
 
