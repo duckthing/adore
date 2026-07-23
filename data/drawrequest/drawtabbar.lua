@@ -71,6 +71,8 @@ function DrawTabBar:draw(tabBar)
 	local x, y, w, h = lcr:unpack()
 	local r, g, b, a = love.graphics.getColor()
 
+	x = x - tabBar._offsetX
+
 	-- Bar background
 	love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.barBackground)))
 	love.graphics.rectangle("fill", x, y, w, h)

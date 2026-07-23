@@ -174,7 +174,7 @@ end
 
 ---Set this to :wheelmoved() if scrolling is enabled
 function HBox:_hboxWheelMoved(x, y)
-	local newOffset = math.max(0, math.min(self._offsetX + (x - y) * self._scrollSpeed, self._calculatedWidth - self._localContentRect.h))
+	local newOffset = math.max(0, math.min(self._offsetX + (x - y) * self._scrollSpeed, self._calculatedWidth - self._localContentRect.w))
 	if newOffset ~= self._offsetX then
 		self._offsetX = newOffset
 		self:deferRefresh()

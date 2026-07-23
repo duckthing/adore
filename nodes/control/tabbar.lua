@@ -32,6 +32,12 @@ function TabBar:new()
 	self.tabSelected = self:newSignal()
 end
 
+function TabBar:forceRefresh()
+	HBox.super.forceRefresh(self)
+	self._calculatedWidth = self._tabs[#self._tabs].upperBoundX + self._padding
+	self:setAllowScrolling(self._allowScrolling)
+end
+
 ---Call this if the tab info changed
 ---@return self
 function TabBar:onTabInfoUpdated()
@@ -62,7 +68,7 @@ function TabBar:mousepressed(mx, my, button, isTouch, pressCount)
 	local tabs = self._tabs
 	local lcr = self._localContentRect
 	local offsetX = lcr.x
-	local lx = mx - offsetX
+	local lx = mx - offsetX + self._offsetX
 	for i = 1, #tabs do
 		local tabInfo = tabs[i]
 		if lx > tabInfo.lowerBoundX then
