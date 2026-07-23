@@ -79,8 +79,8 @@ end
 function Context:setDefault(default, shouldPush)
 	if default == nil then default = true end
 
-	local root = Node._root
-	assert(root, "Create a Root before calling `Context:setDefault`")
+	local root = assert(Node._root, "Create a Root before calling `Context:setDefault`")
+	assert(root.firstRoot, "Context:setDefault() does not work inside of Toolbox")
 	local defaultContexts = root._defaultContexts
 	local existingIndex = nil
 

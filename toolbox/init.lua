@@ -42,6 +42,7 @@ local toolboxContext = Adore.Resources("ShortcutContext")(
 )
 -- 1 below CoreUIContext, so text input in the editor shouldn't get in the way
 toolboxContext._priority = 999
+toolboxContext.name = "ToolboxContext"
 
 function Toolbox:pushSubroot()
 	Node._root = Toolbox.subRoot
