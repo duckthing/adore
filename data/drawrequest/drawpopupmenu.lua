@@ -30,6 +30,7 @@ end
 
 local t1 = {0, 0, 0, 0}
 local t2 = {0, 0, 0, 0}
+local t3 = {0, 0, 0, 0}
 
 ---@param menu PopupMenu
 function DrawPopupMenu:draw(menu)
@@ -50,19 +51,30 @@ function DrawPopupMenu:draw(menu)
 	local itemHeight = font:getHeight() + margin
 	local itemOffsetY = halfMargin
 
+	---@type integer[] # The color of unhovered text
 	local normalText = t1
 	t1[1], t1[2], t1[3], t1[4] = mixRGBA(r, g, b, a, unpack(self.normalText))
 
-	local hoveredBackground = self.hoveredBackground
-	local hoveredText = t2
+	---@type integer[] # The color of the hovered item background
+	local hoveredBackground = t2
+	---@type integer[] # The color of hovered text
+	local hoveredText = t3
 
-	if menu._pressed then
-		-- Draw the background a little different if something is pressed
-		hoveredBackground  =self.pressedBackground
-		hoveredText = self.pressedText
+	do
+		-- Add the hovered colors into the table
+		local rawBackground = self.hoveredBackground
+		local rawText = self.hoveredText
+
+		if menu._pressed then
+			-- Recolor the item a little different if the hovered item is pressed down
+			rawBackground = self.pressedBackground
+			rawText = self.pressedText
+		end
+
+		t2[1], t2[2], t2[3], t2[4] = mixRGBA(r, g, b, a, unpack(rawBackground))
+		t3[1], t3[2], t3[3], t3[4] = mixRGBA(r, g, b, a, unpack(rawText))
 	end
 
-	t2[1], t2[2], t2[3], t2[4] = mixRGBA(r, g, b, a, unpack(self.hoveredText))
 
 	local hoveredIndex = menu._hoveredIndex
 	do
@@ -79,7 +91,7 @@ function DrawPopupMenu:draw(menu)
 		local isHovered = hoveredIndex == i
 
 		if isHovered then
-			love.graphics.setColor(mixRGBA(r, g, b, a, unpack(hoveredBackground, 1, 4)))
+			love.graphics.setColor(hoveredBackground)
 			love.graphics.rectangle("fill", x, offsetY, w, itemHeight)
 		end
 

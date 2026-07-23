@@ -2,9 +2,10 @@
 local Adore = require ""
 local DrawRequest = Adore.Resources("DrawRequest")
 local FontLoader = Adore.Loader.getCollection("FontLoader")
+local mixRGBA = Adore.Common("Color").mixRGBA
 
 ---@class DrawRequest.TabBar: DrawRequest
----@overload fun(normalBackground: integer[], normalText: integer[], selectedBackground: integer[], selectedText: integer[]): DrawRequest.TabBar
+---@overload fun(barBackground: integer[], normalBackground: integer[], normalText: integer[], selectedBackground: integer[], selectedText: integer[]): DrawRequest.TabBar
 local DrawTabBar = DrawRequest:extend()
 DrawTabBar.CLASS_NAME = "DrawTabBar"
 
@@ -14,11 +15,14 @@ local DEFAULT_FONT_SIZE = 0
 ---@type any[] # Used for colored text
 local TEMP_INFO = {false, false}
 
-function DrawTabBar:new(normalBackground, normalText, selectedBackground, selectedText)
+function DrawTabBar:new(barBackground, normalBackground, normalText, selectedBackground, selectedText)
 	DrawTabBar.super.new(self)
 
+	---@type integer[] # The unmixed background color of the tab bar
+	self.barBackground = barBackground or {0.1, 0.1, 0.1, 1}
+
 	---@type integer[] # The unmixed background color of a tab background
-	self.normalBackground = normalBackground or {0.12, 0.12, 0.15}
+	self.normalBackground = normalBackground or {0.12, 0.12, 0.15, 1}
 	---@type integer[] # The unmixed background color of a tab's text
 	self.normalText = normalText or {1, 1, 1, 0.5}
 
@@ -63,17 +67,31 @@ end
 
 ---@param tabBar TabBar
 function DrawTabBar:draw(tabBar)
-	love.graphics.setColor(1, 0, 0)
 	local lcr = tabBar._localContentRect
-	local x, y, _, h = lcr:unpack()
+	local x, y, w, h = lcr:unpack()
+	local r, g, b, a = love.graphics.getColor()
+
+	-- Bar background
+	love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.barBackground)))
+	love.graphics.rectangle("fill", x, y, w, h)
 
 	local tabs = tabBar._tabs
 	local selectedIndex = tabBar._currentTab
-	local selectedBackgroundColor, normalBackgroundColor =
-		self.selectedBackground, self.normalBackground
+
+	-- The selected background color
+	local sr, sg, sb, sa = mixRGBA(r, g, b, a, unpack(self.selectedBackground))
+	-- The unselected background color
+	local nr, ng, nb, na = mixRGBA(r, g, b, a, unpack(self.normalBackground))
+
 	for i = 1, #tabs do
 		local tab = tabs[i]
-		love.graphics.setColor((i == selectedIndex and selectedBackgroundColor) or normalBackgroundColor)
+		if i == selectedIndex then
+			-- Selected color
+			love.graphics.setColor(sr, sg, sb, sa)
+		else
+			-- Normal color
+			love.graphics.setColor(nr, ng, nb, na)
+		end
 
 		local lower, upper = tab.lowerBoundX, tab.upperBoundX
 		love.graphics.rectangle("fill", x + lower, y, upper - lower, h)
