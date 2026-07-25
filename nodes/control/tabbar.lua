@@ -34,7 +34,13 @@ end
 
 function TabBar:forceRefresh()
 	HBox.super.forceRefresh(self)
-	self._calculatedWidth = self._tabs[#self._tabs].upperBoundX + self._padding
+	local tabCount = #self._tabs
+	if tabCount > 0 then
+		-- Go to the last tab and make the width equal to its farthest point + padding
+		self._calculatedWidth = self._tabs[tabCount].upperBoundX + self._padding
+	else
+		self._calculatedWidth = 0
+	end
 	self:setAllowScrolling(self._allowScrolling)
 end
 

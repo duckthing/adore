@@ -3,7 +3,7 @@ local Adore = require ""
 local Object = Adore.Resources("Object")
 local Signal = Adore.Common("Signal")
 local Structures = Adore.Common("Structures")
-local min = math.min
+local max = math.max
 local tinsert = table.insert
 
 ---@alias Node.PauseMode
@@ -269,10 +269,12 @@ function Node:insertChild(child, index)
 	end
 
 	local children = self.children
-	local totalChildren = #children + 1
-	index = min(index, totalChildren)
-	children[totalChildren], children[index] =
-		children[index], child
+	if index > #children + 1 then
+		-- `:addChild` adds to the end by default
+		return self:addChild(child)
+	end
+	index = max(1, index)
+	tinsert(children, index, child)
 	child.parent = self
 	child:onAddedToParent(self)
 

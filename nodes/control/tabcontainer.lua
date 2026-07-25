@@ -66,9 +66,9 @@ function TabContainer:updateTabs()
 	for i = 1, #children do
 		local child = children[i]
 		if child ~= tabBar then
-			tabs[nextIndex] = self:createTabInfo(i, child)
+			tabs[nextIndex] = self:createTabInfo(nextIndex, child)
+			child:setVisible(selectedTab == nextIndex)
 			nextIndex = nextIndex + 1
-			child:setVisible(selectedTab == i)
 		end
 	end
 
@@ -140,7 +140,15 @@ end
 ---Returns the Node that is active
 ---@return Node?
 function TabContainer:getActiveTab()
-	return self.children[self._currentTab]
+	local index = self._currentTab
+	local info = self._internalTabBar._tabs[index]
+	if not info then return end
+	---@type Node
+	local node = info.node
+	local children = self.children
+	for i = 1, #children do
+		if children[i] == node then return node end
+	end
 end
 
 ---Returns `true` if the specified tab index can be selected
