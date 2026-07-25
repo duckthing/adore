@@ -31,6 +31,8 @@ function SceneTreeViewer:new(toolbox)
 	SceneTreeViewer.super.new(self)
 
 	self.toolbox = toolbox
+	---@type Node? # The Node to start building the tree from
+	self.startNode = self.toolbox.subRoot
 
 	self.tree = tnew(32, 1)
 	self.tree.length = 0
@@ -109,7 +111,7 @@ end
 
 function SceneTreeViewer:updateNodes()
 	local tree = self.tree
-	local start = self.toolbox.subRoot
+	local start = self.startNode
 
 	local pressedNode = self.pressedNode
 
@@ -143,6 +145,15 @@ function SceneTreeViewer:updateNodes()
 			self.pressedNode = nil
 			self.nodeSelected:fire(nil)
 		end
+	end
+end
+
+---Sets the start node, which is where the scene tree begins
+---@param node any
+function SceneTreeViewer:setStartNode(node)
+	if self.startNode ~= node then
+		self.startNode = node
+		self:updateNodes()
 	end
 end
 

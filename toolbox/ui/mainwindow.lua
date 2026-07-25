@@ -8,6 +8,7 @@ local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
 local FileBrowser = require(ADORE_PATH..".toolbox.ui.filebrowser")
 local Assets = require(ADORE_PATH..".toolbox.assets")
+local EditableScene = require(ADORE_PATH..".toolbox.editablescene")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
@@ -60,16 +61,27 @@ function MainWindow:new(toolbox)
 			0, 0, 1, 1,
 			260, 36, -260, -240
 	)
-	tabContainer._internalTabBar.tabSelected:connectCallable(function(_, index, tabInfo)
-		if toolbox.subrootContext then
-			toolbox.subrootContext._visible = tabInfo.node == subWindow
+	tabContainer:addChild(EditableScene())
+	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
+		if tabInfo.node == subWindow then
+			self.sceneTree:setStartNode(subRoot)
+			toolbox.subrootContext._visible = true
+		else
+			self.sceneTree:setStartNode(tabInfo.node)
+			toolbox.subrootContext._visible = false
 		end
 	end)
 
 	self.tabContainer = tabContainer
 
 	subWindow = Nodes("ViewportContainer")(subRoot._viewport)
-	subWindow.name = "[ Game ]"
+	subWindow.name = "Game"
+
+	---@type integer # The index of the currently fullscreened tab
+	self.oldIndex = 1
+	---@type Node? # The fullscreened tab
+	self.fullTab = subWindow
+
 
 	subWindow:setAnchors(0, 0, 1, 1)
 	subWindow.paused = true
@@ -145,6 +157,7 @@ function MainWindow:new(toolbox)
 
 	--======== SCENE TREE
 	do
+		---@type Toolbox.SceneTree
 		local sceneTree = SceneTreeViewer(toolbox)
 		self.sceneTree = sceneTree
 		sceneTree:setAnchorsAndOffsets(
@@ -230,26 +243,33 @@ function MainWindow:onSubrootPopped()
 end
 
 function MainWindow:toggleFull()
+	---@type boolean # If we're fullscreened now
 	local full = not self._fullView
 	self._fullView = full
-	local subWindow = self.subWindow
 
-	self.editor:setVisible(not full)
 	if full then
-		self:addChild(subWindow)
-		subWindow:setVisible(true)
-		self.toolbox.subrootContext._visible = true
-		-- subWindow:setAnchorsAndOffsets(
-		-- 	0, 0, 1, 1,
-		-- 	0, 0, 0, 0
-		-- )
+		-- We are going to fullscreen
+		-- Remove the current tab from the TabContainer, and make it fullscreen on the main window
+
+		-- Get the tab
+		local tab = assert(self.tabContainer:getActiveTab(), "Tab doesn't exist")
+		self.oldIndex = self.tabContainer:getIndexOfChild(tab)
+
+		self:addChild(tab)
+		tab:setVisible(true)
+		self.toolbox.subrootContext._visible = tab == self.subWindow
+		self.fullTab = tab
+
+		self.editor:setVisible(false)
 	else
-		self.tabContainer:insertChild(subWindow, 1)
-		self.tabContainer:selectTab(subWindow)
-		-- subWindow:setAnchorsAndOffsets(
-		-- 	0.5, 0, 0.5, 0,
-		-- 	-220, 40 + 26, 220, 300
-		-- )
+		-- We are exiting fullscreen
+		-- Re-insert it into the TabContainer
+		local tab = assert(self.fullTab)
+		self.tabContainer:insertChild(tab, self.oldIndex)
+		self.tabContainer:selectTab(tab)
+		self.toolbox.subrootContext._visible = tab == self.subWindow
+
+		self.editor:setVisible(true)
 	end
 end
 
