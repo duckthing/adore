@@ -1,7 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local HBox = Adore.Nodes("HBox")
-local min, max = math.min, math.max
+local min = math.min
 
 ---@class TabBar: HBox
 ---@override fun(): TabBar

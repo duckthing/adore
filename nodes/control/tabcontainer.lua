@@ -38,6 +38,8 @@ function TabContainer:new()
 	self._internalTabBar._adorePersist = false
 	self._internalTabBar.tabSelected:connect(self, "_onTabSelected")
 	self:addChild(self._internalTabBar)
+
+	self.tabSelected = self:newSignal()
 end
 
 ---Creates TabBar.TabInfo for the internal TabBar
@@ -158,6 +160,7 @@ function TabContainer:_onTabSelected(_, index)
 	self._currentTab = index
 	local tabInfo = self._internalTabBar._tabs[index]
 	if not tabInfo then return self end
+	self.tabSelected:fire(self, index, tabInfo)
 
 	local selectedChild = tabInfo.node
 
