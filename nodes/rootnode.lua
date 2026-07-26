@@ -1420,7 +1420,7 @@ function Root:drawToViewport()
 		-- First, draw everything that wants post-processing
 		for i = 1, #layers do
 			local layer = layers[i]
-			if layer._visible then
+			if layer:isVisibleInTree() then
 				if layer._applyParentProcessing then
 					local shaderId = layer.appliedShaderID
 					layer:drawLayer()
@@ -1442,7 +1442,7 @@ function Root:drawToViewport()
 			love.graphics.clear()
 			for i = 1, #layers do
 				local layer = layers[i]
-				if layer._visible and not layer._applyParentProcessing then
+				if layer:isVisibleInTree() and not layer._applyParentProcessing then
 					local shaderId = layer.appliedShaderID
 					layer:drawLayer()
 					viewport:applyToBuffer(layer.albedo, (shaderId and shaderAssets[shaderId]))
@@ -1457,7 +1457,7 @@ function Root:drawToViewport()
 		local layers = self._canvasLayers
 		for i = 1, #layers do
 			local layer = layers[i]
-			if layer._visible then
+			if layer:isVisibleInTree() then
 				layer:drawLayer()
 				viewport:applyToBuffer(layer.albedo)
 			end
