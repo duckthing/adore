@@ -31,7 +31,10 @@ local menuActions = {
 		"Scene",
 		{
 			{label = "Save Scene"},
-			{label = "Load Scene"},
+			{label = "Load Scene", func = function(window)
+				---@cast window Toolbox.MainWindow
+				window.tabContainer:addChild(EditableScene("src.levels.test"))
+			end},
 			{label = "Reload Scene"},
 			{label = "", separator = true},
 			{label = "Quit"},
@@ -61,13 +64,12 @@ function MainWindow:new(toolbox)
 			0, 0, 1, 1,
 			260, 36, -260, -240
 	)
-	tabContainer:addChild(EditableScene())
 	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
 		if tabInfo.node == subWindow then
 			self.sceneTree:setStartNode(subRoot)
 			toolbox.subrootContext._visible = true
 		else
-			self.sceneTree:setStartNode(tabInfo.node)
+			self.sceneTree:setStartNode(tabInfo.node.pseudoRoot)
 			toolbox.subrootContext._visible = false
 		end
 	end)
@@ -130,6 +132,11 @@ function MainWindow:new(toolbox)
 
 		button.clicked:connectCallable(function(...)
 			popupMenu:popup()
+		end)
+
+		popupMenu.itemSelected:connectCallable(function(_, itemIndex, item)
+			local f = item.func
+			if f then f(self) end
 		end)
 
 		menuBar:addChild(button)
