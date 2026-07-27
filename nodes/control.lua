@@ -782,14 +782,7 @@ function Control:_afterDraw()
 	love.graphics.pop()
 end
 
-function Control:_drawChildren()
-	for i = 1, #self.children do
-		local child = self.children[i]
-		if child._visible then
-			child:_intDraw()
-		end
-	end
-end
+Control._drawChildren = Node._drawChildren
 
 function Control:onViewportAdded(_)
 	-- If we're not added to a Control, refresh relative to the Canvas
