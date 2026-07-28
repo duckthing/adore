@@ -8,7 +8,10 @@ local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
 local FileBrowser = require(ADORE_PATH..".toolbox.ui.filebrowser")
 local Assets = require(ADORE_PATH..".toolbox.assets")
+---@type Toolbox.EditableScene
 local EditableScene = require(ADORE_PATH..".toolbox.editablescene")
+---@type Toolbox.GameScene
+local GameScene = require(ADORE_PATH..".toolbox.gamescene")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
@@ -57,51 +60,28 @@ function MainWindow:new(toolbox)
 	---@type boolean # Whether the game window takes up the whole window
 	self._fullView = true
 
-	---@type ViewportContainer # Where the game is rendered to
-	local subWindow
+	---@type Toolbox.GameScene # Where the game is rendered to
+	local subWindow = GameScene(subRoot)
+
 	local tabContainer = Nodes("TabContainer")()
 	tabContainer:setAnchorsAndOffsets(
 			0, 0, 1, 1,
 			260, 36, -260, -240
 	)
 	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
-		if tabInfo.node == subWindow then
-			self.sceneTree:setStartNode(subRoot)
-			toolbox.subrootContext._visible = true
-		else
-			self.sceneTree:setStartNode(tabInfo.node.pseudoRoot)
-			toolbox.subrootContext._visible = false
-		end
+		self.sceneTree:setStartNode(tabInfo.node.subroot)
+		toolbox.subrootContext._visible = tabInfo.node == subWindow
 	end)
-
 	self.tabContainer = tabContainer
-
-	subWindow = Nodes("ViewportContainer")(subRoot._viewport)
-	subWindow.name = "Game"
 
 	---@type integer # The index of the currently fullscreened tab
 	self.oldIndex = 1
 	---@type Node? # The fullscreened tab
 	self.fullTab = subWindow
 
-
 	subWindow:setAnchors(0, 0, 1, 1)
 	subWindow.paused = true
 	self.subWindow = subWindow
-
-	subWindow.resizeViewport = function(_, w, h)
-		if subRoot then
-			local viewport = subWindow._subViewport
-			if viewport then
-				toolbox:pushSubroot()
-
-				subRoot:resize(w, h)
-				subRoot:drawToViewport()
-
-				toolbox:popSubroot()
-			end
-		end
-	end
 
 	--======== EDITOR
 	local editor = Nodes("Control")()
