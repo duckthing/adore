@@ -8,15 +8,14 @@ local Resources = Adore.Resources
 local EScene = require(ADORE_PATH..".toolbox.editablescene")
 
 ---@class Toolbox.GameScene: Toolbox.EditableScene
+---@overload fun(root: RootNode?): Toolbox.GameScene
 local GScene = EScene:extend()
 GScene._pauseMode = "inherit"
 
 function GScene:new(root)
 	GScene.super.new(self, nil, root)
 	self.name = "Game"
-end
-
-function GScene:update(dt)
+	self._running = true
 end
 
 return GScene

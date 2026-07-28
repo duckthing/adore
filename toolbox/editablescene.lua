@@ -12,7 +12,7 @@ local Viewport = Resources("Viewport")
 
 ---Not a class, to not pollute with useless suggestions
 ---@class Toolbox.EditableScene: ViewportContainer
----@overload fun(self, scene: string? | SceneFactory, root: RootNode?): Toolbox.EditableScene
+---@overload fun(scene: string? | SceneFactory, root: RootNode?): Toolbox.EditableScene
 local EScene = ViewportContainer:extend()
 EScene.CLASS_NAME = "EditableScene"
 EScene._pauseMode = "never"
@@ -27,14 +27,17 @@ function EScene:new(scene, root)
 	EScene.super.new(self, Viewport({}))
 	self:setAnchors(0, 0, 1, 1)
 
-	---@type RootNode?
-	self._lastRoot = nil
+	---@type RootNode[]
+	self._lastRoot = {}
 
 	---@type RootNode? # The subroot contained by this scene
 	self.subroot = root
 	if not root then
 		self:createRoot()
 	end
+
+	---@type boolean # Whether this can call `:update`
+	self._running = false
 
 	self:changeScene(scene)
 end
@@ -69,31 +72,41 @@ function EScene:changeScene(scene)
 	self:popSubroot()
 end
 
+---Pushes the subroot so that it can operate
 function EScene:pushSubroot()
-	self._lastRoot = Node._root
+	self._lastRoot[#self._lastRoot+1] = Node._root
 	Node._root = self.subroot
 end
 
+---Pops the subroot and replaces the active root with the previous one
 function EScene:popSubroot()
-	Node._root = self._lastRoot
-	self._lastRoot = nil
+	assert(#self._lastRoot ~= 0, "Root stack is empty")
+	Node._root, self._lastRoot[#self._lastRoot] = self._lastRoot[#self._lastRoot], nil
 end
 
----Calls a method on the subroot
+---Returns `true` if the subroot is active
+---@return boolean subrootActive
+function EScene:isPushed()
+	return Node._root == self.subroot
+end
+
+---Calls a method on the subroot, pushing and popping as necessary
 ---@param methodName string
 ---@param ... unknown
 ---@return true success # Whether this method didn't crash
 ---@overload fun(self, methodName: string, ...: unknown): false, string
 function EScene:handleOnSubroot(methodName, ...)
-	-- TODO: Understand why this check prevents stack overflows?
-	if not self._lastRoot then
-		self:pushSubroot()
-		local subroot = self.subroot
-		local success, err = pcall(subroot[methodName], subroot, ...)
-		self:popSubroot()
-		return success, err
-	end
-	return false, "Pushed while in another root"
+	self:pushSubroot()
+	local subroot = self.subroot
+	local success, err = pcall(subroot[methodName], subroot, ...)
+	self:popSubroot()
+	return success, err
+end
+
+---Returns `true` if this subroot is getting updated
+---@return boolean running
+function EScene:isRunning()
+	return self._visible and self._running
 end
 
 function EScene:_intDraw()
@@ -112,10 +125,6 @@ function EScene:_intDraw()
 	self._subViewport:drawFittedContents(self._localContentRect.x, self._localContentRect.y)
 end
 
-function EScene:update(dt)
-	if self._visible then
-		self:handleOnSubroot("update", dt)
-	end
-end
+function EScene:update(dt) end
 
 return EScene

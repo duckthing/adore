@@ -42,114 +42,123 @@ function SubrootC:pointToWindow(mx, my)
 end
 
 function SubrootC:mousemoved(x, y, dx, dy, isTouch)
-	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
+	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer or not srContainer:isRunning() then return false end
+
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
+	local subroot = assert(srContainer.subroot)
+
 	if lx then
-		toolbox:pushSubroot()
-
+		-- Inside the window
+		srContainer:pushSubroot()
 		if not self._mouseInside then
+			-- Tell it that it has focus
 			self._mouseInside = true
-			toolbox.subRoot:mousefocus(true)
+			subroot:mousefocus(true)
 		end
-		toolbox.subRoot:mousemoved(lx, ly, dx * scaleX, dy * scaleY, isTouch)
-
-		toolbox:popSubroot()
+		subroot:mousemoved(lx, ly, dx * scaleX, dy * scaleY, isTouch)
+		srContainer:popSubroot()
 		return true
 	elseif self._mouseInside then
 		-- Lost mouse focus
+		srContainer:pushSubroot()
 		self._mouseInside = false
-		toolbox:pushSubroot()
-
-		toolbox.subRoot:mousefocus(false)
-
-		toolbox:popSubroot()
+		subroot:mousefocus(false)
+		srContainer:popSubroot()
+		return false
 	end
-	return false
 end
 
 function SubrootC:mousepressed(x, y, button, isTouch, presses)
-	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
+	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer or not srContainer:isRunning() then return false end
+
 	local lx, ly, _, _ = self:pointToWindow(x, y)
 
 	if lx then
-		toolbox:pushSubroot()
-		toolbox.subRoot:mousepressed(lx, ly, button, isTouch, presses)
-		toolbox:popSubroot()
+		srContainer:pushSubroot()
+		srContainer.subroot:mousepressed(lx, ly, button, isTouch, presses)
+		srContainer:popSubroot()
 		return true
 	end
 	return false
 end
 
 function SubrootC:mousereleased(x, y, button, isTouch, presses)
-	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
-	local subroot = toolbox.subRoot
+	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer or not srContainer:isRunning() then return false end
+
 	local lx, ly, _, _ = self:pointToWindow(x, y)
 
 	if lx then
-		toolbox:pushSubroot()
-		subroot:mousereleased(lx, ly, button, isTouch, presses)
-		toolbox:popSubroot()
+		srContainer:pushSubroot()
+		srContainer.subroot:mousereleased(lx, ly, button, isTouch, presses)
+		srContainer:popSubroot()
 		return true
 	end
 	return false
 end
 
 function SubrootC:touchmoved(id, x, y, dx, dy, pressure)
-	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
+	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer or not srContainer:isRunning() then return false end
+
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
 	if lx then
-		toolbox:pushSubroot()
-		toolbox.subRoot:touchmoved(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
-		toolbox:popSubroot()
+		srContainer:pushSubroot()
+		srContainer.subroot:touchmoved(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
+		srContainer:popSubroot()
 		return true
 	end
 	return false
 end
 
 function SubrootC:touchpressed(id, x, y, dx, dy, pressure)
-	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
+	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer or not srContainer:isRunning() then return false end
+
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
 	if lx then
-		toolbox:pushSubroot()
-		toolbox.subRoot:touchpressed(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
-		toolbox:popSubroot()
+		srContainer:pushSubroot()
+		srContainer.subroot:touchpressed(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
+		srContainer:popSubroot()
 		return true
 	end
 	return false
 end
 
 function SubrootC:touchreleased(id, x, y, dx, dy, pressure)
-	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
+	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer or not srContainer:isRunning() then return false end
+
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
 	if lx then
-		toolbox:pushSubroot()
-		toolbox.subRoot:touchreleased(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
-		toolbox:popSubroot()
+		srContainer:pushSubroot()
+		srContainer.subroot:touchreleased(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
+		srContainer:popSubroot()
 		return true
 	end
 	return false
 end
 
 function SubrootC:update(dt)
-	if not self.running or not self._visible then return false end
 	local toolbox = self._toolbox
-	local subroot = toolbox.subRoot
-	if subroot then
-		toolbox:pushSubroot()
-		subroot:update(dt)
-		subroot:drawToViewport()
-		toolbox:popSubroot()
-	end
+	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer or not srContainer:isRunning() then return false end
+
+	srContainer:pushSubroot()
+	srContainer.subroot:update(dt)
+	srContainer:popSubroot()
 end
 
 SubrootC.HANDLERS = {
@@ -186,15 +195,13 @@ for handler, _ in pairs(SubrootC.HANDLERS) do
 	if not rawget(SubrootC, handler) then
 		---@param c Toolbox.SubrootContext
 		SubrootC[handler] = function(c, ...)
-			if not c.running or not c._visible then return false end
 			local toolbox = c._toolbox
-			local subroot = toolbox.subRoot
-			if subroot then
-				toolbox:pushSubroot()
-				local handled = subroot[handler](subroot, ...)
-				toolbox:popSubroot()
-				return handled
-			end
+			local srContainer = toolbox:getSubrootContainer()
+			if not srContainer or not srContainer:isRunning() then return false end
+
+			srContainer:pushSubroot()
+			local success, handled = srContainer.subroot[handler](srContainer.subroot, ...)
+			srContainer:popSubroot()
 			return false
 		end
 	end

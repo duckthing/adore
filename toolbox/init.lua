@@ -14,8 +14,6 @@ local MainWindow = require(PKG_NAME..".ui.mainwindow")
 
 ---@type Node
 local Node = nil
----@type RootNode?
-Toolbox.subRoot = nil
 ---@type RootNode
 Toolbox.godRoot = nil
 ---@type Toolbox.MainWindow
@@ -44,20 +42,10 @@ local toolboxContext = Adore.Resources("ShortcutContext")(
 toolboxContext._priority = 999
 toolboxContext.name = "ToolboxContext"
 
-function Toolbox:pushSubroot()
-	Node._root = Toolbox.subRoot
-	Toolbox.mainWindow:onSubrootPushed()
-end
-
-function Toolbox:popSubroot()
-	Node._root = Toolbox.godRoot
-	Toolbox.mainWindow:onSubrootPopped()
-end
-
----Returns `true` if the subroot is active
----@return boolean subrootActive
-function Toolbox:isPushed()
-	return Node._root == Toolbox.subRoot
+---Returns the subroot container
+---@return Toolbox.EditableScene
+function Toolbox:getSubrootContainer()
+	return Toolbox.mainWindow.subWindow
 end
 
 return setmetatable(Toolbox, {
@@ -71,14 +59,9 @@ return setmetatable(Toolbox, {
 		Node = Adore.Nodes("Node")
 		Node._root = nil
 
-		Toolbox.subRoot = originalRoot
 		local godRoot = Adore:build({hideSceneWarning = true}, require(PKG_NAME..".themes.dark")())
 		godRoot.allowTabFocus = false
 		Toolbox.godRoot = godRoot
-		-- godRoot.drawBackground = function()
-		-- 	love.graphics.setColor(0.1, 0.1, 0.12)
-		-- 	love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
-		-- end
 
 		Toolbox.mainWindow = MainWindow(self)
 		godRoot:addChild(Toolbox.mainWindow)
@@ -121,17 +104,18 @@ return setmetatable(Toolbox, {
 					-- Call it on the god root first
 					local handled = godRoot[handler](godRoot, ...)
 
-					if not handled and Toolbox.subRoot then
+					local srContainer = self:getSubrootContainer()
+					if not handled and srContainer then
 						-- If not handled, we pass it into the subroot
-						local isPushed = self:isPushed()
+						local isPushed = srContainer:isPushed()
 						if not isPushed then
-							self:pushSubroot()
+							srContainer:pushSubroot()
 						end
 
 						handled = existingCallback(...)
 
 						if not isPushed then
-							self:popSubroot()
+							srContainer:popSubroot()
 						end
 					end
 
@@ -143,15 +127,16 @@ return setmetatable(Toolbox, {
 		-- Push the subroot when changing scenes
 		local originalChangeScene = originalRoot.changeSceneTo
 		originalRoot.changeSceneTo = function(s, constructor)
-			local isPushed = self:isPushed()
+			local srContainer = self:getSubrootContainer()
+			local isPushed = srContainer:isPushed()
 			if not isPushed then
-				self:pushSubroot()
+				srContainer:pushSubroot()
 			end
 
-			originalChangeScene(s, constructor)
+			originalChangeScene(srContainer.subroot, constructor)
 
 			if not isPushed then
-				self:popSubroot()
+				srContainer:popSubroot()
 			end
 		end
 
