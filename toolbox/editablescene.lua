@@ -50,7 +50,7 @@ function EScene:_setCanonRect(x, y, w, h)
 	self._viewportFits = w > 1 and h > 1
 	if self._viewportFits then
 		self:resizeViewport(w, h)
-		self.pseudoRoot:resize(w, h)
+		self.pseudoRoot:resize(self._subViewport:getDimensions())
 	end
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
 end
