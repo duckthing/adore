@@ -47,6 +47,7 @@ function EScene:_setCanonRect(x, y, w, h)
 	if self._viewportFits then
 		self:resizeViewport(w, h)
 		self.subroot:resize(self._subViewport:getDimensions())
+		self:putIntoViewport()
 	end
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
 end
@@ -109,7 +110,8 @@ function EScene:isRunning()
 	return self._visible and self._running
 end
 
-function EScene:_intDraw()
+---Updates the Viewport with the drawn contents of the subroot
+function EScene:putIntoViewport()
 	local sx, sy, sw, sh = love.graphics.getScissor()
 	love.graphics.push("all")
 	love.graphics.origin()
@@ -121,6 +123,12 @@ function EScene:_intDraw()
 	self._subViewport:pop()
 	love.graphics.pop()
 	love.graphics.setScissor(sx, sy, sw, sh)
+end
+
+function EScene:_intDraw()
+	if self:isRunning() then
+		self:putIntoViewport()
+	end
 
 	self._subViewport:drawFittedContents(self._localContentRect.x, self._localContentRect.y)
 end

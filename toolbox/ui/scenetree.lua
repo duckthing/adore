@@ -153,10 +153,11 @@ function SceneTreeViewer:updateNodes()
 end
 
 ---Sets the start node, which is where the scene tree begins
----@param node any
+---@param node Toolbox.EditableScene
 function SceneTreeViewer:setStartNode(node)
 	if self.subrootContainer ~= node then
 		self.subrootContainer = node
+		self.startNode = node.subroot
 		self:updateNodes()
 	end
 end
