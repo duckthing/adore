@@ -12,6 +12,8 @@ local Node = Adore.Nodes("Node")
 local Context = Object:extend()
 Context.CLASS_NAME = "Context"
 
+local PushedRootMT = {__mode = "k"}
+
 function Context:new()
 	Context.super.new(self)
 
@@ -23,8 +25,8 @@ function Context:new()
 	---* If priority is changed while active, this `Context` will receive events earlier than an existing `Context` with the same priority.
 	---* `CoreUIContext` has a priority of 1000.
 	self._priority = 0
-	---@type boolean # Whether this Context is in a stack currently
-	self._inStack = false
+	---@type {[RootNode]: true} # The RootNodes this Context is pushed to; used mainly for Toolbox
+	self._inRoots = setmetatable({}, PushedRootMT)
 	---@type boolean # Whether this Context should sink handled input
 	self.sinkHandledInput = true
 end
@@ -45,9 +47,9 @@ end
 
 ---Adds this Context into the stack, if it isn't in the stack yet
 function Context:push()
-	if self._inStack then return end
-	self._inStack = true
+	if self:isPushed() then return end
 	local root = Node._root
+	self._inRoots[root] = true
 	local stack = root._contextStack
 	push(stack, self)
 	self:pushed()
@@ -55,14 +57,14 @@ end
 
 ---Removes this Context from the stack, if it's there
 function Context:pop()
-	if not self._inStack then return end
+	if not self:isPushed() then return end
 	local root = Node._root
 	local stack = root._contextStack
 
 	for i = #stack, 1, -1 do
 		if stack[i] == self then
 			table.remove(stack, i)
-			self._inStack = false
+			self._inRoots[root] = nil
 			self:popped()
 			return
 		end
@@ -70,6 +72,12 @@ function Context:pop()
 
 	-- Improperly removed
 	error("This Context could not be found in the RootNode's ContextStack (removed outside of :pop())")
+end
+
+---Returns `true` if this Context is pushed in the stack
+---@return boolean isPushed
+function Context:isPushed()
+	return self._inRoots[Node._root] or false
 end
 
 ---Setting a Context as a default will make it exist across scene reloads.
@@ -114,7 +122,7 @@ end
 function Context:setPriority(newValue)
 	if not newValue then newValue = self._priority end
 	self._priority = newValue
-	if self._inStack then
+	if self:isPushed() then
 		self:pop()
 		self:push()
 	end
