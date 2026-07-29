@@ -27,12 +27,16 @@ local labelYOffset = (buttonSize - fontHeight) * 0.5
 local labelXOffset = 2
 
 ---@param toolbox Toolbox
-function SceneTreeViewer:new(toolbox)
+---@param container Toolbox.EditableScene
+function SceneTreeViewer:new(toolbox, container)
 	SceneTreeViewer.super.new(self)
 
 	self.toolbox = toolbox
-	---@type Node? # The Node to start building the tree from
-	self.startNode = self.toolbox.subRoot
+
+	---@type Toolbox.EditableScene? # The current subroot container
+	self.subrootContainer = container
+	---@type Node? # Where the tree begins searching
+	self.startNode = container.subroot
 
 	self.tree = tnew(32, 1)
 	self.tree.length = 0
@@ -113,11 +117,11 @@ function SceneTreeViewer:updateNodes()
 	local tree = self.tree
 	local start = self.startNode
 
-	local pressedNode = self.pressedNode
-
 	tclear(tree)
 	tree.length = 0
+	if not start then return end
 
+	local pressedNode = self.pressedNode
 	cheapIterateAll(start, forEachNode, tree)
 	-- Delay tree updates based off the amount of nodes there are
 	self.interval = max(1, min(tree.length * 0.04, 5))
@@ -151,8 +155,8 @@ end
 ---Sets the start node, which is where the scene tree begins
 ---@param node any
 function SceneTreeViewer:setStartNode(node)
-	if self.startNode ~= node then
-		self.startNode = node
+	if self.subrootContainer ~= node then
+		self.subrootContainer = node
 		self:updateNodes()
 	end
 end
@@ -262,10 +266,10 @@ function SceneTreeViewer:mousepressed(mx, my, button)
 				self.nodeSelected:fire(nil)
 			end
 
-			local toolbox = self.toolbox
-			toolbox:pushSubroot()
+			local srContainer = self.subrootContainer
+			srContainer:pushSubroot()
 			hoveredNode.parent:removeChild(hoveredNode, true)
-			toolbox:popSubroot()
+			srContainer:popSubroot()
 			self.timeSinceUpdate = self.interval + 1
 		end
 	end

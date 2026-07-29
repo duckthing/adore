@@ -50,18 +50,17 @@ local menuActions = {
 }
 
 ---@param toolbox Toolbox
-function MainWindow:new(toolbox)
+function MainWindow:new(toolbox, subroot)
 	MainWindow.super.new(self)
 	self:setAnchors(0, 0, 1, 1)
 
 	self.toolbox = toolbox
-	local subRoot = toolbox.subRoot
 
 	---@type boolean # Whether the game window takes up the whole window
 	self._fullView = true
 
 	---@type Toolbox.GameScene # Where the game is rendered to
-	local subWindow = GameScene(subRoot)
+	local subWindow = GameScene(subroot)
 
 	local tabContainer = Nodes("TabContainer")()
 	tabContainer:setAnchorsAndOffsets(
@@ -69,18 +68,18 @@ function MainWindow:new(toolbox)
 			260, 36, -260, -240
 	)
 	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
-		self.sceneTree:setStartNode(tabInfo.node.subroot)
-		toolbox.subrootContext._visible = tabInfo.node == subWindow
+		self.sceneTree:setStartNode(tabInfo.node)
+		self:updateButtonTexture()
 	end)
 	self.tabContainer = tabContainer
 
 	---@type integer # The index of the currently fullscreened tab
 	self.oldIndex = 1
-	---@type Node? # The fullscreened tab
+	---@type Toolbox.EditableScene? # The fullscreened tab
 	self.fullTab = subWindow
 
 	subWindow:setAnchors(0, 0, 1, 1)
-	subWindow.paused = true
+	---@type Toolbox.GameScene? # The original subwindow
 	self.subWindow = subWindow
 
 	--======== EDITOR
@@ -142,10 +141,13 @@ function MainWindow:new(toolbox)
 		gameActionBar:addChild(button)
 	end
 
+	---@type TextureButton
+	self.pauseButton = gameActionBar.children[2]
+
 	--======== SCENE TREE
 	do
 		---@type Toolbox.SceneTree
-		local sceneTree = SceneTreeViewer(toolbox)
+		local sceneTree = SceneTreeViewer(toolbox, subWindow)
 		self.sceneTree = sceneTree
 		sceneTree:setAnchorsAndOffsets(
 			0, 0, 1, 1,
@@ -199,26 +201,36 @@ function MainWindow:new(toolbox)
 	self:addChild(subWindow)
 end
 
----@param button TextureButton?
-function MainWindow:togglePause(button)
-	local toolbox = self.toolbox
-	local c = toolbox.subrootContext
-	c.running = not c.running
+---Returns the subroot container
+---@return Toolbox.EditableScene
+function MainWindow:getSubrootContainer()
+	if self._fullView then return self.fullTab end
+	local selectedTab = self.tabContainer:getActiveTab()
+	return selectedTab
+end
 
-	if button then
-		button:setTexture(c.running and Assets.Pause or Assets.Play)
+---Changes the pause button texture
+function MainWindow:updateButtonTexture()
+	local srContainer = self:getSubrootContainer()
+	self.pauseButton:setTexture((srContainer and srContainer._running) and Assets.Pause or Assets.Play)
+end
+
+function MainWindow:togglePause()
+	local srContainer = self:getSubrootContainer()
+	if srContainer then
+		srContainer._running = not srContainer._running
+		self:updateButtonTexture()
 	end
 end
 
 function MainWindow:reloadLevel()
-	local toolbox = self.toolbox
-	local subRoot = toolbox.subRoot
-	local c = toolbox.subrootContext
-	c.running = true
+	local srContainer = self:getSubrootContainer()
+	local subroot = srContainer.subroot
+	srContainer._running = true
 
-	toolbox:pushSubroot()
-	subRoot:reloadCurrentScene()
-	toolbox:popSubroot()
+	srContainer:pushSubroot()
+	subroot:reloadCurrentScene()
+	srContainer:popSubroot()
 end
 
 function MainWindow:onSubrootPushed()
@@ -244,7 +256,6 @@ function MainWindow:toggleFull()
 
 		self:addChild(tab)
 		tab:setVisible(true)
-		self.toolbox.subrootContext._visible = tab == self.subWindow
 		self.fullTab = tab
 
 		self.editor:setVisible(false)
@@ -254,7 +265,6 @@ function MainWindow:toggleFull()
 		local tab = assert(self.fullTab)
 		self.tabContainer:insertChild(tab, self.oldIndex)
 		self.tabContainer:selectTab(tab)
-		self.toolbox.subrootContext._visible = tab == self.subWindow
 
 		self.editor:setVisible(true)
 	end

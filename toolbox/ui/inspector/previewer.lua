@@ -42,15 +42,16 @@ end
 ---(Pushes the subroot if needed, and) calls `:onInput`, which should set the property
 ---@param ... unknown
 function Previewer:attemptSet(...)
-	local Toolbox = Previewer.Toolbox
-	if Toolbox:isPushed() then
+	local toolbox = Previewer.Toolbox
+	local srContainer = toolbox:getSubrootContainer()
+	if srContainer:isPushed() then
 		-- Pushed from outside; don't pop
 		self:onInput(...)
 	else
 		-- Not pushed yet; push for this action
-		Toolbox:pushSubroot()
+		srContainer:pushSubroot()
 		self:onInput(...)
-		Toolbox:popSubroot()
+		srContainer:popSubroot()
 	end
 end
 

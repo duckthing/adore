@@ -21,7 +21,7 @@ end
 
 function SubrootC:pointToWindow(mx, my)
 	local toolbox = self._toolbox
-	local window = toolbox.mainWindow.subWindow
+	local window = toolbox.mainWindow:getSubrootContainer()
 	local lcr = window._localContentRect
 
 	if lcr:containsPoint(mx, my) then
@@ -199,9 +199,7 @@ for handler, _ in pairs(SubrootC.HANDLERS) do
 			local srContainer = toolbox:getSubrootContainer()
 			if not srContainer or not srContainer:isRunning() then return false end
 
-			srContainer:pushSubroot()
-			local success, handled = srContainer.subroot[handler](srContainer.subroot, ...)
-			srContainer:popSubroot()
+			srContainer:handleOnSubroot(handler, ...)
 			return false
 		end
 	end

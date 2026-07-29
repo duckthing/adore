@@ -45,7 +45,7 @@ toolboxContext.name = "ToolboxContext"
 ---Returns the subroot container
 ---@return Toolbox.EditableScene
 function Toolbox:getSubrootContainer()
-	return Toolbox.mainWindow.subWindow
+	return Toolbox.mainWindow:getSubrootContainer()
 end
 
 return setmetatable(Toolbox, {
@@ -63,7 +63,7 @@ return setmetatable(Toolbox, {
 		godRoot.allowTabFocus = false
 		Toolbox.godRoot = godRoot
 
-		Toolbox.mainWindow = MainWindow(self)
+		Toolbox.mainWindow = MainWindow(self, originalRoot)
 		godRoot:addChild(Toolbox.mainWindow)
 
 		---@type Toolbox.SubrootContext
