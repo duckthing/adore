@@ -11,7 +11,7 @@ MainLoop.HANDLERS = {
 	update = true,
 	postUpdate = true,
 }
----@type RootNode
+---@type RootNode # The class, not the instance
 MainLoop.Root = nil
 MainLoop.CLASS_NAME = "MainLoopContext"
 
@@ -37,6 +37,10 @@ local function updateTopLevel(start, dt)
 	if not start:is(MainLoop.Root) then
 		start:update(dt)
 	end
+
+	-- Clear the arrays first (in case we error and go to Toolbox)
+	tclear(tlParents)
+	tclear(tlChildIndex)
 
 	tlParents[1] = start
 	tlChildIndex[1] = 1
@@ -71,10 +75,6 @@ local function updateTopLevel(start, dt)
 			tlChildIndex[i] = childIndex + 1
 		end
 	end
-
-	-- Clear the arrays
-	tclear(tlParents)
-	tclear(tlChildIndex)
 end
 
 ---Runs the top-level processors

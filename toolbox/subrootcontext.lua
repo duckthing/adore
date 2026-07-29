@@ -52,21 +52,17 @@ function SubrootC:mousemoved(x, y, dx, dy, isTouch)
 
 	if lx then
 		-- Inside the window
-		srContainer:pushSubroot()
 		if not self._mouseInside then
 			-- Tell it that it has focus
 			self._mouseInside = true
-			subroot:mousefocus(true)
+			srContainer:handleOnSubroot("mousefocus", true)
 		end
-		subroot:mousemoved(lx, ly, dx * scaleX, dy * scaleY, isTouch)
-		srContainer:popSubroot()
+		srContainer:handleOnSubroot("mousemoved", lx, ly, dx * scaleX, dy * scaleY, isTouch)
 		return true
 	elseif self._mouseInside then
 		-- Lost mouse focus
-		srContainer:pushSubroot()
 		self._mouseInside = false
-		subroot:mousefocus(false)
-		srContainer:popSubroot()
+		srContainer:handleOnSubroot("mousefocus", false)
 		return false
 	end
 end
@@ -79,9 +75,7 @@ function SubrootC:mousepressed(x, y, button, isTouch, presses)
 	local lx, ly, _, _ = self:pointToWindow(x, y)
 
 	if lx then
-		srContainer:pushSubroot()
-		srContainer.subroot:mousepressed(lx, ly, button, isTouch, presses)
-		srContainer:popSubroot()
+		srContainer:handleOnSubroot("mousepressed", lx, ly, button, isTouch, presses)
 		return true
 	end
 	return false
@@ -95,9 +89,7 @@ function SubrootC:mousereleased(x, y, button, isTouch, presses)
 	local lx, ly, _, _ = self:pointToWindow(x, y)
 
 	if lx then
-		srContainer:pushSubroot()
-		srContainer.subroot:mousereleased(lx, ly, button, isTouch, presses)
-		srContainer:popSubroot()
+		srContainer:handleOnSubroot("mousereleased", lx, ly, button, isTouch, presses)
 		return true
 	end
 	return false
@@ -111,9 +103,7 @@ function SubrootC:touchmoved(id, x, y, dx, dy, pressure)
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
 	if lx then
-		srContainer:pushSubroot()
-		srContainer.subroot:touchmoved(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
-		srContainer:popSubroot()
+		srContainer:handleOnSubroot("touchmoved", id, lx, ly, dx * scaleX, dy * scaleY, pressure)
 		return true
 	end
 	return false
@@ -127,9 +117,7 @@ function SubrootC:touchpressed(id, x, y, dx, dy, pressure)
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
 	if lx then
-		srContainer:pushSubroot()
-		srContainer.subroot:touchpressed(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
-		srContainer:popSubroot()
+		srContainer:handleOnSubroot("touchpressed", id, lx, ly, dx * scaleX, dy * scaleY, pressure)
 		return true
 	end
 	return false
@@ -143,9 +131,7 @@ function SubrootC:touchreleased(id, x, y, dx, dy, pressure)
 	local lx, ly, scaleX, scaleY = self:pointToWindow(x, y)
 
 	if lx then
-		srContainer:pushSubroot()
-		srContainer.subroot:touchreleased(id, lx, ly, dx * scaleX, dy * scaleY, pressure)
-		srContainer:popSubroot()
+		srContainer:handleOnSubroot("touchreleased", id, lx, ly, dx * scaleX, dy * scaleY, pressure)
 		return true
 	end
 	return false
@@ -156,9 +142,7 @@ function SubrootC:update(dt)
 	local srContainer = toolbox:getSubrootContainer()
 	if not srContainer or not srContainer:isRunning() then return false end
 
-	srContainer:pushSubroot()
-	srContainer.subroot:update(dt)
-	srContainer:popSubroot()
+	srContainer:handleOnSubroot("update", dt)
 end
 
 SubrootC.HANDLERS = {

@@ -38,6 +38,8 @@ function EScene:new(scene, root)
 
 	---@type boolean # Whether this can call `:update`
 	self._running = false
+	---@type string? # The error message from the last method call
+	self._errorMessage = nil
 
 	self:changeScene(scene)
 end
@@ -47,7 +49,7 @@ function EScene:_setCanonRect(x, y, w, h)
 	if self._viewportFits then
 		self:resizeViewport(w, h)
 		self.subroot:resize(self._subViewport:getDimensions())
-		self:putIntoViewport()
+		self:drawRootIntoViewport()
 	end
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
 end
@@ -81,8 +83,9 @@ end
 
 ---Pops the subroot and replaces the active root with the previous one
 function EScene:popSubroot()
-	assert(#self._lastRoot ~= 0, "Root stack is empty")
-	Node._root, self._lastRoot[#self._lastRoot] = self._lastRoot[#self._lastRoot], nil
+	local count = #self._lastRoot
+	assert(count ~= 0, "Root stack is empty")
+	Node._root, self._lastRoot[count] = self._lastRoot[count], nil
 end
 
 ---Returns `true` if the subroot is active
@@ -97,28 +100,64 @@ end
 ---@return true success # Whether this method didn't crash
 ---@overload fun(self, methodName: string, ...: unknown): false, string
 function EScene:handleOnSubroot(methodName, ...)
-	self:pushSubroot()
+	if self._errorMessage then return false, self._errorMessage end
+
+	local shouldPush = not self:isPushed()
+	if shouldPush then
+		self:pushSubroot()
+	end
+
 	local subroot = self.subroot
-	local success, err = pcall(subroot[methodName], subroot, ...)
-	self:popSubroot()
+	local success, err = xpcall(subroot[methodName], debug.traceback, subroot, ...)
+	if not success then
+		self._errorMessage = err
+
+		print(("Errored while calling '%s' on subroot inside of '%s':"):format(methodName, tostring(self)))
+		print(err)
+	end
+
+	if shouldPush then
+		self:popSubroot()
+	end
 	return success, err
 end
 
----Returns `true` if this subroot is getting updated
+---Returns `true` if this subroot can continue running
 ---@return boolean running
 function EScene:isRunning()
-	return self._visible and self._running
+	return self._visible and self._running and not self._errorMessage
 end
 
 ---Updates the Viewport with the drawn contents of the subroot
-function EScene:putIntoViewport()
+function EScene:drawRootIntoViewport()
 	local sx, sy, sw, sh = love.graphics.getScissor()
 	love.graphics.push("all")
 	love.graphics.origin()
 	love.graphics.setScissor()
 	self._subViewport:push()
 
-	self:handleOnSubroot("draw")
+	local success = self:handleOnSubroot("draw")
+
+	self._subViewport:pop()
+	love.graphics.pop()
+	love.graphics.setScissor(sx, sy, sw, sh)
+	if not success then
+		self:drawErrorIntoViewport()
+	end
+end
+
+---Draws the error message into the Viewport
+function EScene:drawErrorIntoViewport()
+	local sx, sy, sw, sh = love.graphics.getScissor()
+	love.graphics.push("all")
+	love.graphics.origin()
+	love.graphics.setScissor()
+	self._subViewport:push()
+
+	love.graphics.setColor(0.3, 0.3, 0.6)
+	love.graphics.rectangle("fill", 0, 0, self._subViewport:getDimensions())
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.print(self._errorMessage, 50, 50)
 
 	self._subViewport:pop()
 	love.graphics.pop()
@@ -127,7 +166,9 @@ end
 
 function EScene:_intDraw()
 	if self:isRunning() then
-		self:putIntoViewport()
+		self:drawRootIntoViewport()
+	elseif self._visible and self._errorMessage then
+		self:drawErrorIntoViewport()
 	end
 
 	self._subViewport:drawFittedContents(self._localContentRect.x, self._localContentRect.y)

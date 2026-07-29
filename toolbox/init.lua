@@ -112,7 +112,7 @@ return setmetatable(Toolbox, {
 							srContainer:pushSubroot()
 						end
 
-						handled = existingCallback(...)
+						handled = existingCallback(srContainer.subroot, ...)
 
 						if not isPushed then
 							srContainer:popSubroot()

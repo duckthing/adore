@@ -219,6 +219,7 @@ function MainWindow:togglePause()
 	local srContainer = self:getSubrootContainer()
 	if srContainer then
 		srContainer._running = not srContainer._running
+		srContainer._errorMessage = nil
 		self:updateButtonTexture()
 	end
 end
