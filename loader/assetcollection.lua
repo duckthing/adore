@@ -68,7 +68,10 @@ end
 ---Reloads an asset at a certain path
 ---@param path string
 ---@param ... unknown
+---@return boolean success
+---@return string? err
 function AssetCollection:reloader(path, ...)
+	return false, "Reloader not defined"
 end
 
 ---Destroys an asset, and optionally replaces it with another asset
@@ -324,17 +327,29 @@ function AssetCollection:reload(path, ...)
 	end
 
 	local reloader = self.reloader
-	if not reloader then
-		-- By default, we destroy and replace the asset
+	if reloader == AssetCollection.reloader then
+		-- Reloader is not defined; destroy and replace the asset
 		local newAsset = self:handler(path, ...)
 		self.assets[id] = newAsset
 		self:destructor(oldAsset, newAsset)
 	else
-		-- Otherwise, the reloader should handle it
-		reloader(self, path)
+		-- Reloader can handle it
+		return reloader(self, path, ...)
 	end
 
 	return true
+end
+
+---Reloads and returns the asset and asset ID at the path
+---@param path string
+---@param ... unknown
+---@return any asset
+---@return AssetID id
+function AssetCollection:getFresh(path, ...)
+	if self:has(path) then
+		assert(self:reload(path, ...))
+	end
+	return self:get(path, ...)
 end
 
 ---Gets the AssetID and path for a given asset
