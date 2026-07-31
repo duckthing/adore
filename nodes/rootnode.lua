@@ -46,7 +46,7 @@ local _, shaderAssets = Adore.Loader.getCollection("ShaderLoader")
 ---@field touchmoved fun(self: RootNode, ...): boolean
 ---@field touchpressed fun(self: RootNode, ...): boolean
 ---@field touchreleased fun(self: RootNode, ...): boolean
----@overload fun(viewportOptions: Viewport.Options, defaultTheme: Theme): RootNode
+---@overload fun(viewportOptions: RootNode.Options, defaultTheme: Theme): RootNode
 local Root = Node:extend()
 Root.CLASS_NAME = "Root"
 Root.albedo = {1, 1, 1, 1}
