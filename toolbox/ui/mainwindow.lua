@@ -36,7 +36,10 @@ local menuActions = {
 			{label = "Save Scene"},
 			{label = "Load Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
-				window.tabContainer:addChild(EditableScene("src.levels.test"))
+				local eScene = EditableScene()
+				eScene:createSubroot()
+				eScene:changeSceneTo("src.levels.test")
+				window.tabContainer:addChild(eScene)
 			end},
 			{label = "Reload Scene"},
 			{label = "", separator = true},

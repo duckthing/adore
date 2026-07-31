@@ -12,7 +12,7 @@ local Viewport = Resources("Viewport")
 
 ---Not a class, to not pollute with useless suggestions
 ---@class Toolbox.EditableScene: ViewportContainer
----@overload fun(scene: string | SceneFactory?, root: RootNode?): Toolbox.EditableScene
+---@overload fun(root: RootNode?): Toolbox.EditableScene
 local EScene = ViewportContainer:extend()
 EScene.CLASS_NAME = "EditableScene"
 EScene._pauseMode = "never"
@@ -23,7 +23,7 @@ do
 	arr[#arr+1] = EScene
 end
 
-function EScene:new(scene, root)
+function EScene:new(root)
 	EScene.super.new(self, Viewport({}))
 	self:setAnchors(0, 0, 1, 1)
 
@@ -32,16 +32,11 @@ function EScene:new(scene, root)
 
 	---@type RootNode? # The subroot contained by this scene
 	self.subroot = root
-	if not root then
-		self:createRoot()
-	end
 
 	---@type boolean # Whether this can call `:update`
 	self._running = false
 	---@type string? # The error message from the last method call
 	self._errorMessage = nil
-
-	self:changeScene(scene)
 end
 
 function EScene:_setCanonRect(x, y, w, h)
@@ -54,17 +49,27 @@ function EScene:_setCanonRect(x, y, w, h)
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
 end
 
-function EScene:createRoot()
+---Sets the subroot from an existing subroot
+---@param root RootNode
+function EScene:setSubroot(root)
+	self.subroot = root
+end
+
+---Creates a subroot
+function EScene:createSubroot()
 	self:pushSubroot()
 	self.subroot = RootNode({
 		-- pixelScale = 2,
+		drawControlDebug = true,
 		physicsWorld = love.physics.newWorld(),
 		ownsPhysicsWorld = true,
 	}, Adore.Resources("DefaultTheme")())
 	self:popSubroot()
 end
 
-function EScene:changeScene(scene)
+---Changes the contained scene
+---@param scene string | SceneFactory
+function EScene:changeSceneTo(scene)
 	self:pushSubroot()
 	local sceneType = type(scene)
 	if sceneType == "string" then

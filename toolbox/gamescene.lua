@@ -12,8 +12,9 @@ local EScene = require(ADORE_PATH..".toolbox.editablescene")
 local GScene = EScene:extend()
 GScene._pauseMode = "inherit"
 
+---@param root RootNode
 function GScene:new(root)
-	GScene.super.new(self, nil, root)
+	GScene.super.new(self, root)
 	self.name = "Game"
 	self._running = true
 end
