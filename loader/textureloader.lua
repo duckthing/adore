@@ -5,7 +5,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.loader%.textureloader")
 local Loader = require(ADORE_PATH..".loader")
 ---@type Adore.AssetCollection
 local AssetCollection = require(ADORE_PATH..".loader.assetcollection")
-local Common = require(ADORE_PATH..".common")
+local Internal = require(ADORE_PATH..".data.internal")
 
 ---@class TextureSource
 ---@field texture love.Texture
@@ -60,12 +60,12 @@ local function genericHandle(self, method, path, ...)
 		end
 
 		local type = result.type
-		if not Common._paths[type] then
+		if not Internal._paths[type] then
 			error(("Asset at '%s' has an invalid type '%s'"):format(path, type))
 		end
 
 		-- Load the Loader for this type
-		local _ = Common[type]
+		local _ = Internal[type]
 		local collection = Loader.getCollection(type)
 		local asset, id = collection[method](collection, path)
 		return asset, id

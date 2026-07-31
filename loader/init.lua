@@ -29,8 +29,8 @@ local function emptyFunc() end
 
 ---@type Adore.AssetCollection
 local AssetCollection = require("loader.assetcollection")
----@type {[Adore.Common | "_paths"]: any}
-local Common = require "common"
+---@type {[Adore.Internal | "_paths"]: any}
+local Internal = require "data.internal"
 
 ---@type {[string]: Adore.AssetCollection}
 local loadedCollections = {}
@@ -71,9 +71,9 @@ function Loader.getCollection(name)
 		if collectionTypeToModule[name] then
 			-- Instance it
 			collection = collectionTypeToModule[name]()
-		elseif Common._paths[name] then
+		elseif Internal._paths[name] then
 			-- Referencing an unloaded module, require and instance it
-			local module = Common[name]
+			local module = Internal[name]
 			collection = module()
 		else
 			-- Not referencing an unloaded collection

@@ -29,14 +29,6 @@ local commonPaths = {
 	---@type NoiseGen
 	NoiseGen = "common.noisegen",
 	Expression = "lib.expression",
-	TextureLoader = "loader.textureloader",
-	ImageLoader = "loader.imageloader",
-	AtlasLoader = "loader.atlasloader",
-	SheetLoader = "loader.sheetloader",
-	ProcLoader = "loader.procloader",
-	FontLoader = "loader.fontloader",
-	ObjectLoader = "loader.objectloader",
-	ShaderLoader = "loader.shaderloader",
 	---@type Adore.Loader
 	["Adore.Loader"] = "loader",
 	---@type Adore.AssetCollection
