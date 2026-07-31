@@ -820,14 +820,14 @@ end
 function Node:setVisible(visible)
 	if self._visible ~= visible then
 		self._visible = visible
-		if self._ancestorsVisible ~= visible then
+		if self._ancestorsVisible then
 			self:shallowEmit("_eAncestorVisibilityChanged", visible)
 		end
 	end
 	return self
 end
 
----Sets the Node.PauseMode of this Node.
+---Sets the Node.PauseMode of this Node
 ---@param mode Node.PauseMode
 function Node:setPauseMode(mode)
 	if mode ~= self._pauseMode then
