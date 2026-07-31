@@ -12,7 +12,7 @@ local Viewport = Resources("Viewport")
 
 ---Not a class, to not pollute with useless suggestions
 ---@class Toolbox.EditableScene: ViewportContainer
----@overload fun(scene: string? | SceneFactory, root: RootNode?): Toolbox.EditableScene
+---@overload fun(scene: string | SceneFactory?, root: RootNode?): Toolbox.EditableScene
 local EScene = ViewportContainer:extend()
 EScene.CLASS_NAME = "EditableScene"
 EScene._pauseMode = "never"
