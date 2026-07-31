@@ -571,26 +571,27 @@ local saveFormatHandler = {
 ---@param file love.File
 ---@param object Object
 ---@param format ObjectSaver.Format?
+---@return boolean success
 ---@return string? error
 function ObjectSaver.saveToFile(file, object, format)
 	-- Get the best format if not provided
 	if not format then
 		format = DEFAULT_FORMAT
 	elseif not StringBuffer and format == "binary" then
-		return "Binary format is not supported on this platform"
+		return false, "Binary format is not supported on this platform"
 	end
 
 	if not file:isOpen() then
 		-- Open the file if it isn't already
 		local ok, err = file:open("w")
 		if not ok then
-			return err
+			return false, err
 		end
 	else
 		-- Check if the file is able to be written to
 		local mode = file:getMode()
 		if mode ~= "w" and mode ~= "a" then
-			return ("File is opened in non-write mode: '%s'"):format(mode)
+			return false, ("File is opened in non-write mode: '%s'"):format(mode)
 		end
 	end
 
@@ -598,7 +599,7 @@ function ObjectSaver.saveToFile(file, object, format)
 
 	-- Close the file
 	file:close()
-	return err
+	return err == nil, err
 end
 
 ---Saves this `Object` to a relative file path. It creates a `love.File` and passes it into `ObjectSaver.saveToFile`.
@@ -607,12 +608,13 @@ end
 ---@param path string
 ---@param object Object
 ---@param format ObjectSaver.Format?
+---@return boolean success
 ---@return string? error
 function ObjectSaver.saveToFilePath(path, object, format)
 	local file = love.filesystem.newFile(path, "w")
-	local err = ObjectSaver.saveToFile(file, object, format)
+	local ok, err = ObjectSaver.saveToFile(file, object, format)
 	file:release()
-	return err
+	return ok, err
 end
 
 ---Saves this `Object` to a *GLOBAL* file path.
@@ -623,17 +625,18 @@ end
 ---@param path string
 ---@param object Object
 ---@param format ObjectSaver.Format?
+---@return boolean success
 ---@return string? error
 function ObjectSaver.saveToNativeFilePath(path, object, format)
 	-- Get the best format if not provided
 	if not format then
 		format = DEFAULT_FORMAT
 	elseif not StringBuffer and format == "binary" then
-		return "Binary format is not supported on this platform"
+		return false, "Binary format is not supported on this platform"
 	end
 
 	if not ffi then
-		return "[ObjectSaver.savetoNativeFile] Lacking FFI; native files are not supported"
+		return false, "[ObjectSaver.savetoNativeFile] Lacking FFI; native files are not supported"
 	end
 
 	-- Create the native file, and return if there's an issue
@@ -642,7 +645,7 @@ function ObjectSaver.saveToNativeFilePath(path, object, format)
 	do
 		local ok, err = file:open("w")
 		if not ok then
-			return err
+			return false, err
 		end
 	end
 
@@ -651,7 +654,7 @@ function ObjectSaver.saveToNativeFilePath(path, object, format)
 		local success, err = file:write(STRING_MAGIC_NUMBER)
 		if not success then
 			file:close()
-			return err
+			return false, err
 		end
 
 		-- Reset the temporary buffer and put the serialized Object into it
@@ -666,7 +669,7 @@ function ObjectSaver.saveToNativeFilePath(path, object, format)
 			success, err = file:writecdata(ref, len)
 			if not success then
 				file:close()
-				return err
+				return false, err
 			end
 		end
 
@@ -678,9 +681,10 @@ function ObjectSaver.saveToNativeFilePath(path, object, format)
 
 	file:close()
 	file:release()
+	return true
 end
 
----@type {[ObjectSaver.Format]: fun(file: love.File, requestedClassName: string?, canInherit: boolean?): string?, Object?}
+---@type {[ObjectSaver.Format]: fun(file: love.File, requestedClassName: string?, canInherit: boolean?): Object?, string?}
 local loadFormatHandler = {
 	binary = function(file, requestedClassName, canInherit)
 		-- Check the magic number
@@ -689,7 +693,7 @@ local loadFormatHandler = {
 			if contents ~= STRING_MAGIC_NUMBER then
 				-- Magic number match, exit
 				file:close()
-				return ("Invalid Adore Object (magic number does not match) (%s ~= %s)"):format(contents, STRING_MAGIC_NUMBER), nil
+				return nil, ("Invalid Adore Object (magic number does not match) (%s ~= %s)"):format(contents, STRING_MAGIC_NUMBER)
 			end
 		end
 
@@ -707,13 +711,13 @@ local loadFormatHandler = {
 			if not success then
 				-- Errored while decoding
 				file:close()
-				return headerOrErr, nil
+				return nil, headerOrErr
 			end
 
 			if type(headerOrErr) ~= "table" then
 				-- Wrong type
 				file:close()
-				return ("Expected header of type 'table', got '%s'"):format(type(headerOrErr)), nil
+				return nil, ("Expected header of type 'table', got '%s'"):format(type(headerOrErr))
 			end
 
 			-- All good
@@ -735,13 +739,13 @@ local loadFormatHandler = {
 				-- Errored while decoding
 				---@cast bodyOrErr string
 				file:close()
-				return bodyOrErr, nil
+				return nil, bodyOrErr
 			end
 
 			if type(bodyOrErr) ~= "table" then
 				-- Wrong type
 				file:close()
-				return ("Expected body of type 'table', got '%s'"):format(type(bodyOrErr)), nil
+				return nil, ("Expected body of type 'table', got '%s'"):format(type(bodyOrErr))
 			end
 
 			-- All good
@@ -758,7 +762,7 @@ local loadFormatHandler = {
 		if err then
 			-- Errored while deserializing Object
 			tbuffer:reset()
-			return err, nil
+			return nil, err
 		end
 		---@cast obj Object
 
@@ -768,11 +772,11 @@ local loadFormatHandler = {
 		tbuffer:reset()
 
 		if err then
-			return ("[ObjectSaver.fromFile] Errored while deserializing resources: %s"):format(err), nil
+			return nil, ("[ObjectSaver.fromFile] Errored while deserializing resources: %s"):format(err)
 		end
 
 		ObjectSaver.setDeferredProperties(obj, deferredProperties, resources)
-		return err, obj
+		return obj, err
 	end,
 
 	lua = function(file, requestedClassName, canInherit)
@@ -782,7 +786,7 @@ local loadFormatHandler = {
 		---@cast contents string
 		local success, array = Serpent.load(contents, SERPENT_OPTIONS)
 		if not success then
-			return ("Failed to deserialize Lua: %s"):format(array)
+			return nil, ("Failed to deserialize Lua: %s"):format(array)
 		end
 
 		local err, obj, deferredProperties = ObjectSaver.deserializeObjectFromArray(
@@ -791,13 +795,13 @@ local loadFormatHandler = {
 		)
 
 		if err then
-			return err, nil
+			return nil, err
 		end
 
 		---@cast obj Object
 		local resources = array[3]
 		ObjectSaver.setDeferredProperties(obj, deferredProperties, resources)
-		return err, obj
+		return obj, err
 	end,
 }
 
@@ -807,32 +811,37 @@ local loadFormatHandler = {
 ---@param format ObjectSaver.Format?
 ---@param requestedClassName `T` # The optional class (name) to expect; should be a string
 ---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
----@return string? err
 ---@return T? object
----@overload fun(file: love.File, format: ObjectSaver.Format?): string?, Object?
+---@return string? err
+---@overload fun(file: love.File, format: ObjectSaver.Format?): Object?, string?
 function ObjectSaver.loadFromFile(file, format, requestedClassName, canInherit)
 	-- Get the best format if not provided
 	if not format then
 		format = DEFAULT_FORMAT
 	elseif not StringBuffer and format == "binary" then
-		return "Binary format is not supported on this platform"
+		return nil, "Binary format is not supported on this platform"
 	end
 
 	if not file:isOpen() then
 		-- Open the file if it isn't already
 		local ok, err = file:open("r")
 		if not ok then
-			return err, nil
+			return nil, err
 		end
 	else
 		-- Check if the file is able to be read from
 		local mode = file:getMode()
 		if mode ~= "r" then
-			return ("File is opened in non-read mode: '%s'"):format(mode), nil
+			return nil, ("File is opened in non-read mode: '%s'"):format(mode)
 		end
 	end
 
-	return loadFormatHandler[format](file, requestedClassName, canInherit)
+	local handler = loadFormatHandler[format]
+	if not handler then
+		return nil, ("Format '%s' is not supported"):format(format)
+	end
+
+	return handler(file, requestedClassName, canInherit)
 end
 
 ---Opens and returns the binary serialized `Object` from the file path. Will create a File object.
@@ -841,20 +850,20 @@ end
 ---@param format ObjectSaver.Format?
 ---@param requestedClassName `T` # The optional class (name) to expect; should be a string
 ---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
----@return string? err
 ---@return T? object
----@overload fun(path: string, format: ObjectSaver.Format?): string?, Object?
+---@return string? err
+---@overload fun(path: string, format: ObjectSaver.Format?): Object?, string?
 function ObjectSaver.loadFromFilePath(path, format, requestedClassName, canInherit)
 	local file, err = love.filesystem.newFile(path, "r")
 	if not file then
-		return err, nil
+		return nil, err
 	end
 
 	local obj
 	---@diagnostic disable-next-line: cast-local-type
-	err, obj = ObjectSaver.loadFromFile(file, format, requestedClassName, canInherit)
+	obj, err = ObjectSaver.loadFromFile(file, format, requestedClassName, canInherit)
 	file:release()
-	return err, obj
+	return obj, err
 end
 
 require("data.property").ObjectSaver = ObjectSaver

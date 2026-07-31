@@ -16,7 +16,7 @@ ObjectLoader.TYPE = "ObjectLoader"
 ---Takes a filepath of a Lua file (like "/assets/fognoise.lua") and creates an Object from it
 ---@param filepath string
 local function requireFromFilePath(filepath, requestedClassName)
-	local err, obj = ObjectSaver.loadFromFilePath(filepath, "lua", requestedClassName, true)
+	local obj, err = ObjectSaver.loadFromFilePath(filepath, "lua", requestedClassName, true)
 	if err then
 		error(("Failed to load Object from '%s': \n'%s'"):format(filepath, err))
 	end
@@ -76,9 +76,7 @@ function ObjectLoader:handler(path, requestedClassName)
 		return obj
 	else
 		-- It's probably binary
-		local err, obj = ObjectSaver.loadFromFilePath(path, "binary", requestedClassName, true)
-		assert(obj, err)
-		return obj
+		return assert(ObjectSaver.loadFromFilePath(path, "binary", requestedClassName, true))
 	end
 end
 
