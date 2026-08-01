@@ -99,6 +99,14 @@ function EScene:isPushed()
 	return Node._root == self.subroot
 end
 
+---@type string? # The last caught error
+local lastError
+local function handleSubrootError(error)
+	local traceback = debug.traceback("", 3)
+	lastError = ("Game Error [Press ` to open Toolbox]\n\n%s\n%s"):format(error, traceback)
+	return ("%s%s"):format(error, traceback)
+end
+
 ---Calls a method on the subroot, pushing and popping as necessary
 ---@param methodName string
 ---@param ... unknown
@@ -113,12 +121,12 @@ function EScene:handleOnSubroot(methodName, ...)
 	end
 
 	local subroot = self.subroot
-	local success, err = xpcall(subroot[methodName], debug.traceback, subroot, ...)
+	local success, err = xpcall(subroot[methodName], handleSubrootError, subroot, ...)
 	if not success then
-		self._errorMessage = err
-
 		print(("Errored while calling '%s' on subroot inside of '%s':"):format(methodName, tostring(self)))
 		print(err)
+
+		self._errorMessage, lastError = lastError
 	end
 
 	if shouldPush then

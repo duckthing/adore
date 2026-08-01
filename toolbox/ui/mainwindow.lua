@@ -21,7 +21,7 @@ MainWindow.CLASS_NAME = "MainWindow"
 local gameActions = {
 	{
 		Assets.Reload,
-		"reloadLevel",
+		"reloadScene",
 	},
 	{
 		Assets.Pause,
@@ -33,13 +33,13 @@ local menuActions = {
 	{
 		"Scene",
 		{
-			{label = "Save Scene"},
+			{label = "Save Scene", func = function(window)
+				---@cast window Toolbox.MainWindow
+				window:saveScene()
+			end},
 			{label = "Load Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
-				local eScene = EditableScene()
-				eScene:createSubroot()
-				eScene:changeSceneTo("src.levels.test")
-				window.tabContainer:addChild(eScene)
+				window:loadScene()
 			end},
 			{label = "Reload Scene"},
 			{label = "", separator = true},
@@ -56,15 +56,9 @@ local menuActions = {
 function MainWindow:new(toolbox, subroot)
 	MainWindow.super.new(self)
 	self:setAnchors(0, 0, 1, 1)
-
 	self.toolbox = toolbox
 
-	---@type boolean # Whether the game window takes up the whole window
-	self._fullView = true
-
-	---@type Toolbox.GameScene # Where the game is rendered to
-	local subWindow = GameScene(subroot)
-
+	--======== GAME TABS
 	local tabContainer = Nodes("TabContainer")()
 	tabContainer:setAnchorsAndOffsets(
 			0, 0, 1, 1,
@@ -76,14 +70,15 @@ function MainWindow:new(toolbox, subroot)
 	end)
 	self.tabContainer = tabContainer
 
+	--======== ORIGINAL ROOT
+	---@type Toolbox.GameScene # Where the game is rendered to
+	local subWindow = GameScene(subroot)
 	---@type integer # The index of the currently fullscreened tab
-	self.oldIndex = 1
-	---@type Toolbox.EditableScene? # The fullscreened tab
-	self.fullTab = subWindow
-
-	subWindow:setAnchors(0, 0, 1, 1)
-	---@type Toolbox.GameScene? # The original subwindow
-	self.subWindow = subWindow
+	self._tabIndex = 1
+	---@type Toolbox.EditableScene? # The current tab, including when fullscreened
+	self._currentTab = subWindow
+	---@type boolean # Whether the game window takes up the whole window
+	self._fullView = true
 
 	--======== EDITOR
 	local editor = Nodes("Control")()
@@ -207,7 +202,7 @@ end
 ---Returns the subroot container
 ---@return Toolbox.EditableScene
 function MainWindow:getSubrootContainer()
-	if self._fullView then return self.fullTab end
+	if self._fullView then return self._currentTab end
 	local selectedTab = self.tabContainer:getActiveTab()
 	return selectedTab
 end
@@ -218,6 +213,7 @@ function MainWindow:updateButtonTexture()
 	self.pauseButton:setTexture((srContainer and srContainer._running) and Assets.Pause or Assets.Play)
 end
 
+---Toggles the pause mode of the current tab
 function MainWindow:togglePause()
 	local srContainer = self:getSubrootContainer()
 	if srContainer then
@@ -227,24 +223,7 @@ function MainWindow:togglePause()
 	end
 end
 
-function MainWindow:reloadLevel()
-	local srContainer = self:getSubrootContainer()
-	local subroot = srContainer.subroot
-	srContainer._running = true
-
-	srContainer:pushSubroot()
-	subroot:reloadCurrentScene()
-	srContainer:popSubroot()
-end
-
-function MainWindow:onSubrootPushed()
-	self.sceneTree:onSubrootPushed()
-end
-
-function MainWindow:onSubrootPopped()
-	self.sceneTree:onSubrootPopped()
-end
-
+---Toggles fullscreen of the current tab
 function MainWindow:toggleFull()
 	---@type boolean # If we're fullscreened now
 	local full = not self._fullView
@@ -256,28 +235,58 @@ function MainWindow:toggleFull()
 
 		-- Get the tab
 		local tab = assert(self.tabContainer:getActiveTab(), "Tab doesn't exist")
-		self.oldIndex = self.tabContainer:getIndexOfChild(tab)
+		self._tabIndex = self.tabContainer:getIndexOfChild(tab)
 
 		self:addChild(tab)
 		tab:setVisible(true)
-		self.fullTab = tab
+		self._currentTab = tab
 
 		self.editor:setVisible(false)
 	else
 		-- We are exiting fullscreen
 		-- Re-insert it into the TabContainer
-		local tab = assert(self.fullTab)
-		self.tabContainer:insertChild(tab, self.oldIndex)
+		local tab = assert(self._currentTab)
+		self.tabContainer:insertChild(tab, self._tabIndex)
 		self.tabContainer:selectTab(tab)
 
 		self.editor:setVisible(true)
 	end
 end
 
-function MainWindow:saveScene()
+---Reloads the scene of the current tab
+function MainWindow:reloadScene()
+	local srContainer = self:getSubrootContainer()
+	srContainer._running = true
+
+	srContainer:handleOnSubroot("reloadCurrentScene")
 end
 
+---Saves the scene of the current tab
+function MainWindow:saveScene()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local sceneRoot = srContainer.subroot.children[1]
+
+	local ObjectSaver = Adore.Common("ObjectSaver")
+	local TableScene = Adore.Resources("TableScene")
+	local tableScene = TableScene()
+	tableScene:pack(sceneRoot)
+	print("written as text:", ObjectSaver.saveToFilePath("myScene.lua", tableScene, "lua"))
+end
+
+---Loads the scene and opens it
 function MainWindow:loadScene()
+	local ObjectSaver = Adore.Common("ObjectSaver")
+	local obj, err = ObjectSaver.loadFromFilePath("myScene.lua", "lua", "SceneFactory", true)
+	if obj then
+		local eScene = EditableScene()
+		eScene:createSubroot()
+		eScene:changeSceneTo(obj)
+		self.tabContainer:addChild(eScene)
+	else
+		print(err)
+		return
+	end
 end
 
 return MainWindow
