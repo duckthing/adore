@@ -27,7 +27,7 @@ function DrawTabBar:new(barBackground, normalBackground, normalText, selectedBac
 	self.normalText = normalText or {1, 1, 1, 0.5}
 
 	---@type integer[] # The unmixed background color of a selected tab background
-	self.selectedBackground = selectedBackground or {0.15, 0.15, 0.2}
+	self.selectedBackground = selectedBackground or {0.15, 0.15, 0.2, 1}
 	---@type integer[] # The unmixed background color of a selected tab's text
 	self.selectedText = selectedText or {1, 1, 1, 0.75}
 end
