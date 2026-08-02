@@ -165,7 +165,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		local focused = root._focusedControl
 		if focused then
 			local fMouseMoved = focused.mousemoved
-			if fMouseMoved then
+			if fMouseMoved and focused:canReceiveInput(true, x, y) then
 				-- Viewports in CanvasLayers all rely on the RootNode's Viewport, no matter what
 				-- Make the points relative to the Viewport the Control belongs to
 				local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
@@ -216,7 +216,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 	if newControl then
 		local ncMouseMoved = newControl.mousemoved
 		-- The "new control" might be the same as the old one
-		if ncMouseMoved and ncMouseMoved(newControl, nx, ny) then
+		if ncMouseMoved and newControl:canReceiveInput(true, x, y) and ncMouseMoved(newControl, nx, ny) then
 			return self.sinkHandledInput
 		end
 	else
@@ -224,7 +224,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		local modal = root._modalStack[#root._modalStack]
 		if modal then
 			local mMouseMoved = modal.mousemoved
-			if mMouseMoved then
+			if mMouseMoved and modal:canReceiveInput(true, x, y) then
 				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
 
 				if mMouseMoved(modal, modalX, modalY) then
@@ -247,7 +247,7 @@ function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 	local hovered = root._hoveredControl
 	if hovered then
 		local hMousePressed = hovered.mousepressed
-		if hMousePressed then
+		if hMousePressed and hovered:canReceiveInput(true, x, y) then
 			local hoveredX, hoveredY = controlToLocal(rootViewport, hovered, rx, ry)
 
 			if hMousePressed(hovered, hoveredX, hoveredY, button, isTouch, pressCount) then
@@ -259,7 +259,7 @@ function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 	do
 		-- TODO: Is there a better way than having to look up twice?
 		-- Send to something that has `mousepressed` and can receive mouse inputs
-		local found, fx, fy = root:getControlAtPointWithMember(x, y, "mousepressed")
+		local found, fx, fy = root:getControlAtPointWithMember(x, y, "mousepressed", true)
 		if found and found ~= hovered then
 			if found:mousepressed(fx, fy, button, isTouch, pressCount) then
 				return self.sinkHandledInput
@@ -286,7 +286,7 @@ function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 		local modal = root._modalStack[#root._modalStack]
 		if modal then
 			local mMousePressed = modal.mousepressed
-			if mMousePressed then
+			if mMousePressed and modal:canReceiveInput(true, x, y) then
 				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
 
 				if mMousePressed(modal, modalX, modalY, button, isTouch, pressCount) then
@@ -310,7 +310,9 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 		local focused = root._focusedControl
 		if focused then
 			local fMouseReleased = focused.mousereleased
-			if fMouseReleased then
+			-- Instead of using the mouse variant of :canReceiveInput, do the check manually
+			-- in case there is a Control that is clipping it
+			if fMouseReleased and focused:canReceiveInput(false) and focused._mouseInputMode ~= "ignore" then
 				local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
 				fMouseReleased(focused, focusedX, focusedY, button)
 			end
@@ -322,7 +324,7 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 		local modal = root._modalStack[#root._modalStack]
 		if modal then
 			local mMouseReleased = modal.mousereleased
-			if mMouseReleased then
+			if mMouseReleased and modal:canReceiveInput(true, x, y) then
 				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
 				if mMouseReleased(modal, modalX, modalY, button) then
 					root:uiUnfocus()
@@ -336,7 +338,7 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 	local hovered = root._hoveredControl
 	if hovered then
 		local hMouseReleased = hovered.mousereleased
-		if hMouseReleased then
+		if hMouseReleased and hovered:canReceiveInput(true, x, y) then
 			local hoveredX, hoveredY = controlToLocal(rootViewport, hovered, rx, ry)
 			if hMouseReleased(hovered, hoveredX, hoveredY, button) then
 				return self.sinkHandledInput
@@ -347,7 +349,7 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 	do
 		-- TODO: Is there a better way than having to look up twice?
 		-- Send to something that has `mousereleased` and can receive mouse inputs
-		local found, foundX, foundY = root:getControlAtPointWithMember(x, y, "mousereleased")
+		local found, foundX, foundY = root:getControlAtPointWithMember(x, y, "mousereleased", true)
 		if found and found ~= hovered then
 			if found:mousereleased(foundX, foundY, button) then
 				return self.sinkHandledInput
@@ -361,7 +363,7 @@ end
 function CoreUIContext:wheelmoved(x, y)
 	local mx, my = love.mouse.getPosition()
 
-	local hovered, _, _ = self.root:getControlAtPointWithMember(mx, my, "wheelmoved")
+	local hovered, _, _ = self.root:getControlAtPointWithMember(mx, my, "wheelmoved", true)
 	if hovered then
 		local hWheelMoved = hovered.wheelmoved
 		if hWheelMoved and hWheelMoved(hovered, x, y) then
@@ -387,7 +389,7 @@ function CoreUIContext:mousefocus(inWindow)
 	return CoreUIContext.super.mousefocus(self, inWindow)
 end
 
----Handle any other Love2d events by sending them to the focused Control
+---Handle any other Love events by sending them to the focused Control
 ---@param event string
 ---@param ... unknown
 ---@return boolean

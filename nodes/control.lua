@@ -443,8 +443,8 @@ end
 ---@param mode Control.InputFilter
 ---@return self
 function Control:setMouseInputMode(mode)
-	if self._inputMode ~= mode then
-		self._inputMode = mode
+	if self._mouseInputMode ~= mode then
+		self._mouseInputMode = mode
 		-- Updating shash here isn't necessary
 	end
 	return self
@@ -886,7 +886,8 @@ function Control:canFocus(isMouse)
 	return mode == "all" or (mode == "click" and isMouse)
 end
 
----Checks if we can receive this input
+---Checks if we can receive this input, with a global screen position used if it is mouse input.
+---Does not check if the given point overlaps; you'll have to use `:doesPointOverlap`.
 ---@overload fun(self, isMouse: false): boolean
 ---@overload fun(self, isMouse: true, gx: integer, gy: integer): boolean
 function Control:canReceiveInput(isMouse, gx, gy)
@@ -921,18 +922,19 @@ function Control:canReceiveInput(isMouse, gx, gy)
 		if -- This Control cannot receive input if...
 			not currNode._visible -- ...its not visible,
 			or currNode._inputMode == "sink" -- ...or sinking inputs for later children,
-			or (isMouse -- ...or if its mouse input, and...
-				and
-				(
+			or (
+				isMouse -- ...or if its mouse input, and...
+				and (
 					-- ...either...
 					currNode._mouseInputMode == "sink" -- Sinking MOUSE inputs for later children
 					or
 					--...or clipping the input
 					(
 						currNode.clipChildren
-						and not currNode:doesPointOverlap(gx, gy))
+						and not currNode:doesPointOverlap(gx, gy)
 					)
 				)
+			)
 		then
 			return false
 		end
@@ -1239,6 +1241,22 @@ function Control._addDefinition(entry)
 	entry:newVec2("_scale", nil, "setScaleVec")
 	entry:newVec2("_minimumSize", nil, "setMinimumSizeVec")
 	entry:newVec2("_maximumSize", nil, "setMaximumSizeVec")
+
+	local inputModes = {
+		pass = true,
+		sink = true,
+		ignore = true,
+	}
+	entry:newEnum("_inputMode", inputModes, "pass", "setInputMode")
+	entry:newEnum("_mouseInputMode", inputModes, "pass", "setMouseInputMode")
+
+	local focusModes = {
+		all = true,
+		click = true,
+		none = true,
+	}
+	entry:newEnum("focusMode", focusModes, "none")
+
 	entry:newString("_currentOriginalSubclass", "normal", nil, nil, "setSubclass")
 	entry:newString("_variantName", "", nil, nil, "setVariant")
 	entry:newColor("albedo")

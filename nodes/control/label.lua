@@ -15,6 +15,8 @@ local max = math.max
 ---@overload fun(text: string?): Label
 local Label = Control:extend()
 Label.CLASS_NAME = "Label"
+Label._inputMode = "ignore"
+
 local DEFAULT_FONT = FontLoader:get("")
 ---@type FontSource? # The overridden font
 Label._font = DEFAULT_FONT

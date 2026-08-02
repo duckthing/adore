@@ -78,11 +78,19 @@ end
 
 ---Closes the Popup
 function Popup:close()
-	self:popModal()
-	self:hide()
-	if self._destroyOnClose then
-		self:queueDestroy(true)
+	if self:canClose() then
+		self:popModal()
+		self:hide()
+		if self._destroyOnClose then
+			self:queueDestroy(true)
+		end
 	end
+end
+
+---Returns `true` if this Popup can be closed right now
+---@return boolean canClose
+function Popup:canClose()
+	return true
 end
 
 function Popup:onRefreshed()

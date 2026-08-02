@@ -1048,9 +1048,36 @@ local function shashForEachWithMember(obj, mouseX, mouseY, member)
 	end
 end
 
+---@param obj Control
+---@param mouseX integer
+---@param mouseY integer
+---@param member string
+local function shashForEachMouseableWithMember(obj, mouseX, mouseY, member)
+	if obj._visible and obj[member] then
+		---@type CanvasLayer
+		local layerNode = Node._root._controlTopLevelLayers[obj._topLevelNode]
+		if layerNode == nil then return end
+
+		-- Only continue if the current layer is equal or greater than the deepest layer depth
+		local layerDepth = layerNode._layerIndex
+		if layerDepth < deepestLayer then return end
+
+		local objDepth = obj._depth
+
+		if objDepth > deepestDepth then
+			-- Found the new deepest object
+			if obj:canReceiveInput(true, mouseX, mouseY) then
+				deepestDepth = objDepth
+				deepestLayer = layerDepth
+				deepestElement = obj
+			end
+		end
+	end
+end
+
 local function noop() return true end
 
----Returns the highest Control at a certain **screen** point.
+---Returns the highest Control at a certain **screen** point
 ---@param x integer
 ---@param y integer
 ---@param check (fun(control: Control, ...): boolean)?
@@ -1109,20 +1136,26 @@ function Root:getControlAtPoint(x, y, check, ...)
 	return deepestElement, fx, fy
 end
 
----Returns the highest Control at a certain point that has 'member'.
+---Returns the highest Control at a certain point that has 'member'
 ---@param x integer
 ---@param y integer
 ---@param member string
+---@param mouseable boolean? # If this member should be able to receive mouse input
 ---@return Control?
 ---@return integer? px # The local X coordinate for the Control
 ---@return integer? py # The local Y coordinate for the Control
-function Root:getControlAtPointWithMember(x, y, member)
+function Root:getControlAtPointWithMember(x, y, member, mouseable)
 	deepestDepth = -math.huge
 	deepestElement = nil
 
 	local rootViewport = self._viewport
 	local tx, ty = rootViewport:windowToViewportPoint(x, y)
 	local fx, fy = nil, nil
+
+	local check = shashForEachWithMember
+	if mouseable then
+		check = shashForEachMouseableWithMember
+	end
 
 	for i = #self._canvasLayers, 1, -1 do
 		local layer = self._canvasLayers[i]
@@ -1133,7 +1166,7 @@ function Root:getControlAtPointWithMember(x, y, member)
 		if viewport ~= rootViewport then
 			lx, ly = viewport:windowToViewportPoint(tx, ty)
 		end
-		shash:each(lx, ly, 1, 1, shashForEachWithMember, lx, ly, member)
+		shash:each(lx, ly, 1, 1, check, lx, ly, member)
 
 		if deepestElement then
 			fx, fy = lx, ly
