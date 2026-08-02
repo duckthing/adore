@@ -213,6 +213,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 	end
 
 	-- Send to the new hovered control
+	local modal = root._modalStack[#root._modalStack]
 	if newControl then
 		local ncMouseMoved = newControl.mousemoved
 		-- The "new control" might be the same as the old one
@@ -221,7 +222,6 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		end
 	else
 		-- Send to modal
-		local modal = root._modalStack[#root._modalStack]
 		if modal then
 			local mMouseMoved = modal.mousemoved
 			if mMouseMoved and modal:canReceiveInput(true, x, y) then
@@ -234,7 +234,8 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		end
 	end
 
-	return CoreUIContext.super.mousemoved(self, x, y, dx, dy, isTouch)
+	-- Check if there is a modal as well, as it should block ALL input
+	return CoreUIContext.super.mousemoved(self, x, y, dx, dy, isTouch) or modal ~= nil
 end
 
 function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
@@ -281,22 +282,21 @@ function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 		end
 	end
 
-	do
-		-- Send to modal
-		local modal = root._modalStack[#root._modalStack]
-		if modal then
-			local mMousePressed = modal.mousepressed
-			if mMousePressed and modal:canReceiveInput(true, x, y) then
-				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
+	-- Send to modal
+	local modal = root._modalStack[#root._modalStack]
+	if modal then
+		local mMousePressed = modal.mousepressed
+		if mMousePressed and modal:canReceiveInput(true, x, y) then
+			local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
 
-				if mMousePressed(modal, modalX, modalY, button, isTouch, pressCount) then
-					return self.sinkHandledInput
-				end
+			if mMousePressed(modal, modalX, modalY, button, isTouch, pressCount) then
+				return self.sinkHandledInput
 			end
 		end
 	end
 
-	return CoreUIContext.super.mousepressed(self, x, y, button, isTouch, pressCount)
+	-- Check if there is a modal as well, as it should block ALL input
+	return CoreUIContext.super.mousepressed(self, x, y, button, isTouch, pressCount) or modal ~= nil
 end
 
 function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
@@ -319,17 +319,15 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 		end
 	end
 
-	do
-		-- Send to modal
-		local modal = root._modalStack[#root._modalStack]
-		if modal then
-			local mMouseReleased = modal.mousereleased
-			if mMouseReleased and modal:canReceiveInput(true, x, y) then
-				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
-				if mMouseReleased(modal, modalX, modalY, button) then
-					root:uiUnfocus()
-					return self.sinkHandledInput
-				end
+	-- Send to modal
+	local modal = root._modalStack[#root._modalStack]
+	if modal then
+		local mMouseReleased = modal.mousereleased
+		if mMouseReleased and modal:canReceiveInput(true, x, y) then
+			local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
+			if mMouseReleased(modal, modalX, modalY, button) then
+				root:uiUnfocus()
+				return self.sinkHandledInput
 			end
 		end
 	end
@@ -357,13 +355,15 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 		end
 	end
 
-	return CoreUIContext.super.mousereleased(self, x, y, button, isTouch, pressCount)
+	-- Check if there is a modal as well, as it should block ALL input
+	return CoreUIContext.super.mousereleased(self, x, y, button, isTouch, pressCount) or modal ~= nil
 end
 
 function CoreUIContext:wheelmoved(x, y)
 	local mx, my = love.mouse.getPosition()
+	local root = self.root
 
-	local hovered, _, _ = self.root:getControlAtPointWithMember(mx, my, "wheelmoved", true)
+	local hovered, _, _ = root:getControlAtPointWithMember(mx, my, "wheelmoved", true)
 	if hovered then
 		local hWheelMoved = hovered.wheelmoved
 		if hWheelMoved and hWheelMoved(hovered, x, y) then
@@ -394,7 +394,8 @@ end
 ---@param ... unknown
 ---@return boolean
 function CoreUIContext:_miscInput(event, ...)
-	local focused = self.root._focusedControl
+	local root = self.root
+	local focused = root._focusedControl
 	if focused then
 		local fMethod = focused[event]
 		if fMethod and fMethod(focused, ...) then
@@ -402,7 +403,8 @@ function CoreUIContext:_miscInput(event, ...)
 		end
 	end
 
-	return CoreUIContext.super[event](self, ...)
+	-- Check if there is a modal as well, as it should block ALL input
+	return CoreUIContext.super[event](self, ...) or root._modalStack[#root._modalStack] ~= nil
 end
 
 -- Add any missing handlers for the CoreUIContext (with :_miscInput())
