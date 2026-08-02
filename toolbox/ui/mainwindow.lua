@@ -4,6 +4,14 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 
+local Control = Nodes("Control")
+local TabContainer = Nodes("TabContainer")
+local HBox = Nodes("HBox")
+local Button = Nodes("Button")
+local TextureButton = Nodes("TextureButton")
+local Label = Nodes("Label")
+local PopupMenu = Nodes("PopupMenu")
+
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
 local FileBrowser = require(ADORE_PATH..".toolbox.ui.filebrowser")
@@ -15,7 +23,7 @@ local GameScene = require(ADORE_PATH..".toolbox.gamescene")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
-local MainWindow = Nodes("Control"):extend()
+local MainWindow = Control:extend()
 MainWindow.CLASS_NAME = "MainWindow"
 
 local gameActions = {
@@ -59,7 +67,7 @@ function MainWindow:new(toolbox, subroot)
 	self.toolbox = toolbox
 
 	--======== GAME TABS
-	local tabContainer = Nodes("TabContainer")()
+	local tabContainer = TabContainer()
 	tabContainer:setAnchorsAndOffsets(
 			0, 0, 1, 1,
 			260, 36, -260, -240
@@ -81,30 +89,30 @@ function MainWindow:new(toolbox, subroot)
 	self._fullView = true
 
 	--======== EDITOR
-	local editor = Nodes("Control")()
+	local editor = Control()
 	editor:setAnchors(0, 0, 1, 1)
 	self.editor = editor
 
 	--======== MENU BAR
-	local menuBar = Nodes("HBox")()
-	menuBar:setAnchorsAndOffsets(
-		0, 0, 1, 0,
-		-4, 0, -180, 32
-	)
-	menuBar:setMargin(4)
-	menuBar:setPadding(12)
-	menuBar:setVariant("topbar")
+	local menuBar = HBox()
+		:setAnchorsAndOffsets(
+			0, 0, 1, 0,
+			-4, 0, -180, 32
+		)
+		:setMargin(4)
+		:setPadding(12)
+		:setVariant("topbar")
 
 	for i = 1, #menuActions do
 		local action = menuActions[i]
-		local button = Nodes("Button")(action[1])
-		button:setAnchorsAndOffsets(
-			0, 0, 0, 1,
-			0, 0, 60, 0
-		)
-		button:setVariant("flat")
-		local popupMenu = Nodes("PopupMenu")(action[2])
-		popupMenu:setAnchors(0, 1, 0, 1)
+		local button = Button(action[1])
+			:setAnchorsAndOffsets(
+				0, 0, 0, 1,
+				0, 0, 60, 0
+			)
+			:setVariant("flat")
+		local popupMenu = PopupMenu(action[2])
+			:setAnchors(0, 1, 0, 1)
 		button:addChild(popupMenu)
 
 		button.clicked:connectCallable(function(...)
@@ -120,21 +128,21 @@ function MainWindow:new(toolbox, subroot)
 	end
 
 	--======== GAME BAR
-	local gameActionBar = Nodes("HBox")()
-	gameActionBar:setAnchorsAndOffsets(
-		1, 0, 1, 0,
-		-176, 0, 4, 32
-	)
-	gameActionBar:setMargin(4)
-	gameActionBar:setVariant("topbar")
+	local gameActionBar = HBox()
+		:setAnchorsAndOffsets(
+			1, 0, 1, 0,
+			-176, 0, 4, 32
+		)
+		:setMargin(4)
+		:setVariant("topbar")
 
 	for i = 1, #gameActions do
 		local action = gameActions[i]
-		local button = Nodes("TextureButton")(action[1])
-		button:setAnchorsAndOffsets(
-			0, 0, 0, 1,
-			0, 0, 32, 0
-		)
+		local button = TextureButton(action[1])
+			:setAnchorsAndOffsets(
+				0, 0, 0, 1,
+				0, 0, 32, 0
+			)
 		button.clicked:connect(self, action[2])
 		gameActionBar:addChild(button)
 	end
@@ -146,45 +154,46 @@ function MainWindow:new(toolbox, subroot)
 	do
 		---@type Toolbox.SceneTree
 		local sceneTree = SceneTreeViewer(toolbox, subWindow)
+			:setAnchorsAndOffsets(
+				0, 0, 1, 1,
+				0, 36, 0, 0
+			)
 		self.sceneTree = sceneTree
-		sceneTree:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			0, 36, 0, 0
-		)
 
-		local sceneTreeContainer = Nodes("Control")()
+		local sceneTreeContainer = Control()
+			:setAnchorsAndOffsets(
+				0, 0, 0, 1,
+				0, 40, 252, 0
+			)
+			:setVariant("panel")
 		self.sceneTreeContainer = sceneTreeContainer
-		sceneTreeContainer:setAnchorsAndOffsets(
-			0, 0, 0, 1,
-			0, 40, 252, 0
-		)
-		sceneTreeContainer:setVariant("panel")
-		sceneTreeContainer:addChild(sceneTree)
 
-		local label = Nodes("Label")("Scene Tree")
+		local label = Label("Scene Tree")
 			:setAnchors(0, 0, 1, 0)
 			:setOffsets(5, 0, 0, 30)
 			:setAlign("left")
 			:setJustify("center")
 			:setFontSize(16)
+
+		sceneTreeContainer:addChild(sceneTree)
 		sceneTreeContainer:addChild(label)
 	end
 
 	--======== INSPECTOR
 	local inspector = Inspector(toolbox, self.sceneTree)
+		:setAnchorsAndOffsets(
+			1, 0, 1, 1,
+			-252, 40, 0, 0
+		)
 	self.inspector = inspector
-	inspector:setAnchorsAndOffsets(
-		1, 0, 1, 1,
-		-252, 40, 0, 0
-	)
 
 	--======== FILE BROWSER
 	local fileBrowser = FileBrowser(toolbox)
+		:setAnchorsAndOffsets(
+			0, 1, 1, 1,
+			264, -233, -264, 0
+		)
 	self.fileBrowser = fileBrowser
-	fileBrowser:setAnchorsAndOffsets(
-		0, 1, 1, 1,
-		264, -233, -264, 0
-	)
 
 	--======== SCENE STRUCTURE
 	editor:addChild(self.sceneTreeContainer)
@@ -200,11 +209,15 @@ function MainWindow:new(toolbox, subroot)
 end
 
 ---Returns the subroot container
----@return Toolbox.EditableScene
+---@return Toolbox.EditableScene?
 function MainWindow:getSubrootContainer()
 	if self._fullView then return self._currentTab end
 	local selectedTab = self.tabContainer:getActiveTab()
-	return selectedTab
+	if selectedTab and selectedTab:is(EditableScene) then
+		---@cast selectedTab Toolbox.EditableScene
+		return selectedTab
+	end
+	return nil
 end
 
 ---Changes the pause button texture
@@ -225,39 +238,39 @@ end
 
 ---Toggles fullscreen of the current tab
 function MainWindow:toggleFull()
-	---@type boolean # If we're fullscreened now
-	local full = not self._fullView
-	self._fullView = full
-
-	if full then
+	if not self._fullView then
 		-- We are going to fullscreen
 		-- Remove the current tab from the TabContainer, and make it fullscreen on the main window
+		local tab = self.tabContainer:getActiveTab()
+		if tab then
+			self._fullView = true
+			self._tabIndex = self.tabContainer:getIndexOfChild(tab)
 
-		-- Get the tab
-		local tab = assert(self.tabContainer:getActiveTab(), "Tab doesn't exist")
-		self._tabIndex = self.tabContainer:getIndexOfChild(tab)
+			self:addChild(tab)
+			tab:setVisible(true)
+			self._currentTab = tab
 
-		self:addChild(tab)
-		tab:setVisible(true)
-		self._currentTab = tab
-
-		self.editor:setVisible(false)
+			self.editor:setVisible(false)
+		end
 	else
 		-- We are exiting fullscreen
 		-- Re-insert it into the TabContainer
-		local tab = assert(self._currentTab)
-		self.tabContainer:insertChild(tab, self._tabIndex)
-		self.tabContainer:selectTab(tab)
+		local tab = self._currentTab
+		if tab then
+			self._fullView = false
+			self.tabContainer:insertChild(tab, self._tabIndex)
+			self.tabContainer:selectTab(tab)
 
-		self.editor:setVisible(true)
+			self.editor:setVisible(true)
+		end
 	end
 end
 
 ---Reloads the scene of the current tab
 function MainWindow:reloadScene()
 	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
 	srContainer._running = true
-
 	srContainer:handleOnSubroot("reloadCurrentScene")
 end
 
