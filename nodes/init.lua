@@ -92,6 +92,8 @@ local nodePaths = {
 			Popup = "nodes.control.popup",
 				---@type PopupMenu
 				PopupMenu = "nodes.control.popup.popupmenu",
+				---@type WindowPopup
+				WindowPopup = "nodes.control.popup.windowpopup",
 		---@type CanvasLayer
 		CanvasLayer = "nodes.canvaslayer",
 

@@ -19,6 +19,7 @@ local function onRequire()
 	local TabBar = Nodes("TabBar")
 	local TabContainer = Nodes("TabContainer")
 	local PopupMenu = Nodes("PopupMenu")
+	local WindowPopup = Nodes("WindowPopup")
 
 	local Box = Resources("DrawRequest.Box")
 	local DrawLabel = Resources("DrawRequest.Label")
@@ -31,6 +32,7 @@ local function onRequire()
 	local DrawTabBar = Resources("DrawRequest.TabBar")
 	local DrawTabContainer = Resources("DrawRequest.TabContainer")
 	local DrawPopupMenu = Resources("DrawRequest.PopupMenu")
+	local DrawWindowPopup = Resources("DrawRequest.WindowPopup")
 
 	local default = Theme()
 
@@ -98,6 +100,9 @@ local function onRequire()
 
 		-- PopupMenu
 		default:setDrawable(PopupMenu, "", DrawPopupMenu())
+
+		-- WindowPopup
+		default:setDrawable(WindowPopup, "", DrawWindowPopup())
 	end
 
 	default:setDrawable(Label, "", DrawLabel())

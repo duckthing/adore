@@ -46,6 +46,8 @@ local resourcePaths = {
 		["DrawRequest.TabContainer"] = "data.drawrequest.drawtabcontainer",
 		---@type DrawRequest.PopupMenu
 		["DrawRequest.PopupMenu"] = "data.drawrequest.drawpopupmenu",
+		---@type DrawRequest.WindowPopup
+		["DrawRequest.WindowPopup"] = "data.drawrequest.drawwindowpopup",
 	---@type PackedScene
 	PackedScene = "data.packedscene",
 	---@type TableScene
