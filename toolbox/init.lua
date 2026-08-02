@@ -43,7 +43,7 @@ toolboxContext._priority = 999
 toolboxContext.name = "ToolboxContext"
 
 ---Returns the subroot container
----@return Toolbox.EditableScene
+---@return Toolbox.EditableScene?
 function Toolbox:getSubrootContainer()
 	return Toolbox.mainWindow:getSubrootContainer()
 end
