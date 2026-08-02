@@ -6,7 +6,7 @@ local Color = Adore.Common("Color")
 local mixRGBA = Color.mixRGBA
 
 ---@class DrawRequest.TextureButton: DrawRequest
----@overload fun(backgroundColor: integer[]?, angle: number?, textureAlbedo: integer[]?): DrawRequest.TextureButton
+---@overload fun(backgroundColor: number[]?, angle: number?, textureAlbedo: number[]?): DrawRequest.TextureButton
 local DrawTextureButton = DrawRequest:extend()
 DrawTextureButton.CLASS_NAME = "DrawTexture"
 
@@ -15,9 +15,9 @@ function DrawTextureButton:new(backgroundColor, angle, textureAlbedo)
 
 	---@type number
 	self.angle = angle or 8
-	---@type integer[]? # The background color, will be mixed with the Control's albedo
+	---@type number[]? # Optional; won't draw if this is nil
 	self.backgroundColor = backgroundColor
-	---@type integer[]
+	---@type number[]
 	self.textureAlbedo = textureAlbedo or {1, 1, 1, 1}
 end
 

@@ -6,7 +6,7 @@ local mixRGBA = Color.mixRGBA
 local FontLoader = Adore.Loader.getCollection("FontLoader")
 
 ---@class DrawRequest.Button: DrawRequest
----@overload fun(backgroundColor: integer[]?, angle: number?, iconAlbedo: integer[]?, textAlbedo: integer[]?): DrawRequest.Button
+---@overload fun(backgroundColor: number[]?, angle: number?, iconAlbedo: number[]?, textAlbedo: number[]?): DrawRequest.Button
 local DrawButton = DrawRequest:extend()
 DrawButton.CLASS_NAME = "DrawButton"
 
@@ -16,12 +16,12 @@ local DEFAULT_FONT_SIZE = 0
 function DrawButton:new(backgroundColor, angle, iconAlbedo, textAlbedo)
 	DrawButton.super.new(self)
 
-	---@type integer[] # The background color, will be mixed with the Control's albedo
-	self.backgroundColor = backgroundColor or {1, 1, 1}
-	---@type integer[]
-	self.iconAlbedo = iconAlbedo or {1, 1, 1, 1}
-	---@type integer[]
-	self.textAlbedo = textAlbedo or {1, 1, 1, 1}
+	---@type number[]
+	self.backgroundColor = backgroundColor or {1, 1, 1, 1}
+	---@type number[]
+	self.iconColor = iconAlbedo or {1, 1, 1, 1}
+	---@type number[]
+	self.textColor = textAlbedo or {1, 1, 1, 1}
 
 	---@type number
 	self.angle = angle or 4
@@ -130,12 +130,12 @@ function DrawButton:draw(button)
 	if icon then
 		-- Draw the icon
 		local scale = button._iconScale
-		love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.iconAlbedo, 1, 4)))
+		love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.iconColor, 1, 4)))
 		love.graphics.draw(icon.texture, icon.quad, x + button._iconX, y + button._iconY, 0, scale, scale)
 	end
 
 	-- Draw the text
-	love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.textAlbedo, 1, 4)))
+	love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.textColor, 1, 4)))
 	love.graphics.draw(button._textBatch, x + button._textBatchX, y + button._textBatchY)
 end
 

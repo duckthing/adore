@@ -9,19 +9,19 @@ local DEFAULT_FONT = FontLoader:get("")
 local DEFAULT_FONT_SIZE = 0
 
 ---@class DrawRequest.LineEdit: DrawRequest
----@overload fun(backgroundColor: integer[]?, angle: number?, textAlbedo: integer[]?, placeholderAlbedo: integer[]?): DrawRequest.Button
+---@overload fun(backgroundColor: number[]?, angle: number?, textColor: number[]?, placeholderColor: number[]?): DrawRequest.Button
 local DrawLineEdit = DrawRequest:extend()
 DrawLineEdit.CLASS_NAME = "DrawLineEdit"
 
 function DrawLineEdit:new(backgroundColor, angle, textAlbedo, placeholderAlbedo)
 	DrawLineEdit.super.new(self)
 
-	---@type integer[] # The background color, will be mixed with the Control's albedo
-	self.backgroundColor = backgroundColor or {1, 1, 1}
-	---@type integer[]
-	self.textAlbedo = textAlbedo or {1, 1, 1, 1}
-	---@type integer[]
-	self.placeholderAlbedo = placeholderAlbedo or {0.9, 0.9, 0.9, 0.7}
+	---@type number[]
+	self.backgroundColor = backgroundColor or {1, 1, 1, 1}
+	---@type number[]
+	self.textColor = textAlbedo or {1, 1, 1, 1}
+	---@type number[]
+	self.placeholderColor = placeholderAlbedo or {0.9, 0.9, 0.9, 0.7}
 
 	---@type number
 	self.angle = angle or 4
@@ -103,11 +103,11 @@ function DrawLineEdit:draw(edit)
 
 	if hasText then
 		-- Draw the text contents
-		love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.textAlbedo, 1, 4)))
+		love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.textColor, 1, 4)))
 		love.graphics.draw(edit._textBatch, fieldX - field:getScrollX(), fieldY)
 	else
 		-- No text content, draw the placeholder
-		love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.placeholderAlbedo, 1, 4)))
+		love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.placeholderColor, 1, 4)))
 		love.graphics.draw(edit._placeholderTextBatch, fieldX, fieldY)
 	end
 

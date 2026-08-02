@@ -5,14 +5,14 @@ local Color = Adore.Common("Color")
 local mixRGBA = Color.mixRGBA
 
 ---@class DrawRequest.NinePatch: DrawRequest
----@overload fun(color: integer[]?, ninepatch: NinePatch, scale: number?): DrawRequest.NinePatch
+---@overload fun(color: number[]?, ninepatch: NinePatch, scale: number?): DrawRequest.NinePatch
 local DrawNinePatch = DrawRequest:extend()
 DrawNinePatch.CLASS_NAME = "DrawNinePatch"
 
 function DrawNinePatch:new(color, ninepatch, scale)
 	DrawNinePatch.super.new(self)
 
-	---@type integer[] # The base color, will be mixed with the Control's albedo
+	---@type number[]
 	self.baseColor = color or {1, 1, 1, 1}
 
 	---@type NinePatch

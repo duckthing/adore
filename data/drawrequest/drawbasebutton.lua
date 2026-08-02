@@ -5,14 +5,14 @@ local Color = Adore.Common("Color")
 local mixRGBA = Color.mixRGBA
 
 ---@class DrawRequest.BaseButton: DrawRequest
----@overload fun(color: integer[]?, angle: number?): DrawRequest.BaseButton
+---@overload fun(color: number[]?, angle: number?): DrawRequest.BaseButton
 local DrawBaseButton = DrawRequest:extend()
 DrawBaseButton.CLASS_NAME = "DrawBaseButton"
 
 function DrawBaseButton:new(color, angle)
 	DrawBaseButton.super.new(self)
 
-	---@type integer[] # The base color, will be mixed with the Control's albedo
+	---@type number[]
 	self.baseColor = color or {1, 1, 1}
 	---@type number
 	self.angle = angle or 4

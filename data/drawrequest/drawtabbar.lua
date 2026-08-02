@@ -5,7 +5,7 @@ local FontLoader = Adore.Loader.getCollection("FontLoader")
 local mixRGBA = Adore.Common("Color").mixRGBA
 
 ---@class DrawRequest.TabBar: DrawRequest
----@overload fun(barBackground: integer[], normalBackground: integer[], normalText: integer[], selectedBackground: integer[], selectedText: integer[]): DrawRequest.TabBar
+---@overload fun(barBackground: number[], normalBackground: number[], normalText: number[], selectedBackground: number[], selectedText: number[]): DrawRequest.TabBar
 local DrawTabBar = DrawRequest:extend()
 DrawTabBar.CLASS_NAME = "DrawTabBar"
 
@@ -18,17 +18,17 @@ local TEMP_INFO = {false, false}
 function DrawTabBar:new(barBackground, normalBackground, normalText, selectedBackground, selectedText)
 	DrawTabBar.super.new(self)
 
-	---@type integer[] # The unmixed background color of the tab bar
+	---@type number[] # The background of the entire TabBar
 	self.barBackground = barBackground or {0.1, 0.1, 0.1, 1}
 
-	---@type integer[] # The unmixed background color of a tab background
+	---@type number[] # Unselected tab background color
 	self.normalBackground = normalBackground or {0.12, 0.12, 0.15, 1}
-	---@type integer[] # The unmixed background color of a tab's text
+	---@type number[] # Unselected tab text color
 	self.normalText = normalText or {1, 1, 1, 0.5}
 
-	---@type integer[] # The unmixed background color of a selected tab background
+	---@type number[] # Selected tab background color
 	self.selectedBackground = selectedBackground or {0.15, 0.15, 0.2, 1}
-	---@type integer[] # The unmixed background color of a selected tab's text
+	---@type number[] # Selected tab text color
 	self.selectedText = selectedText or {1, 1, 1, 0.75}
 end
 
