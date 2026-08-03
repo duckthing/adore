@@ -62,7 +62,7 @@ function VBox:forceRefresh()
 			containerH = containerH + childH
 		end
 	end
-	containerH = containerH + (max(0, #self.children) - 1) * margin
+	containerH = containerH + (max(0, #children) - 1) * margin
 
 	self._calculatedWidth = containerW
 	self._calculatedHeight = containerH

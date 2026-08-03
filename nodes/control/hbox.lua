@@ -57,7 +57,7 @@ function HBox:forceRefresh()
 			containerH = max(containerH, childY + childH)
 		end
 	end
-	containerW = containerW + (max(0, #self.children) - 1) * margin
+	containerW = containerW + (max(0, #children) - 1) * margin
 
 	self._calculatedWidth = containerW
 	self._calculatedHeight = containerH
