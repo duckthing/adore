@@ -11,6 +11,7 @@ local Button = Nodes("Button")
 local TextureButton = Nodes("TextureButton")
 local Label = Nodes("Label")
 local PopupMenu = Nodes("PopupMenu")
+local WindowPopup = Nodes("WindowPopup")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -278,13 +279,35 @@ end
 function MainWindow:saveScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local sceneRoot = srContainer.subroot.children[1]
 
-	local ObjectSaver = Adore.Common("ObjectSaver")
-	local TableScene = Adore.Resources("TableScene")
-	local tableScene = TableScene()
-	tableScene:pack(sceneRoot)
-	print("written as text:", ObjectSaver.saveToFilePath("myScene.lua", tableScene, "lua"))
+	local windowPopup = WindowPopup()
+	windowPopup:setAnchorsAndOffsets(
+		0.5, 0.5, 0.5, 0.5,
+		-90, -60, 90, 60
+	)
+	windowPopup:addChild(
+		Control()
+			:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 10, -10, -10
+		):setVariant("panel")
+	)
+
+	windowPopup:addAction("Cancel").clicked:connect(windowPopup, "close")
+	local save = windowPopup:addAction("Save")
+	save.clicked:connect(windowPopup, "close")
+	save.clicked:connectCallable(function(...)
+		local sceneRoot = srContainer.subroot.children[1]
+
+		local ObjectSaver = Adore.Common("ObjectSaver")
+		local TableScene = Adore.Resources("TableScene")
+		local tableScene = TableScene()
+		tableScene:pack(sceneRoot)
+		print("written as text:", ObjectSaver.saveToFilePath("myScene.lua", tableScene, "lua"))
+	end)
+
+	self:addChild(windowPopup)
+	windowPopup:popup()
 end
 
 ---Loads the scene and opens it
