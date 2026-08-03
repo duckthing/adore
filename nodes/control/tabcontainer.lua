@@ -132,8 +132,9 @@ function TabContainer:_simpleRefresh(child, w, h)
 		offsetY = self._tabBarHeight
 		h = max(0, h - offsetY)
 	end
+	local lcr = self._localContentRect
 	local childX, childY, childW, childH = child:_getRectFromParentSize(w, h)
-	child:_setCanonRect(childX + self._localContentRect.x, childY + self._localContentRect.y + offsetY, childW, childH)
+	child:_setCanonRect(childX + lcr.x, childY + lcr.y + offsetY, childW, childH)
 	child:onRefreshed()
 end
 

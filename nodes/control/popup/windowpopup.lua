@@ -1,11 +1,11 @@
 ---@type AdoreInit
 local Adore = require ""
 local Nodes = Adore.Nodes
+local max = math.max
 
 local Label = Nodes("Label")
 local Button = Nodes("Button")
 local Popup = Nodes("Popup")
-local Control = Nodes("Control")
 local ColorRect = Nodes("ColorRect")
 
 ---@class WindowPopup: Popup
@@ -47,13 +47,6 @@ function WindowPopup:new()
 		:setVariant("flat")
 	self._closeButton._adorePersist = false
 
-	---@type Control # The Control where it is safe to put Controls under
-	self._body = Control()
-		:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			0, titleHeight, 0, 0
-		)
-
 	---@type boolean # If the close button is visible
 	self._showCloseButton = self:canClose()
 	self._closeButton:setVisible(self._showCloseButton)
@@ -69,12 +62,6 @@ end
 ---@return Control
 function WindowPopup:getTitlebar()
 	return self._titlebar
-end
-
----Returns the Control where Controls can be safely put under
----@return Control
-function WindowPopup:getBody()
-	return self._body
 end
 
 ---Returns the titlebar Label
@@ -98,6 +85,37 @@ function WindowPopup:setCloseButtonVisible(visible)
 		self:getCloseButton():setVisible(visible)
 	end
 	return self
+end
+
+function WindowPopup:_simpleRefresh(child, w, h)
+	if child == self._titlebar then
+		-- Resize the titlebar like normal
+		return WindowPopup.super._simpleRefresh(self, child, w, h)
+	end
+
+	local offsetY = 0
+	if child ~= self._titlebar then
+		offsetY = self._titleHeight
+		h = max(0, h - offsetY)
+	end
+	local lcr = self._localContentRect
+	local childX, childY, childW, childH = child:_getRectFromParentSize(w, h)
+	child:_setCanonRect(childX + lcr.x, childY + lcr.y + offsetY, childW, childH)
+	child:onRefreshed()
+end
+
+---Removes all children from this WindowPopup
+---@param shouldDestroy boolean?
+function WindowPopup:clearChildren(shouldDestroy)
+	local children = self.children
+	local titlebar = self._titlebar
+	for i = #children, 1, -1 do
+		local child = children[i]
+		if child ~= titlebar then
+			-- Only remove children that aren't the titlebar
+			self:removeChildAtIndex(i, shouldDestroy)
+		end
+	end
 end
 
 return WindowPopup
