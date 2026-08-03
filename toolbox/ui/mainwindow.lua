@@ -292,7 +292,7 @@ function MainWindow:saveScene()
 	local vbox = VBox()
 	vbox:setAnchorsAndOffsets(
 			0, 0, 1, 1,
-			10, 0, -10, 0
+			10, 10, -10, 0
 		)
 		:setResizeToContent(true)
 
@@ -333,6 +333,7 @@ function MainWindow:saveScene()
 	-- Show the popup
 	self:addChild(windowPopup)
 	windowPopup:popup()
+	self:getRoot():uiSelectNext()
 end
 
 ---Loads the scene and opens it

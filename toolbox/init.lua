@@ -59,8 +59,7 @@ return setmetatable(Toolbox, {
 		Node = Adore.Nodes("Node")
 		Node._root = nil
 
-		local godRoot = Adore:build({hideSceneWarning = true}, require(PKG_NAME..".themes.dark")())
-		godRoot.allowTabFocus = false
+		local godRoot = Adore:build({hideSceneWarning = true, allowTabFocus = "withModal"}, require(PKG_NAME..".themes.dark")())
 		Toolbox.godRoot = godRoot
 
 		Toolbox.mainWindow = MainWindow(self, originalRoot)
