@@ -1,7 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local Control = Adore.Nodes("Control")
-local max = math.max
+local min, max = math.min, math.max
 
 ---@class VBox: Control
 ---@field super Control
@@ -52,12 +52,13 @@ function VBox:forceRefresh()
 	end
 
 	-- Calculate the size required
-	for i = 1, #self.children do
-		local child = self.children[i]
+	local children = self.children
+	for i = 1, #children do
+		local child = children[i]
 		if child:is(Control) and child._visible then
 			---@cast child Control
 			local childX, _, childW, childH = child:_getRectFromParentSize(selfW, 0)
-			containerW = math.max(containerW, childX + childW)
+			containerW = max(containerW, childX + childW)
 			containerH = containerH + childH
 		end
 	end
@@ -71,7 +72,7 @@ function VBox:forceRefresh()
 		selfH = containerH
 		chosenOffsetY = 0
 	else
-		chosenOffsetY = math.max(0, math.min(self._offsetY, containerH - selfH))
+		chosenOffsetY = max(0, min(self._offsetY, containerH - selfH))
 	end
 
 	local currY = selfY + -chosenOffsetY
@@ -88,7 +89,8 @@ function VBox:forceRefresh()
 	end
 
 	-- Set the positions of the children
-	for _, child in ipairs(self.children) do
+	for i = 1, #children do
+		local child = children[i]
 		if child:is(Control) and child._visible then
 			---@cast child Control
 			local offsetX, _, childW, childH = child:_getRectFromParentSize(selfW, selfH)
@@ -121,7 +123,7 @@ function VBox:_focusOnChild(child)
 		local lowerBounds = child._localContentRect.y - self._localContentRect.y + self._offsetY
 		local upperBounds = lowerBounds - self._localContentRect.h + child._localContentRect.h
 		-- lowerbounds is less than upperbounds (reversed)
-		self._offsetY = math.max(upperBounds, math.min(self._offsetY, lowerBounds))
+		self._offsetY = max(upperBounds, min(self._offsetY, lowerBounds))
 		self:deferRefresh()
 	end
 	VBox.super._focusOnChild(self, child)
@@ -186,7 +188,7 @@ end
 
 ---Set this to :wheelmoved() if scrolling is enabled
 function VBox:_vboxWheelMoved(_, y)
-	local newOffset = math.max(0, math.min(self._offsetY - y * self._scrollSpeed, self._calculatedHeight - self._localContentRect.h))
+	local newOffset = max(0, min(self._offsetY - y * self._scrollSpeed, self._calculatedHeight - self._localContentRect.h))
 	if newOffset ~= self._offsetY then
 		self._offsetY = newOffset
 		self:deferRefresh()

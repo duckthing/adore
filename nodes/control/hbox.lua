@@ -1,7 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local Control = Adore.Nodes("Control")
-local max = math.max
+local min, max = math.min, math.max
 
 ---@class HBox: Control
 ---@field super Control
@@ -47,13 +47,14 @@ function HBox:forceRefresh()
 	end
 
 	-- Calculate the size required
-	for i = 1, #self.children do
-		local child = self.children[i]
+	local children = self.children
+	for i = 1, #children do
+		local child = children[i]
 		if child:is(Control) and child._visible then
 			---@cast child Control
 			local _, childY, childW, childH = child:_getRectFromParentSize(selfW, selfH)
 			containerW = containerW + childW
-			containerH = math.max(containerH, childY + childH)
+			containerH = max(containerH, childY + childH)
 		end
 	end
 	containerW = containerW + (max(0, #self.children) - 1) * margin
@@ -66,7 +67,7 @@ function HBox:forceRefresh()
 		selfH = containerH
 		chosenOffsetX = 0
 	else
-		chosenOffsetX = math.max(0, math.min(self._offsetX, containerW - selfW))
+		chosenOffsetX = max(0, min(self._offsetX, containerW - selfW))
 	end
 
 	local currX = selfX + -chosenOffsetX
@@ -83,7 +84,8 @@ function HBox:forceRefresh()
 	end
 
 	-- Set the positions of the children
-	for _, child in ipairs(self.children) do
+	for i = 1, #children do
+		local child = children[i]
 		if child:is(Control) and child._visible then
 			---@cast child Control
 			local _, offsetY, childW, childH = child:_getRectFromParentSize(selfW, selfH)
@@ -115,7 +117,7 @@ function HBox:_focusOnChild(child)
 	if self._allowScrolling then
 		local lowerBounds = child._localContentRect.x - self._localContentRect.x + self._offsetX
 		local upperBounds = lowerBounds - self._localContentRect.w + child._localContentRect.w
-		self._offsetX = math.max(upperBounds, math.min(self._offsetX, lowerBounds))
+		self._offsetX = max(upperBounds, min(self._offsetX, lowerBounds))
 		self:deferRefresh()
 	end
 	HBox.super._focusOnChild(self, child)
@@ -174,7 +176,7 @@ end
 
 ---Set this to :wheelmoved() if scrolling is enabled
 function HBox:_hboxWheelMoved(x, y)
-	local newOffset = math.max(0, math.min(self._offsetX + (x - y) * self._scrollSpeed, self._calculatedWidth - self._localContentRect.w))
+	local newOffset = max(0, min(self._offsetX + (x - y) * self._scrollSpeed, self._calculatedWidth - self._localContentRect.w))
 	if newOffset ~= self._offsetX then
 		self._offsetX = newOffset
 		self:deferRefresh()
