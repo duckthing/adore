@@ -152,12 +152,26 @@ function LineEdit:setJustify(justify)
 	return self
 end
 
+---If unfocused, draws the most relevant text
+---@param self LineEdit
+local function setFieldUnfocusedAlignment(self)
+	local field = self._inputField
+	if self._align ~= "right" then
+		field:setCursor(0)
+	else
+		field:setCursor(#field:getText())
+	end
+end
+
 ---Sets the horizontal placement of the field
 ---@param align love.AlignMode
 function LineEdit:setAlign(align)
 	if self._align ~= align then
 		self._align= align
 		self._inputField:setAlignment(align)
+		if not self:hasFocus() then
+			setFieldUnfocusedAlignment(self)
+		end
 		self:deferRefreshSelf()
 	end
 	return self
@@ -278,9 +292,21 @@ end
 
 function LineEdit:uiFocusLost()
 	LineEdit.super.uiFocusLost(self)
-	self._inputField:setCursor(0)
+	if not self:hasFocus() then
+		setFieldUnfocusedAlignment(self)
+	end
 	self._inputField:releaseMouse()
 	self:submit()
+end
+
+function LineEdit:onRefreshed()
+	if not self:hasFocus() then
+		if not self:hasFocus() then
+			setFieldUnfocusedAlignment(self)
+		end
+		self._inputField:releaseMouse()
+	end
+	return LineEdit.super.onRefreshed(self)
 end
 
 -- Only update the cursor if we're on a computer
