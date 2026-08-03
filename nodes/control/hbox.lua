@@ -134,7 +134,7 @@ function HBox:setAllowScrolling(allow)
 	return self
 end
 
----Sets whether scrolling is allowed on this HBox
+---Sets whether this HBox will resize to fit all content
 ---@param resize boolean
 ---@return self
 function HBox:setResizeToContent(resize)

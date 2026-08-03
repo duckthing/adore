@@ -140,7 +140,7 @@ function VBox:setAllowScrolling(allow)
 	return self
 end
 
----Sets whether scrolling is allowed on this VBox
+---Sets whether this VBox will resize to fit all content
 ---@param resize boolean
 ---@return self
 function VBox:setResizeToContent(resize)
