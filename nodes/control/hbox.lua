@@ -97,7 +97,7 @@ function HBox:forceRefresh()
 	end
 
 	if resizeToContent then
-		self._localContentRect.h = containerW
+		self._localContentRect.w = max(self._localContentRect.w, containerW)
 	end
 
 	self._offsetX = chosenOffsetX

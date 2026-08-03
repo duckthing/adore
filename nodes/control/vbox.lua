@@ -102,7 +102,7 @@ function VBox:forceRefresh()
 	end
 
 	if resizeToContent then
-		self._localContentRect.h = containerH
+		self._localContentRect.h = max(self._localContentRect.h, containerH)
 	end
 
 	self._offsetY = chosenOffsetY
