@@ -4,6 +4,8 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.lib")
 
 local LazyRequire = require(ADORE_PATH..".lazyrequire")
 
+---@class NativeFS: love.filesystem
+
 local Libraries
 do
 ---@enum (key) Adore.Libraries
