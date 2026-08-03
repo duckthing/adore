@@ -7,6 +7,7 @@ local Label = Nodes("Label")
 local Button = Nodes("Button")
 local Popup = Nodes("Popup")
 local ColorRect = Nodes("ColorRect")
+local HBox = Nodes("HBox")
 
 ---@class WindowPopup: Popup
 ---@overload fun(): WindowPopup
@@ -16,6 +17,10 @@ WindowPopup.CLASS_NAME = "WindowPopup"
 
 ---@type integer # The space the titlebar will take
 WindowPopup._titleHeight = 20
+---@type integer # The space the actionbar will take
+WindowPopup._actionbarHeight = 34
+---@type integer # The vertical padding around the actions
+WindowPopup._actionPadding = 4
 
 function WindowPopup:new()
 	WindowPopup.super.new(self)
@@ -30,14 +35,14 @@ function WindowPopup:new()
 		)
 	self._titlebar.albedo = {0.15, 0.15, 0.2, 1}
 
-	---@type Label # The titlebar Label
+	---@type Label # The title Label
 	self._title = Label("Window")
 		:setAnchors(0, 0, 1, 1)
 		:setAlign("center")
 		:setJustify("center")
 	self._title._adorePersist = false
 
-	---@type Button # The close button
+	---@type Button # The close Button
 	self._closeButton = Button("X")
 		:setAnchorsAndOffsets(
 			1, 0, 1, 0,
@@ -46,6 +51,9 @@ function WindowPopup:new()
 		:setTextAlign("center")
 		:setVariant("flat")
 	self._closeButton._adorePersist = false
+
+	---@type HBox? # The actionbar HBox, which may not exist yet
+	self._actionbar = nil
 
 	---@type boolean # If the close button is visible
 	self._showCloseButton = self:canClose()
@@ -76,6 +84,12 @@ function WindowPopup:getCloseButton()
 	return self._closeButton
 end
 
+---Returns the actionbar, if it exists
+---@return HBox?
+function WindowPopup:getActionBar()
+	return self._actionbar
+end
+
 ---Sets the visibility of the close button
 ---@param visible boolean
 ---@return self
@@ -87,16 +101,51 @@ function WindowPopup:setCloseButtonVisible(visible)
 	return self
 end
 
-function WindowPopup:_simpleRefresh(child, w, h)
-	if child == self._titlebar then
-		-- Resize the titlebar like normal
-		return WindowPopup.super._simpleRefresh(self, child, w, h)
+---Adds the given Button to the actionbar, and then returns it so you can connect to it
+---@param name string
+---@return Button
+function WindowPopup:addAction(name)
+	local bar = self._actionbar
+	if not bar then
+		-- Create the actionbar if it doesn't exist
+		bar = HBox()
+		local height = self._actionbarHeight
+		local padding = self._actionPadding
+		bar:setAnchorsAndOffsets(
+			0, 1, 1, 1,
+			0, -height + padding, 0, -padding
+		)
+			:setMargin(4)
+			:setSortMode("center")
+		bar._adorePersist = false
+		self:addChild(bar)
+		self._actionbar = bar
 	end
 
+	-- Create the action
+	local button = Button(name)
+	button:setAnchorsAndOffsets(
+		0, 0, 0, 1,
+		-30, 0, 30, 0
+	)
+	bar:addChild(button)
+	return button
+end
+
+function WindowPopup:_simpleRefresh(child, w, h)
 	local offsetY = 0
-	if child ~= self._titlebar then
+	if child == self._titlebar or child == self._actionbar then
+		-- Resize the titlebar/actionbar like normal
+		return WindowPopup.super._simpleRefresh(self, child, w, h)
+	else
+		-- Change the available space
 		offsetY = self._titleHeight
-		h = max(0, h - offsetY)
+		local endH = 0
+		if self._actionbar then
+			-- If the actionbar exists, reduce the space available
+			endH = self._actionbarHeight
+		end
+		h = max(0, h - offsetY - endH)
 	end
 	local lcr = self._localContentRect
 	local childX, childY, childW, childH = child:_getRectFromParentSize(w, h)
