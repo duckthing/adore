@@ -50,17 +50,27 @@ local actions = {
 	end,
 
 	uiSelectNext = function(context)
-		return context.root:uiSelectNext()
+		local root = context.root
+		local focusMode = context.allowTabFocus
+		if root._focusedControl or focusMode == "always" or (focusMode == "withModal" and #root._modalStack > 0) then
+			return context.root:uiSelectNext()
+		end
+		return false
 	end,
 	uiSelectPrevious = function(context)
-		return context.root:uiSelectPrevious()
+		local root = context.root
+		local focusMode = context.allowTabFocus
+		if root._focusedControl or focusMode == "always" or (focusMode == "withModal" and #root._modalStack > 0) then
+			return context.root:uiSelectPrevious()
+		end
+		return false
 	end,
 	uiUnfocus = function(context)
 		-- TODO: Default unfocus check is in shortcut action, while default focus check is in navigation method.
 		-- Should these be moved together?
 
 		local root = context.root
-		if root.allowUnfocus then
+		if context.allowUnfocus then
 			-- Can unfocus Controls
 			if root._focusedControl then
 				-- A Control is focused; unfocus it
@@ -128,11 +138,21 @@ local releasedGamepadBinds = {
 	a = "uiDeactivate"
 }
 
+---@alias CoreUIContext.GrabFocusMode
+---| "always" # Always allow grabbing focus of a Control
+---| "withModal" # Only allow grabbing focus of a Control when a modal is pushed (ex. WindowPopup)
+---| "never" # Grabbing focus when there is no Control focused is disallowed
+
 ---@param root RootNode
 function CoreUIContext:new(root)
 	CoreUIContext.super.new(self, actions, pressedKeybinds, releasedKeybinds, pressedGamepadBinds, releasedGamepadBinds)
 	self.root = root
 	self._priority = 1000
+
+	---@type boolean # Does pressing Escape unfocus the UI?
+	self.allowUnfocus = true
+	---@type CoreUIContext.GrabFocusMode # Does pressing (Shift+)Tab focus the UI when there is no focus currently?
+	self.allowTabFocus = "always"
 end
 
 ---Makes points relative to the Control's Viewport
@@ -319,6 +339,18 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 		end
 	end
 
+	-- Send to hovered
+	local hovered = root._hoveredControl
+	if hovered then
+		local hMouseReleased = hovered.mousereleased
+		if hMouseReleased and hovered:canReceiveInput(true, x, y) then
+			local hoveredX, hoveredY = controlToLocal(rootViewport, hovered, rx, ry)
+			if hMouseReleased(hovered, hoveredX, hoveredY, button) then
+				return self.sinkHandledInput
+			end
+		end
+	end
+
 	-- Send to modal
 	local modal = root._modalStack[#root._modalStack]
 	if modal then
@@ -327,18 +359,6 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 			local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
 			if mMouseReleased(modal, modalX, modalY, button) then
 				root:uiUnfocus()
-				return self.sinkHandledInput
-			end
-		end
-	end
-
-	-- Send to hovered
-	local hovered = root._hoveredControl
-	if hovered then
-		local hMouseReleased = hovered.mousereleased
-		if hMouseReleased and hovered:canReceiveInput(true, x, y) then
-			local hoveredX, hoveredY = controlToLocal(rootViewport, hovered, rx, ry)
-			if hMouseReleased(hovered, hoveredX, hoveredY, button) then
 				return self.sinkHandledInput
 			end
 		end

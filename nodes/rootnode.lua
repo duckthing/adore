@@ -25,6 +25,8 @@ local _, shaderAssets = Adore.Loader.getCollection("ShaderLoader")
 ---@class RootNode.Options: Viewport.Options
 ---@field hideSceneWarning boolean? # Pass `true` to hide the "no scene" warning
 ---@field drawControlDebug boolean? # Draw an outline around Controls without a DrawRequest
+---@field allowUnfocus boolean? # Does pressing Escape unfocus the UI?
+---@field allowTabFocus CoreUIContext.GrabFocusMode? # Does pressing (Shift+)Tab focus the UI when there is no focus currently?
 
 ---@class RootNode: Node
 ---@field super Node
@@ -176,10 +178,6 @@ function Root:new(rootOptions, defaultTheme)
 	---======== CONTROL
 	---@type Theme
 	self._defaultTheme = defaultTheme
-	---@type boolean # Does pressing Escape unfocus the UI?
-	self.allowUnfocus = true
-	---@type boolean # Does pressing (Shift+)Tab focus the UI when there is no focus currently?
-	self.allowTabFocus = true
 
 	---@type Control? # The current Control being hovered over
 	self._hoveredControl = nil
@@ -241,9 +239,20 @@ function Root:new(rootOptions, defaultTheme)
 		self:addChild(timer)
 	end
 
-	if rootOptions and rootOptions.drawControlDebug then
-		-- Gives all Controls without a DrawRequest an outline
-		defaultTheme:setDrawable(Control, nil, Resources("DrawRequest.DebugBox")())
+	if rootOptions then
+		if rootOptions.drawControlDebug then
+			-- Gives all Controls without a DrawRequest an outline
+			defaultTheme:setDrawable(Control, nil, Resources("DrawRequest.DebugBox")())
+		end
+
+		local coreUI = self._coreUIContext
+		if rootOptions.allowTabFocus ~= nil then
+			coreUI.allowTabFocus = rootOptions.allowTabFocus
+		end
+
+		if rootOptions.allowUnfocus ~= nil then
+			coreUI.allowUnfocus = rootOptions.allowUnfocus
+		end
 	end
 end
 
@@ -487,20 +496,14 @@ function Root:uiSelectNext()
 	local oldFocused = self._focusedControl
 	if not oldFocused then
 		-- Missing a Control to navigate from, select the first Control found
-		if not self.allowTabFocus then
-			-- Navigation without an existing element is disabled
-			return false
-		else
-			-- Pick the first element
-			for control, _ in pairs(self._controlTopLevelLayers) do
-				local result = control:traverseDownwards(forEachCanFocus, isControl)
-				if result then
-					result:grabFocus(false)
-					return true
-				end
+		for control, _ in pairs(self._controlTopLevelLayers) do
+			local result = control:traverseDownwards(forEachCanFocus, isControl)
+			if result then
+				result:grabFocus(false)
+				return true
 			end
-			return false
 		end
+		return false
 	else
 		-- Navigate from an existing Control
 
@@ -545,22 +548,16 @@ function Root:uiSelectPrevious()
 	local oldFocused = self._focusedControl
 	if not oldFocused then
 		-- Missing a Control to navigate from, select the first Control found
-		if not self.allowTabFocus then
-			-- Navigation without an existing element is disabled
-			return false
-		else
-			-- Pick the first element
-			for control, _ in pairs(self._controlTopLevelLayers) do
-				local result = control
-					:getDeepestNode()
-					:traverseUpwards(function(node) return (node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) and node) or nil end, isControl)
-				if result then
-					result:grabFocus(false)
-					return true
-				end
+		for control, _ in pairs(self._controlTopLevelLayers) do
+			local result = control
+				:getDeepestNode()
+				:traverseUpwards(function(node) return (node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) and node) or nil end, isControl)
+			if result then
+				result:grabFocus(false)
+				return true
 			end
-			return false
 		end
+		return false
 	else
 		-- Navigate from an existing Control
 
@@ -1011,7 +1008,6 @@ local function shashForEachControlWithCheck(obj, mouseX, mouseY, check, ...)
 
 		if objDepth > deepestDepth then
 			-- Found the new deepest object
-			-- print("woah", obj, obj:canReceiveInput(true, mouseX, mouseY), obj:doesPointOverlap(mouseX, mouseY))
 			if check(obj, ...) and obj:canReceiveInput(true, mouseX, mouseY) and obj:doesPointOverlap(mouseX, mouseY) then
 				deepestDepth = objDepth
 				deepestLayer = layerDepth
