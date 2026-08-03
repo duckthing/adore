@@ -6,12 +6,14 @@ local Nodes = Adore.Nodes
 
 local Control = Nodes("Control")
 local TabContainer = Nodes("TabContainer")
+local VBox = Nodes("VBox")
 local HBox = Nodes("HBox")
 local Button = Nodes("Button")
 local TextureButton = Nodes("TextureButton")
 local Label = Nodes("Label")
 local PopupMenu = Nodes("PopupMenu")
 local WindowPopup = Nodes("WindowPopup")
+local LineEdit = Nodes("LineEdit")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -280,22 +282,35 @@ function MainWindow:saveScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
 
+	-- Create the popup
 	local windowPopup = WindowPopup()
 	windowPopup:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
 		-90, -60, 90, 60
 	)
-	windowPopup:addChild(
-		Control()
-			:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			10, 10, -10, -10
-		):setVariant("panel")
-	)
 
+	local vbox = VBox()
+	vbox:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 0, -10, 0
+		)
+		:setResizeToContent(true)
+
+	-- Create the fields
+	local userPath = love.filesystem.getWorkingDirectory()
+	local pathField = LineEdit(userPath.."/myScene.lua")
+	pathField:setAnchorsAndOffsets(
+		0, 0, 1, 0,
+		10, 0, -10, 0
+	)
+		:setAlign("right")
+	vbox:addChild(pathField)
+
+	windowPopup:addChild(vbox)
+
+	-- Connect events
 	windowPopup:addAction("Cancel").clicked:connect(windowPopup, "close")
 	local save = windowPopup:addAction("Save")
-	save.clicked:connect(windowPopup, "close")
 	save.clicked:connectCallable(function(...)
 		local sceneRoot = srContainer.subroot.children[1]
 
@@ -303,9 +318,19 @@ function MainWindow:saveScene()
 		local TableScene = Adore.Resources("TableScene")
 		local tableScene = TableScene()
 		tableScene:pack(sceneRoot)
-		print("written as text:", ObjectSaver.saveToFilePath("myScene.lua", tableScene, "lua"))
+
+		local NativeFS = Adore.Libraries("NativeFS")
+		local file = NativeFS.newFile(pathField._text)
+		local success, err = ObjectSaver.saveToFile(file, tableScene, "lua")
+		if success then
+			print("written to path:", pathField._text)
+			windowPopup:close()
+		else
+			print(err)
+		end
 	end)
 
+	-- Show the popup
 	self:addChild(windowPopup)
 	windowPopup:popup()
 end
