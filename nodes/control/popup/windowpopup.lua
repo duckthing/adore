@@ -52,6 +52,7 @@ function WindowPopup:new()
 		)
 		:setTextAlign("center")
 		:setVariant("flat")
+	self._closeButton.focusMode = "click"
 	self._closeButton._adorePersist = false
 
 	---@type HBox? # The actionbar HBox, which may not exist yet
