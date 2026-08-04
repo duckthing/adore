@@ -52,9 +52,10 @@ local menuActions = {
 				---@cast window Toolbox.MainWindow
 				window:loadScene()
 			end},
-			{label = "Reload Scene"},
-			{label = "", separator = true},
-			{label = "Quit"},
+			{label = "Reload Scene", func = function(window)
+				---@cast window Toolbox.MainWindow
+				window:reloadScene()
+			end},
 		}
 	},
 	{
@@ -283,11 +284,13 @@ function MainWindow:saveScene()
 	if not srContainer then return end
 
 	-- Create the popup
-	local windowPopup = WindowPopup()
-	windowPopup:setAnchorsAndOffsets(
+	local window = WindowPopup()
+	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
 		-90, -60, 90, 60
 	)
+
+	window:getTitleLabel():setText("Save to...")
 
 	local vbox = VBox()
 	vbox:setAnchorsAndOffsets(
@@ -295,22 +298,24 @@ function MainWindow:saveScene()
 			10, 10, -10, 0
 		)
 		:setResizeToContent(true)
+		:setMargin(4)
 
 	-- Create the fields
+	-- == File path Label
+	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
+
+	-- == File path LineEdit
 	local userPath = love.filesystem.getWorkingDirectory()
 	local pathField = LineEdit(userPath.."/myScene.lua")
-	pathField:setAnchorsAndOffsets(
-		0, 0, 1, 0,
-		10, 0, -10, 0
-	)
+	pathField:setAnchors(0, 0, 1, 0)
 		:setAlign("right")
 	vbox:addChild(pathField)
 
-	windowPopup:addChild(vbox)
+	window:addChild(vbox)
 
 	-- Connect events
-	windowPopup:addAction("Cancel").clicked:connect(windowPopup, "close")
-	local save = windowPopup:addAction("Save")
+	window:addAction("Cancel").clicked:connect(window, "close")
+	local save = window:addAction("Save")
 	save.clicked:connectCallable(function(...)
 		local sceneRoot = srContainer.subroot.children[1]
 
@@ -324,15 +329,15 @@ function MainWindow:saveScene()
 		local success, err = ObjectSaver.saveToFile(file, tableScene, "lua")
 		if success then
 			print("written to path:", pathField._text)
-			windowPopup:close()
+			window:close()
 		else
 			print(err)
 		end
 	end)
 
 	-- Show the popup
-	self:addChild(windowPopup)
-	windowPopup:popup()
+	self:addChild(window)
+	window:popup()
 	self:getRoot():uiSelectNext()
 end
 
