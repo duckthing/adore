@@ -48,6 +48,10 @@ local menuActions = {
 				---@cast window Toolbox.MainWindow
 				window:saveScene()
 			end},
+			{label = "Save As...", func = function(window)
+				---@cast window Toolbox.MainWindow
+				window:saveSceneAs()
+			end},
 			{label = "Load Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
 				window:loadScene()
@@ -278,10 +282,49 @@ function MainWindow:reloadScene()
 	srContainer:handleOnSubroot("reloadCurrentScene")
 end
 
----Saves the scene of the current tab
+---Saves the scene of the current tab, if it has its filepath set
+---@return boolean success
 function MainWindow:saveScene()
 	local srContainer = self:getSubrootContainer()
+	if not srContainer then return false end
+	local child = srContainer.subroot._instancedScene
+	if not child then return false end
+	local savePath = srContainer._filepath
+	if not savePath then return self:saveSceneAs() or false end
+
+	-- Create the directories, and error early if we can't open that file
+	local NativeFS = Adore.Libraries("NativeFS")
+	NativeFS.createDirectory(savePath:match("(.*)[/\\].*$"))
+	local file = NativeFS.newFile(savePath)
+	if not (file:isOpen() or file:open("w") or file:getMode() == "w") then
+		print("Can't open file")
+		return false
+	end
+
+	-- Pack the scene object
+	local ObjectSaver = Adore.Common("ObjectSaver")
+	local TableScene = Adore.Resources("TableScene")
+	local tableScene = TableScene()
+	tableScene:pack(child)
+
+	-- Write to the file
+	local success, err = ObjectSaver.saveToFile(file, tableScene, "lua")
+	if success then
+		print("Written to path:", savePath)
+		srContainer._filepath = savePath
+	else
+		-- Errored
+		print(err)
+	end
+
+	return success
+end
+
+function MainWindow:saveSceneAs()
+	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
+	local child = srContainer.subroot._instancedScene
+	if not child then return end
 
 	-- Create the popup
 	local window = WindowPopup()
@@ -305,8 +348,10 @@ function MainWindow:saveScene()
 	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
 
 	-- == File path LineEdit
-	local userPath = love.filesystem.getWorkingDirectory()
-	local pathField = LineEdit(userPath.."/myScene.lua")
+	local pathField = LineEdit(
+		srContainer._filepath
+		or ("scenes/%s.lua"):format(tostring(child):lower())
+	)
 	pathField:setAnchors(0, 0, 1, 0)
 		:setAlign("right")
 	vbox:addChild(pathField)
@@ -317,28 +362,13 @@ function MainWindow:saveScene()
 	window:addAction("Cancel").clicked:connect(window, "close")
 	local save = window:addAction("Save")
 	save.clicked:connectCallable(function(...)
-		local sceneRoot = srContainer.subroot.children[1]
-
-		local ObjectSaver = Adore.Common("ObjectSaver")
-		local TableScene = Adore.Resources("TableScene")
-		local tableScene = TableScene()
-		tableScene:pack(sceneRoot)
-
-		local NativeFS = Adore.Libraries("NativeFS")
-		local file = NativeFS.newFile(pathField._text)
-		local success, err = ObjectSaver.saveToFile(file, tableScene, "lua")
-		if success then
-			print("written to path:", pathField._text)
-			window:close()
-		else
-			print(err)
-		end
+		srContainer._filepath = pathField._submittedText
+		if self:saveScene() then window:close() end
 	end)
 
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
-	self:getRoot():uiSelectNext()
 end
 
 ---Loads the scene and opens it
