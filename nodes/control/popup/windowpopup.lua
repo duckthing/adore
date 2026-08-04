@@ -19,8 +19,10 @@ WindowPopup.CLASS_NAME = "WindowPopup"
 WindowPopup._titleHeight = 20
 ---@type integer # The space the actionbar will take
 WindowPopup._actionbarHeight = 34
----@type integer # The vertical padding around the actions
-WindowPopup._actionPadding = 4
+---@type integer # The vertical padding above and below the actions
+WindowPopup._actionVerticalPadding = 4
+---@type integer # The padding around the action text
+WindowPopup._actionTextPadding = 4
 
 function WindowPopup:new()
 	WindowPopup.super.new(self)
@@ -33,7 +35,7 @@ function WindowPopup:new()
 			0, 0, 1, 0,
 			0, 0, 0, titleHeight
 		)
-	self._titlebar.albedo = {0.15, 0.15, 0.2, 1}
+	self._titlebar.albedo = {0.17, 0.17, 0.2, 1}
 
 	---@type Label # The title Label
 	self._title = Label("Window")
@@ -110,7 +112,7 @@ function WindowPopup:addAction(name)
 		-- Create the actionbar if it doesn't exist
 		bar = HBox()
 		local height = self._actionbarHeight
-		local padding = self._actionPadding
+		local padding = self._actionVerticalPadding
 		bar:setAnchorsAndOffsets(
 			0, 1, 1, 1,
 			0, -height + padding, 0, -padding
@@ -124,9 +126,10 @@ function WindowPopup:addAction(name)
 
 	-- Create the action
 	local button = Button(name)
+	local width = button._textBatch:getWidth() + self._actionTextPadding * 2
 	button:setAnchorsAndOffsets(
 		0, 0, 0, 1,
-		-30, 0, 30, 0
+		width * -0.5, 0, width * 0.5, 0
 	)
 	bar:addChild(button)
 	return button

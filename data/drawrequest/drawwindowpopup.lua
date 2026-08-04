@@ -13,7 +13,7 @@ function DrawWindowPopup:new(bodyColor, tabColor, angle)
 	DrawWindowPopup.super.new(self)
 
 	---@type number[]
-	self.bodyColor = bodyColor or {0.22, 0.22, 0.25, 1}
+	self.bodyColor = bodyColor or {0.14, 0.14, 0.16, 1}
 	---@type number
 	self.angle = angle or 0
 end
