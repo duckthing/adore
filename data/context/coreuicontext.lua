@@ -185,7 +185,9 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		local focused = root._focusedControl
 		if focused then
 			local fMouseMoved = focused.mousemoved
-			if fMouseMoved and focused:canReceiveInput(true, x, y) then
+			-- Instead of using the mouse variant of :canReceiveInput, do the check manually
+			-- in case there is a Control that is clipping it
+			if fMouseMoved and focused:canReceiveInput(false) and focused._mouseInputMode ~= "ignore" then
 				-- Viewports in CanvasLayers all rely on the RootNode's Viewport, no matter what
 				-- Make the points relative to the Viewport the Control belongs to
 				local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
