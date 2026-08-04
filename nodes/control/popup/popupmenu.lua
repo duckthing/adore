@@ -51,10 +51,9 @@ function PopupMenu:setItems(items)
 	local totalItems = #items
 	local minWidth = 0
 	local minHeight = font:getHeight() * totalItems
-
-	if totalItems > 1 then
-		minHeight = minHeight + margin * (totalItems - 1)
-	end
+		-- TODO: This should be (totalItems - 1), but it seems to clip off the end of the PopupMenu
+		+ margin * totalItems
+		+ padding * 2
 
 	-- Get the width required to fit all items
 	for i = 1, #items do
@@ -67,7 +66,7 @@ function PopupMenu:setItems(items)
 		end
 	end
 
-	self:setMinimumSize(minWidth + padding * 2, minHeight + padding * 2)
+	self:setMinimumSize(minWidth + padding * 2, minHeight)
 end
 
 function PopupMenu:mousemoved(mx, my)
