@@ -9,6 +9,7 @@ local ceil = math.ceil
 ---@overload fun(items: PopupMenu.Item[]?): PopupMenu
 local PopupMenu = Popup:extend()
 PopupMenu.CLASS_NAME = "PopupMenu"
+PopupMenu._drawPreviousModals = true
 
 ---@class PopupMenu.Item
 ---@field label string?
@@ -69,6 +70,15 @@ function PopupMenu:setItems(items)
 	self:setMinimumSize(minWidth + padding * 2, minHeight)
 end
 
+---Fires the `itemSelected` signal
+---@param itemIndex integer
+function PopupMenu:selectItem(itemIndex)
+	local item = self._items[itemIndex]
+	if item then
+		self.itemSelected:fire(self, itemIndex, item)
+	end
+end
+
 function PopupMenu:mousemoved(mx, my)
 	if not self:doesPointOverlap(mx, my) then return true end
 
@@ -120,7 +130,7 @@ function PopupMenu:mousereleased(mx, my, button)
 
 	-- If it's a separator, do nothing
 	if item.separator then return true end
-	self.itemSelected:fire(self, itemIndex, item)
+	self:selectItem(itemIndex)
 	self:close()
 	return true
 end

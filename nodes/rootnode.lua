@@ -1409,15 +1409,25 @@ end
 
 ---@param modalStack Popup[]
 local function drawModals(modalStack)
-	for i = #modalStack, 1, -1 do
-		local popup = modalStack[i]
-		if popup._drawOnTop then
-			popup:_intModalDraw()
+	local topModal = modalStack[#modalStack]
+	if not topModal then return end
+
+	if topModal._drawOnTop and #modalStack > 1 then
+		-- Get the earliest modal that allows drawing the previous modals
+		for i = #modalStack - 1, 1, -1 do
+			if not modalStack[i]._drawPreviousModals then
+				-- Now draw from here to the end
+				for j = i, #modalStack do
+					local popup = modalStack[j]
+					if popup._drawOnTop then
+						popup:_intModalDraw()
+					end
+				end
+				return
+			end
 		end
-		if not popup._drawPreviousModals then
-			-- Don't draw the other modals
-			return
-		end
+	elseif topModal._drawOnTop then
+		topModal:_intModalDraw()
 	end
 end
 

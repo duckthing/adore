@@ -66,6 +66,10 @@ local nodePaths = {
 			BaseButton = "nodes.control.basebutton",
 				---@type Button
 				Button = "nodes.control.basebutton.button",
+					---@type MenuButton
+					MenuButton = "nodes.control.basebutton.menubutton",
+						---@type DropdownButton
+						DropdownButton = "nodes.control.basebutton.dropdownbutton",
 				---@type TextureButton
 				TextureButton = "nodes.control.basebutton.texturebutton",
 			---@type VBox
