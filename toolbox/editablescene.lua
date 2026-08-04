@@ -37,8 +37,10 @@ function EScene:new(root)
 	self._running = false
 	---@type string? # The error message from the last method call
 	self._errorMessage = nil
-	---@type string? # What file this EditableScene came from, and will be saved to
-	self._filepath = nil
+	---@type string? # The last file path this EditableScene interacted with
+	self._lastFilepath = nil
+	---@type "lua" | "binary" | nil # The last format this was saved in
+	self._lastFormat = nil
 end
 
 function EScene:_setCanonRect(x, y, w, h)
@@ -75,7 +77,7 @@ function EScene:changeSceneTo(scene)
 	self:pushSubroot()
 	local sceneType = type(scene)
 	if sceneType == "string" then
-		self._filepath = scene:gsub("%.", "/")..".lua"
+		self._lastFilepath = scene:gsub("%.", "/")..".lua"
 		self.subroot:changeSceneTo(require(scene))
 	elseif sceneType == "table" then
 		self.subroot:changeSceneTo(scene)

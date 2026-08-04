@@ -14,6 +14,8 @@ local Label = Nodes("Label")
 local PopupMenu = Nodes("PopupMenu")
 local WindowPopup = Nodes("WindowPopup")
 local LineEdit = Nodes("LineEdit")
+local MenuButton = Nodes("MenuButton")
+local DropdownButton = Nodes("DropdownButton")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -113,21 +115,13 @@ function MainWindow:new(toolbox, subroot)
 
 	for i = 1, #menuActions do
 		local action = menuActions[i]
-		local button = Button(action[1])
+		local button = MenuButton(action[1], nil, action[2])
 			:setAnchorsAndOffsets(
 				0, 0, 0, 1,
 				0, 0, 60, 0
 			)
-			:setVariant("flat")
-		local popupMenu = PopupMenu(action[2])
-			:setAnchors(0, 1, 0, 1)
-		button:addChild(popupMenu)
 
-		button.clicked:connectCallable(function(...)
-			popupMenu:popup()
-		end)
-
-		popupMenu.itemSelected:connectCallable(function(_, itemIndex, item)
+		button:getPopupMenu().itemSelected:connectCallable(function(_, itemIndex, item)
 			local f = item.func
 			if f then f(self) end
 		end)
@@ -289,8 +283,9 @@ function MainWindow:saveScene()
 	if not srContainer then return false end
 	local child = srContainer.subroot._instancedScene
 	if not child then return false end
-	local savePath = srContainer._filepath
-	if not savePath then return self:saveSceneAs() or false end
+	local savePath = srContainer._lastFilepath
+	local format = srContainer._lastFormat
+	if not savePath or not format then return self:saveSceneAs() or false end
 
 	-- Create the directories, and error early if we can't open that file
 	local NativeFS = Adore.Libraries("NativeFS")
@@ -302,16 +297,22 @@ function MainWindow:saveScene()
 	end
 
 	-- Pack the scene object
-	local ObjectSaver = Adore.Common("ObjectSaver")
-	local TableScene = Adore.Resources("TableScene")
-	local tableScene = TableScene()
-	tableScene:pack(child)
+	---@type SceneFactory
+	local scene
+	if format == "lua" then
+		local TableScene = Adore.Resources("TableScene")
+		scene = TableScene()
+	else
+		local PackedScene = Adore.Resources("PackedScene")
+		scene = PackedScene()
+	end
+	scene:pack(child)
 
 	-- Write to the file
-	local success, err = ObjectSaver.saveToFile(file, tableScene, "lua")
+	local ObjectSaver = Adore.Common("ObjectSaver")
+	local success, err = ObjectSaver.saveToFile(file, scene, format)
 	if success then
 		print("Written to path:", savePath)
-		srContainer._filepath = savePath
 	else
 		-- Errored
 		print(err)
@@ -330,7 +331,7 @@ function MainWindow:saveSceneAs()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -60, 90, 60
+		-90, -75, 90, 75
 	)
 
 	window:getTitleLabel():setText("Save to...")
@@ -349,20 +350,34 @@ function MainWindow:saveSceneAs()
 
 	-- == File path LineEdit
 	local pathField = LineEdit(
-		srContainer._filepath
-		or ("scenes/%s.lua"):format(tostring(child):lower())
-	)
-	pathField:setAnchors(0, 0, 1, 0)
+			srContainer._lastFilepath
+			or ("scenes/%s.lua"):format(tostring(child):lower())
+		)
+		:setAnchors(0, 0, 1, 0)
 		:setAlign("right")
 	vbox:addChild(pathField)
 
+	-- == File format Label
+	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
+
+	-- == File format DropdownButton
+	local dropdown = DropdownButton(nil, {{label = "lua"}, {label = "binary"}})
+	dropdown:setAnchorsAndOffsets(
+		0, 0, 1, 0,
+		0, 0, 0, 20
+	)
+	dropdown:getPopupMenu():selectItem(srContainer._lastFormat == "binary" and 2 or 1)
+	vbox:addChild(dropdown)
+
+	-- Add those fields
 	window:addChild(vbox)
 
 	-- Connect events
 	window:addAction("Cancel").clicked:connect(window, "close")
 	local save = window:addAction("Save")
 	save.clicked:connectCallable(function(...)
-		srContainer._filepath = pathField._submittedText
+		srContainer._lastFilepath = pathField._submittedText
+		srContainer._lastFormat = dropdown._selectedItem.label
 		if self:saveScene() then window:close() end
 	end)
 
