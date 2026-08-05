@@ -47,6 +47,10 @@ local menuActions = {
 	{
 		"Scene",
 		{
+			{label = "New Scene", func = function(window)
+				---@cast window Toolbox.MainWindow
+				window:newScene()
+			end},
 			{label = "Save Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
 				window:saveScene()
@@ -277,6 +281,16 @@ function MainWindow:reloadScene()
 	srContainer:handleOnSubroot("reloadCurrentScene")
 end
 
+---Creates an empty EditableScene and selects it
+function MainWindow:newScene()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return false end
+	local eScene = EditableScene()
+	eScene:createSubroot()
+	self.tabContainer:addChild(eScene)
+	self.tabContainer:selectTab(eScene)
+end
+
 ---Saves the scene of the current tab, if it has its filepath set
 ---@return boolean success
 function MainWindow:saveScene()
@@ -353,7 +367,10 @@ function MainWindow:saveSceneAs()
 			srContainer._lastFilepath
 			or ("scenes/%s.lua"):format(tostring(child):lower())
 		)
-		:setAnchors(0, 0, 1, 0)
+		:setAnchorsAndOffsets(
+			0, 0, 1, 0,
+			0, 0, 0, 22
+		)
 		:setAlign("right")
 	vbox:addChild(pathField)
 
@@ -413,7 +430,10 @@ function MainWindow:loadScene()
 
 	-- == File path LineEdit
 	local pathField = LineEdit(srContainer and srContainer._lastFilepath or "scenes/myScene.lua")
-		:setAnchors(0, 0, 1, 0)
+		:setAnchorsAndOffsets(
+			0, 0, 1, 0,
+			0, 0, 0, 22
+		)
 		:setAlign("right")
 	vbox:addChild(pathField)
 

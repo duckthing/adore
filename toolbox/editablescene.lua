@@ -63,7 +63,7 @@ end
 function EScene:createSubroot()
 	self:pushSubroot()
 	self.subroot = RootNode({
-		-- pixelScale = 2,
+		hideSceneWarning = true,
 		drawControlDebug = true,
 		physicsWorld = love.physics.newWorld(),
 		ownsPhysicsWorld = true,
