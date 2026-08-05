@@ -6,6 +6,7 @@ local ffi = Adore.Common("ffilib")
 
 local ClassDB = Adore.Common("ClassDB")
 local Serpent = Adore.Libraries("Serpent")
+local JSON = Adore.Libraries("JSON")
 local Properties = require "data.properties"
 
 ---@class ObjectSaver
@@ -14,6 +15,7 @@ local ObjectSaver = {}
 ---@alias ObjectSaver.Format
 ---| "binary" # A binary format
 ---| "lua" # A plain-text format in valid Lua syntax
+---| "json" # A common plain-text format
 
 -- http://stackoverflow.com/questions/9137415
 ---@param str string
@@ -32,6 +34,16 @@ local function tohex(str)
 	end))
 end
 
+---Guesses a file format from a path
+---@param path string
+---@return ObjectSaver.Format? format
+local function guessFormatFromPath(path)
+	local extension = path:match("^.+(%..+)$")
+	if extension == "json" or extension == "lua" then
+		return extension
+	end
+end
+
 local STRING_MAGIC_NUMBER = fromhex("AD0430B7") -- "AdoreObj"
 local EMPTY_ARR = {}
 local SERPENT_OPTIONS = {nocode = true, comment = false}
@@ -43,7 +55,7 @@ end
 
 ---@type string.buffer
 local tbuffer
-local DEFAULT_FORMAT = "lua"
+local DEFAULT_FORMAT = "json"
 if StringBuffer then
 	---@diagnostic disable-next-line: undefined-field
 	tbuffer = StringBuffer.new()
@@ -564,6 +576,17 @@ local saveFormatHandler = {
 		local _, err = file:write(Serpent.dump(array, SERPENT_OPTIONS))
 		return err
 	end,
+
+	json = function(file, object)
+		local array = {}
+		local resources = ObjectSaver.serializeObjectToArray(object, array)
+		array[#array+1] = resources
+		local val, err = JSON.encode(array)
+		if val then
+			_, err = file:write(val)
+		end
+		return err
+	end
 }
 
 ---Saves this `Object` into a `love.File`. Pick a format with the `format` parameter, which is binary by default.
@@ -611,7 +634,12 @@ end
 ---@return boolean success
 ---@return string? error
 function ObjectSaver.saveToFilePath(path, object, format)
-	local file = love.filesystem.newFile(path, "w")
+	local file, err = love.filesystem.newFile(path, "w")
+	if not file then
+		return false, err
+	end
+	if not format then format = guessFormatFromPath(path) end
+
 	local ok, err = ObjectSaver.saveToFile(file, object, format)
 	file:release()
 	return ok, err
@@ -803,6 +831,32 @@ local loadFormatHandler = {
 		ObjectSaver.setDeferredProperties(obj, deferredProperties, resources)
 		return obj, err
 	end,
+
+	json = function(file, requestedClassName, canInherit)
+		local contents = file:read("string")
+		file:close()
+
+		---@cast contents string
+		local array, err = JSON.decode(contents)
+		if not array then
+			return nil, ("Failed to deserialize JSON: %s"):format(err)
+		end
+
+		local obj, deferredProperties
+		err, obj, deferredProperties = ObjectSaver.deserializeObjectFromArray(
+			array[1], array[2], -- The header and body
+			requestedClassName, canInherit
+		)
+
+		if err then
+			return nil, err
+		end
+
+		---@cast obj Object
+		local resources = array[3]
+		ObjectSaver.setDeferredProperties(obj, deferredProperties, resources)
+		return obj, err
+	end,
 }
 
 ---Opens, deserializes a serialized `Object` from the `File` object, and returns it
@@ -858,6 +912,7 @@ function ObjectSaver.loadFromFilePath(path, format, requestedClassName, canInher
 	if not file then
 		return nil, err
 	end
+	if not format then format = guessFormatFromPath(path) end
 
 	local obj
 	---@diagnostic disable-next-line: cast-local-type
