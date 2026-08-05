@@ -63,8 +63,6 @@ function LineEdit:new(text)
 	self._textBatch = love.graphics.newText(self._font[self._fontSize], self._text)
 	---@type love.Text # The drawn placeholder text batch
 	self._placeholderTextBatch = love.graphics.newText(self._font[self._fontSize], self._placeholderText)
-	---@type number # The minimum size is equal to this added to the font height
-	self._minimumPadding = 4
 
 	self.textSubmitted = self:newSignal()
 	self.textChanged = self:newSignal()
@@ -73,7 +71,7 @@ end
 
 function LineEdit:getMinimumSize()
 	local minW, minH = LineEdit.super.getMinimumSize(self)
-	return minW, max(minH, self._textBatch:getFont():getHeight() + self._minimumPadding * 2)
+	return minW, max(minH, self._textBatch:getFont():getHeight())
 end
 
 function LineEdit:submit()
