@@ -691,7 +691,7 @@ local loadFormatHandler = {
 		do
 			local contents, _ = file:read(#STRING_MAGIC_NUMBER)
 			if contents ~= STRING_MAGIC_NUMBER then
-				-- Magic number match, exit
+				-- Magic number doesn't match, exit
 				file:close()
 				return nil, ("Invalid Adore Object (magic number does not match) (%s ~= %s)"):format(contents, STRING_MAGIC_NUMBER)
 			end
