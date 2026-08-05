@@ -3,6 +3,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
+local ObjectSaver = Adore.Common("ObjectSaver")
 
 local Control = Nodes("Control")
 local TabContainer = Nodes("TabContainer")
@@ -309,7 +310,6 @@ function MainWindow:saveScene()
 	scene:pack(child)
 
 	-- Write to the file
-	local ObjectSaver = Adore.Common("ObjectSaver")
 	local success, err = ObjectSaver.saveToFile(file, scene, format)
 	if success then
 		print("Written to path:", savePath)
@@ -331,7 +331,7 @@ function MainWindow:saveSceneAs()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -75, 90, 75
+		-90, -76, 90, 76
 	)
 
 	window:getTitleLabel():setText("Save to...")
@@ -388,17 +388,76 @@ end
 
 ---Loads the scene and opens it
 function MainWindow:loadScene()
-	local ObjectSaver = Adore.Common("ObjectSaver")
-	local obj, err = ObjectSaver.loadFromFilePath("myScene.lua", "lua", "SceneFactory", true)
-	if obj then
-		local eScene = EditableScene()
-		eScene:createSubroot()
-		eScene:changeSceneTo(obj)
-		self.tabContainer:addChild(eScene)
-	else
-		print(err)
-		return
-	end
+	local srContainer = self:getSubrootContainer()
+
+	-- Create the popup
+	local window = WindowPopup()
+	window:setAnchorsAndOffsets(
+		0.5, 0.5, 0.5, 0.5,
+		-90, -76, 90, 76
+	)
+
+	window:getTitleLabel():setText("Load scene...")
+
+	local vbox = VBox()
+	vbox:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 10, -10, 0
+		)
+		:setResizeToContent(true)
+		:setMargin(4)
+
+	-- Create the fields
+	-- == File path Label
+	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
+
+	-- == File path LineEdit
+	local pathField = LineEdit(srContainer and srContainer._lastFilepath or "scenes/myScene.lua")
+		:setAnchors(0, 0, 1, 0)
+		:setAlign("right")
+	vbox:addChild(pathField)
+
+	-- == File format Label
+	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
+
+	-- == File format DropdownButton
+	local dropdown = DropdownButton(nil, {{label = "lua"}, {label = "binary"}})
+	dropdown:setAnchorsAndOffsets(
+		0, 0, 1, 0,
+		0, 0, 0, 20
+	)
+	dropdown:getPopupMenu():selectItem(srContainer and srContainer._lastFormat == "binary" and 2 or 1)
+	vbox:addChild(dropdown)
+
+	-- Add those fields
+	window:addChild(vbox)
+
+	-- Connect events
+	window:addAction("Cancel").clicked:connect(window, "close")
+	local save = window:addAction("Save")
+	save.clicked:connectCallable(function(...)
+		local path = pathField._submittedText
+		local format = dropdown._selectedItem.label
+
+		local scene, err = ObjectSaver.loadFromFilePath(path, format, "SceneFactory", true)
+		if scene then
+			-- Create the scene and add the tab
+			local eScene = EditableScene()
+			eScene:createSubroot()
+			eScene:changeSceneTo(scene)
+			eScene._lastFilepath = path
+			eScene._lastFormat = format
+			self.tabContainer:addChild(eScene)
+			self.tabContainer:selectTab(eScene)
+			window:close()
+		else
+			print(err)
+		end
+	end)
+
+	-- Show the popup
+	self:addChild(window)
+	window:popup()
 end
 
 return MainWindow
