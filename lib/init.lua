@@ -16,6 +16,7 @@ local libraryPaths = {
 	InputField = "lib.inputfield",
 	---@type Flux
 	Flux = "lib.flux",
+	---@type NativeFS
 	NativeFS = "lib.nativefs",
 	Shash = "lib.shash",
 	---@type TinyTOML
@@ -23,6 +24,8 @@ local libraryPaths = {
 	Serpent = "lib.serpent",
 	RTA = "lib.runtimeatlas",
 	Expression = "lib.expression",
+	---@type JSON
+	JSON = "lib.json",
 }
 Libraries = LazyRequire(libraryPaths, true)
 end
