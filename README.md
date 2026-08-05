@@ -215,7 +215,7 @@ I do not have the ability to test Android, iOS, and Mac right now.
 ## Acknowledgments
 These projects are used within Adore (inside `./lib`). You are also required to acknowledge them in your projects.
 
-* classic, flux, and shash.lua (by *rxi*, MIT)
+* classic, flux, json.lua, and shash.lua (by *rxi*, MIT)
 * nativefs (by *megagrump*, MIT)
 * tinytoml (by *FourierTransformer*, MIT)
 * numberlua (by *David Manura*, MIT)
