@@ -314,12 +314,12 @@ function MainWindow:saveScene()
 	-- Pack the scene object
 	---@type SceneFactory
 	local scene
-	if format == "lua" then
-		local TableScene = Adore.Resources("TableScene")
-		scene = TableScene()
-	else
+	if format == "binary" then
 		local PackedScene = Adore.Resources("PackedScene")
 		scene = PackedScene()
+	else
+		local TableScene = Adore.Resources("TableScene")
+		scene = TableScene()
 	end
 	scene:pack(child)
 
@@ -365,7 +365,7 @@ function MainWindow:saveSceneAs()
 	-- == File path LineEdit
 	local pathField = LineEdit(
 			srContainer._lastFilepath
-			or ("scenes/%s.lua"):format(tostring(child):lower())
+			or ("scenes/%s.json"):format(tostring(child):lower())
 		)
 		:setAnchorsAndOffsets(
 			0, 0, 1, 0,
@@ -378,7 +378,7 @@ function MainWindow:saveSceneAs()
 	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
 
 	-- == File format DropdownButton
-	local dropdown = DropdownButton(nil, {{label = "lua"}, {label = "binary"}})
+	local dropdown = DropdownButton(nil, {{label = "json"}, {label = "lua"}, {label = "binary"}})
 	dropdown:setAnchorsAndOffsets(
 		0, 0, 1, 0,
 		0, 0, 0, 20
@@ -429,7 +429,7 @@ function MainWindow:loadScene()
 	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
 
 	-- == File path LineEdit
-	local pathField = LineEdit(srContainer and srContainer._lastFilepath or "scenes/myScene.lua")
+	local pathField = LineEdit(srContainer and srContainer._lastFilepath or "scenes/myscene.json")
 		:setAnchorsAndOffsets(
 			0, 0, 1, 0,
 			0, 0, 0, 22
@@ -441,7 +441,7 @@ function MainWindow:loadScene()
 	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
 
 	-- == File format DropdownButton
-	local dropdown = DropdownButton(nil, {{label = "lua"}, {label = "binary"}})
+	local dropdown = DropdownButton(nil, {{label = "json"}, {label = "lua"}, {label = "binary"}})
 	dropdown:setAnchorsAndOffsets(
 		0, 0, 1, 0,
 		0, 0, 0, 20
@@ -454,7 +454,7 @@ function MainWindow:loadScene()
 
 	-- Connect events
 	window:addAction("Cancel").clicked:connect(window, "close")
-	local save = window:addAction("Save")
+	local save = window:addAction("Load")
 	save.clicked:connectCallable(function(...)
 		local path = pathField._submittedText
 		local format = dropdown._selectedItem.label
