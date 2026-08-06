@@ -52,7 +52,10 @@ local actions = {
 	uiSelectNext = function(context)
 		local root = context.root
 		local focusMode = context.allowTabFocus
-		if root._focusedControl or focusMode == "always" or (focusMode == "withModal" and #root._modalStack > 0) then
+		if (root._focusedControl and root._focusedControl:isVisibleInTree()) -- It exists and isn't destroyed
+			or focusMode == "always" -- Can select something from nothing
+			or (focusMode == "withModal" and #root._modalStack > 0) -- Can select when there's a modal
+		then
 			return context.root:uiSelectNext()
 		end
 		return false
@@ -60,7 +63,10 @@ local actions = {
 	uiSelectPrevious = function(context)
 		local root = context.root
 		local focusMode = context.allowTabFocus
-		if root._focusedControl or focusMode == "always" or (focusMode == "withModal" and #root._modalStack > 0) then
+		if (root._focusedControl and root._focusedControl:isVisibleInTree()) -- It exists and isn't destroyed
+			or focusMode == "always" -- Can select something from nothing
+			or (focusMode == "withModal" and #root._modalStack > 0) -- Can select when there's a modal
+		then
 			return context.root:uiSelectPrevious()
 		end
 		return false

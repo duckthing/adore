@@ -283,10 +283,10 @@ function Node:insertChild(child, index)
 end
 
 ---Returns the index the child is in. Returns `nil` if not found.
----@param child Node
+---@param child Node?
 ---@return integer? index
 function Node:getIndexOfChild(child)
-	if child.parent ~= self then return nil end
+	if not child or child.parent ~= self then return nil end
 	local children = self.children
 	for i = 1, #children do
 		if children[i] == child then return i end
