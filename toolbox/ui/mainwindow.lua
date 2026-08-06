@@ -67,6 +67,10 @@ local menuActions = {
 				---@cast window Toolbox.MainWindow
 				window:reloadScene()
 			end},
+			{label = "Close Scene", func = function(window)
+				---@cast window Toolbox.MainWindow
+				window:closeScene()
+			end},
 		}
 	},
 	{
@@ -283,12 +287,27 @@ end
 
 ---Creates an empty EditableScene and selects it
 function MainWindow:newScene()
-	local srContainer = self:getSubrootContainer()
-	if not srContainer then return false end
+	local tabContainer = self.tabContainer
 	local eScene = EditableScene()
 	eScene:createSubroot()
-	self.tabContainer:addChild(eScene)
-	self.tabContainer:selectTab(eScene)
+
+	local index = (tabContainer:getIndexOfChild(self:getSubrootContainer()) or #tabContainer.children) + 1
+
+	tabContainer:insertChild(eScene, index)
+	tabContainer:selectTab(eScene)
+end
+
+---Closes the current tab
+function MainWindow:closeScene()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local index = self.tabContainer:getIndexOfChild(srContainer)
+	if index then
+		self.tabContainer:removeChildAtIndex(index)
+		if index > 1 then
+			self.tabContainer:selectTab(index - 1)
+		end
+	end
 end
 
 ---Saves the scene of the current tab, if it has its filepath set
@@ -467,6 +486,10 @@ function MainWindow:loadScene()
 			eScene:changeSceneTo(scene)
 			eScene._lastFilepath = path
 			eScene._lastFormat = format
+
+			local fileName = path:match(".*[/\\](.*)$")
+			eScene.name = fileName
+
 			self.tabContainer:addChild(eScene)
 			self.tabContainer:selectTab(eScene)
 			window:close()
