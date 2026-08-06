@@ -241,9 +241,29 @@ end
 function MainWindow:togglePause()
 	local srContainer = self:getSubrootContainer()
 	if srContainer then
-		srContainer._running = not srContainer._running
-		srContainer._errorMessage = nil
-		self:updateButtonTexture()
+		if srContainer:is(GameScene) then
+			srContainer._running = not srContainer._running
+			srContainer._errorMessage = nil
+			self:updateButtonTexture()
+		else
+			local path, format = srContainer._lastFilepath, srContainer._lastFormat
+			if not (path and format) then return self:saveSceneAs() end
+			self:saveScene()
+
+			local gScene = GameScene()
+			gScene:createSubroot()
+
+			local scene, err = ObjectSaver.loadFromFilePath(path, format, "SceneFactory", true)
+
+			if scene then
+				gScene:changeSceneTo(scene)
+				gScene.name = ("Game (%s)"):format(path:match(".*[/\\](.*)$"))
+				self.tabContainer:addChild(gScene)
+				self.tabContainer:selectTab(self.tabContainer:getIndexOfChild(gScene))
+			else
+				print(err)
+			end
+		end
 	end
 end
 
@@ -290,6 +310,7 @@ function MainWindow:newScene()
 	local tabContainer = self.tabContainer
 	local eScene = EditableScene()
 	eScene:createSubroot()
+	eScene.name = "(Empty)"
 
 	local index = (tabContainer:getIndexOfChild(self:getSubrootContainer()) or #tabContainer.children) + 1
 
