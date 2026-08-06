@@ -5,6 +5,7 @@ local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local ObjectSaver = Adore.Common("ObjectSaver")
 
+local Node = Nodes("Node")
 local Control = Nodes("Control")
 local TabContainer = Nodes("TabContainer")
 local VBox = Nodes("VBox")
@@ -186,8 +187,35 @@ function MainWindow:new(toolbox, subroot)
 			:setJustify("center")
 			:setFontSize(16)
 
+		local treeActionBar = HBox()
+			:setAnchorsAndOffsets(
+				0, 0, 1, 0,
+				(label:getMinimumSize()), 0, 0, 30
+			)
+			:setSortMode("end")
+
+		local addNodeButton = Button("Add")
+			:setAnchorsAndOffsets(
+				0, 0, 0, 1,
+				0, 0, 50, 0
+			)
+			:setVariant("flat")
+		addNodeButton.clicked:connect(self, "addNode")
+
+		local extendNodeButton = Button("Extend")
+		extendNodeButton:setAnchorsAndOffsets(
+				0, 0, 0, 1,
+				0, 0, 50, 0
+			)
+			:setVariant("flat")
+		extendNodeButton.clicked:connect(self, "extendNode")
+
+		treeActionBar:addChild(addNodeButton)
+		treeActionBar:addChild(extendNodeButton)
+
 		sceneTreeContainer:addChild(sceneTree)
 		sceneTreeContainer:addChild(label)
+		sceneTreeContainer:addChild(treeActionBar)
 	end
 
 	--======== INSPECTOR
@@ -494,8 +522,8 @@ function MainWindow:loadScene()
 
 	-- Connect events
 	window:addAction("Cancel").clicked:connect(window, "close")
-	local save = window:addAction("Load")
-	save.clicked:connectCallable(function(...)
+	local load = window:addAction("Load")
+	load.clicked:connectCallable(function(...)
 		local path = pathField._submittedText
 		local format = dropdown._selectedItem.label
 
@@ -522,6 +550,74 @@ function MainWindow:loadScene()
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
+end
+
+function MainWindow:addNode()
+	local srContainer = self:getSubrootContainer()
+	print("hai")
+	if not srContainer then return end
+	print("woah")
+	local instanceUnder = self.sceneTree:getSelectedNode() or srContainer.subroot._instancedScene or srContainer.subroot
+
+	-- Create the popup
+	local window = WindowPopup()
+	window:setAnchorsAndOffsets(
+		0.5, 0.5, 0.5, 0.5,
+		-90, -76, 90, 76
+	)
+
+	window:getTitleLabel():setText("Add Node...")
+
+	local vbox = VBox()
+	vbox:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 10, -10, 0
+		)
+		:setResizeToContent(true)
+		:setMargin(4)
+
+	-- Create the fields
+	-- == File path Label
+	vbox:addChild(Label("Class Name"):setAnchors(0, 0, 1, 0))
+
+	-- == File path LineEdit
+	local pathField = LineEdit((instanceUnder ~= srContainer.subroot and instanceUnder.CLASS_NAME) or "Node")
+		:setAnchorsAndOffsets(
+			0, 0, 1, 0,
+			0, 0, 0, 22
+		)
+		:setAlign("right")
+	vbox:addChild(pathField)
+	window:addChild(vbox)
+
+	-- Connect events
+	window:addAction("Cancel").clicked:connect(window, "close")
+	local addButton = window:addAction("Add")
+	addButton.clicked:connectCallable(function(...)
+		local className = pathField._submittedText
+
+		local success, ClassOrErr = pcall(Adore.Nodes, className)
+		if success and ClassOrErr:is(Node) then
+			-- Create the scene and add the tab
+			srContainer:pushSubroot()
+
+			local newNode = ClassOrErr()
+			instanceUnder:addChild(newNode)
+
+			srContainer:popSubroot()
+			self.sceneTree:selectNode(newNode)
+			window:close()
+		else
+			print(ClassOrErr)
+		end
+	end)
+
+	-- Show the popup
+	self:addChild(window)
+	window:popup()
+end
+
+function MainWindow:extendNode()
 end
 
 return MainWindow

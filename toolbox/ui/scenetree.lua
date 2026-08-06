@@ -1,5 +1,6 @@
 local PKG_NAME = ...
 local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
+---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local floor, ceil = math.floor, math.ceil
@@ -160,6 +161,13 @@ function SceneTreeViewer:setStartNode(node)
 		self.startNode = node.subroot
 		self:updateNodes()
 	end
+end
+
+---Returns the pressed Node, if it's visible and valid
+---@return Node?
+function SceneTreeViewer:getSelectedNode()
+	local pressed = self.pressedNode
+	return (pressed and pressed:isVisibleInTree() and pressed) or nil
 end
 
 function SceneTreeViewer:onSubrootPushed()

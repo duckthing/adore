@@ -183,9 +183,9 @@ function EScene:drawErrorIntoViewport()
 end
 
 function EScene:_intDraw()
-	if self:isRunning() then
+	if not self._errorMessage then
 		self:drawRootIntoViewport()
-	elseif self._visible and self._errorMessage then
+	else
 		self:drawErrorIntoViewport()
 	end
 
