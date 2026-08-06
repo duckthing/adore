@@ -349,8 +349,8 @@ function Node2d:onAddedToParent(parent)
 end
 
 function Node2d._addDefinition(entry)
-	entry:newVec2("_position", nil, "setPositionVector")
-	entry:newVec2("_scale", nil, "setScaleVector")
+	entry:newVec2("_position", Vec2(0, 0), "setPositionVector")
+	entry:newVec2("_scale", Vec2(1, 1), "setScaleVector")
 	entry:newNumber("_rotation", 0, nil, nil, nil, "setRotation")
 	entry:newBoolean("_transformRelativeToParent", true, "setRelativeTransform")
 	entry:newColor("albedo")
