@@ -133,7 +133,7 @@ end
 
 ---Sets all the anchors in bulk
 ---@generic T: Control
----@param self T
+---@param self T | Control
 ---@param left number
 ---@param top number
 ---@param right number
@@ -148,7 +148,7 @@ end
 
 ---Sets all the offsets in bulk
 ---@generic T: Control
----@param self T
+---@param self T | Control
 ---@param left number
 ---@param top number
 ---@param right number
@@ -161,9 +161,9 @@ function Control:setOffsets(left, top, right, bottom)
 	return self
 end
 
----Sets all the anchors in bulk
+---Sets all the anchors and offsets in bulk
 ---@generic T: Control
----@param self T
+---@param self T | Control
 ---@param aleft number
 ---@param atop number
 ---@param aright number
@@ -328,7 +328,7 @@ local presets = {
 
 ---Bulk sets the anchor values to a preset, or to all zeros if 'preset' is nil.
 ---@generic T: Control
----@param self T
+---@param self T | Control
 ---@param preset Control.AnchorPreset?
 ---@return T
 function Control:setAnchorPreset(preset)
@@ -419,8 +419,10 @@ end
 
 ---Sets the variant/subclass map of this Control through the name.
 ---When the applied Theme changes, the variant name will be used to get the variation specific to that Theme.
+---@generic T: Control
+---@param self T | Control
 ---@param name string
----@return self
+---@return T
 function Control:setVariant(name)
 	if self._variantName == name then return self end
 	forceSetVariant(self, name)
@@ -440,8 +442,10 @@ end
 
 ---Sets the mouse input filter for this Control.
 ---Make sure the normal input filter is set to receive inputs.
+---@generic T: Control
+---@param self T | Control
 ---@param mode Control.InputFilter
----@return self
+---@return T
 function Control:setMouseInputMode(mode)
 	if self._mouseInputMode ~= mode then
 		self._mouseInputMode = mode
@@ -451,9 +455,11 @@ function Control:setMouseInputMode(mode)
 end
 
 ---Sets the minimum size of the Control, and defers a self refresh if needed
+---@generic T: Control
+---@param self T | Control
 ---@param minSizeX number
 ---@param minSizeY number
----@return self
+---@return T
 function Control:setMinimumSize(minSizeX, minSizeY)
 	local oldMin = self._minimumSize
 	if not oldMin or not oldMin:isEqual(minSizeX, minSizeY) then
@@ -484,8 +490,10 @@ function Control:setMinimumSize(minSizeX, minSizeY)
 end
 
 ---Sets the minimum size of the Control with a Vec2, and defers a self refresh if needed
+---@generic T: Control
+---@param self T | Control
 ---@param minSize Vec2
----@return self
+---@return T
 function Control:setMinimumSizeVec(minSize)
 	self:setMinimumSize(minSize.x, minSize.y)
 	return self
@@ -503,9 +511,11 @@ function Control:getMinimumSize()
 end
 
 ---Sets the maximum size of the Control, and defers a self refresh if needed
+---@generic T: Control
+---@param self T | Control
 ---@param maxSizeX number
 ---@param maxSizeY number
----@return self
+---@return T
 function Control:setMaximumSize(maxSizeX, maxSizeY)
 	local oldMax = self._maximumSize
 	if not oldMax or not oldMax:isEqual(maxSizeX, maxSizeY) then
@@ -536,8 +546,10 @@ function Control:setMaximumSize(maxSizeX, maxSizeY)
 end
 
 ---Sets the maximum size of the Control with a Vec2, and defers a self refresh if needed
+---@generic T: Control
+---@param self T | Control
 ---@param maxSize Vec2
----@return self
+---@return T
 function Control:setMaximumSizeVec(maxSize)
 	self:setMaximumSize(maxSize.x, maxSize.y)
 	return self
@@ -1218,7 +1230,9 @@ function Control:clearChildren(shouldDestroy)
 	self:deferRefresh()
 end
 
----@return self
+---@generic T: Control
+---@param self T | Control
+---@return T
 function Control:setVisible(visible)
 	if self._visible ~= visible then
 		self:deferRefreshSelf()
