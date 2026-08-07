@@ -13,7 +13,7 @@ local HBox = Nodes("HBox")
 ---@overload fun(): WindowPopup
 local WindowPopup = Popup:extend()
 WindowPopup.CLASS_NAME = "WindowPopup"
--- WindowPopup._resizeWithParent = false
+WindowPopup._destroyOnClose = true
 
 ---@type integer # The space the titlebar will take
 WindowPopup._titleHeight = 20
