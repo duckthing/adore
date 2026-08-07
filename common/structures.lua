@@ -423,6 +423,7 @@ end
 
 ---Goes through ourselves and up through the Scene Tree, and returns if the value returned by `forEach` is not nil.
 ---Imagine the Scene Tree in a Tree format, with all groups expanded. It will go 'up' towards neighboring children.
+---The "above" Node will either be the deepest Node in an earlier sibling, the earlier sibling, or the parent.
 ---@param node Node
 ---@param forEach fun(node: Node, ...: unknown): any?
 ---@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns true if the current node is valid to travel to
@@ -437,22 +438,21 @@ function TreeIter:traverseUpwards(node, forEach, currNodeValidator, ...)
 		if result then return result end
 	end
 
-	-- Go to the deepest nodes and see if they have the result
+	-- Get the 'previous' node and continue iterating upwards
 	local parent = node.parent
 	if parent then
-		-- Start 1 index 'above'
-		local indexInParent = parent:getIndexOfChild(node)
-		local parentChildren = parent.children
-		for i = indexInParent - 1, 1, -1 do
-			local currNode = parentChildren[i]
-			currNode = currNode:getDeepestNode() or currNode
-
-			local result = self:traverseUpwards(currNode, forEach, currNodeValidator, ...)
-			if result then return result end
+		local ownIndex = parent:getIndexOfChild(node)
+		if ownIndex == 1 then
+			-- We are the earliest child, iterate with the parent
+			return self:traverseUpwards(parent, forEach, currNodeValidator, ...)
+		else
+			-- Get the previous sibling, and continue iterating with either its
+			-- deepest node or itself
+			local previousNode = parent.children[ownIndex - 1]
+			return self:traverseUpwards(
+				previousNode:getDeepestNode() or previousNode,
+			forEach, currNodeValidator, ...)
 		end
-
-		local result = self:traverseUpwards(parent, forEach, currNodeValidator, ...)
-		if result then return result end
 	end
 
 	-- Not the result
