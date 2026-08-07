@@ -554,9 +554,7 @@ end
 
 function MainWindow:addNode()
 	local srContainer = self:getSubrootContainer()
-	print("hai")
 	if not srContainer then return end
-	print("woah")
 	local instanceUnder = self.sceneTree:getSelectedNode() or srContainer.subroot._instancedScene or srContainer.subroot
 
 	-- Create the popup
