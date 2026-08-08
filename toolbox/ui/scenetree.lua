@@ -167,7 +167,7 @@ end
 ---@return Node?
 function SceneTreeViewer:getSelectedNode()
 	local pressed = self.pressedNode
-	return (pressed and pressed:isVisibleInTree() and pressed) or nil
+	return (pressed and pressed._valid and pressed) or nil
 end
 
 function SceneTreeViewer:onSubrootPushed()

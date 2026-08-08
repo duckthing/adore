@@ -27,11 +27,15 @@ local Assets = require(ADORE_PATH..".toolbox.assets")
 local EditableScene = require(ADORE_PATH..".toolbox.editablescene")
 ---@type Toolbox.GameScene
 local GameScene = require(ADORE_PATH..".toolbox.gamescene")
+local Templates = require(ADORE_PATH..".toolbox.scripttemplates")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
 local MainWindow = Control:extend()
 MainWindow.CLASS_NAME = "MainWindow"
+
+local FORMAT_OPTIONS = {{label = "json"}, {label = "lua"}, {label = "binary"}}
+local SCRIPT_OPTIONS = {{label = "Normal", template = "normal"}, {label = "No comments", template = "noComments"}}
 
 local gameActions = {
 	{
@@ -329,7 +333,9 @@ end
 function MainWindow:reloadScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	srContainer._running = true
+	if srContainer:is(GameScene) then
+		srContainer._running = true
+	end
 	srContainer:handleOnSubroot("reloadCurrentScene")
 end
 
@@ -446,7 +452,7 @@ function MainWindow:saveSceneAs()
 	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
 
 	-- == File format DropdownButton
-	local dropdown = DropdownButton(nil, {{label = "json"}, {label = "lua"}, {label = "binary"}})
+	local dropdown = DropdownButton(nil, FORMAT_OPTIONS)
 	dropdown:setAnchorsAndOffsets(
 		0, 0, 1, 0,
 		0, 0, 0, 20
@@ -509,7 +515,7 @@ function MainWindow:loadScene()
 	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
 
 	-- == File format DropdownButton
-	local dropdown = DropdownButton(nil, {{label = "json"}, {label = "lua"}, {label = "binary"}})
+	local dropdown = DropdownButton(nil, FORMAT_OPTIONS)
 	dropdown:setAnchorsAndOffsets(
 		0, 0, 1, 0,
 		0, 0, 0, 20
@@ -561,10 +567,10 @@ function MainWindow:addNode()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -76, 90, 76
+		-90, -56, 90, 56
 	)
 
-	window:getTitleLabel():setText("Add Node...")
+	window:getTitleLabel():setText("Add node...")
 
 	local vbox = VBox()
 	vbox:setAnchorsAndOffsets(
@@ -575,10 +581,10 @@ function MainWindow:addNode()
 		:setMargin(4)
 
 	-- Create the fields
-	-- == File path Label
+	-- == Class name Label
 	vbox:addChild(Label("Class Name"):setAnchors(0, 0, 1, 0))
 
-	-- == File path LineEdit
+	-- == Class name LineEdit
 	local pathField = LineEdit((instanceUnder ~= srContainer.subroot and instanceUnder.CLASS_NAME) or "Node")
 		:setAnchorsAndOffsets(
 			0, 0, 1, 0,
@@ -603,6 +609,7 @@ function MainWindow:addNode()
 			instanceUnder:addChild(newNode)
 
 			srContainer:popSubroot()
+			self.sceneTree:updateNodes()
 			self.sceneTree:selectNode(newNode)
 			window:close()
 		else
@@ -616,6 +623,134 @@ function MainWindow:addNode()
 end
 
 function MainWindow:extendNode()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local selectedNode = self.sceneTree:getSelectedNode()
+	if not (selectedNode and selectedNode:is(Node)) then return end
+
+	-- Create the popup
+	local window = WindowPopup()
+	window:setAnchorsAndOffsets(
+		0.5, 0.5, 0.5, 0.5,
+		-90, -121, 90, 121
+	)
+
+	window:getTitleLabel():setText("Extend node...")
+
+	local vbox = VBox()
+	vbox:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 10, -10, 0
+		)
+		:setResizeToContent(true)
+		:setMargin(4)
+
+	-- Create the fields
+	-- == Class name Label
+	vbox:addChild(Label("Base Class Name"):setAnchors(0, 0, 1, 0))
+
+	-- == Class name LineEdit
+	local baseClassField = LineEdit(selectedNode.CLASS_NAME)
+		:setAnchorsAndOffsets(
+			0, 0, 1, 0,
+			0, 0, 0, 22
+		)
+		:setAlign("right")
+	vbox:addChild(baseClassField)
+
+	-- == New class name Label
+	vbox:addChild(Label("New Class Name"):setAnchors(0, 0, 1, 0))
+
+	-- == New class name LineEdit
+	local newClassField = LineEdit("New"..((selectedNode ~= srContainer.subroot and selectedNode.CLASS_NAME) or "Node"))
+		:setAnchorsAndOffsets(
+			0, 0, 1, 0,
+			0, 0, 0, 22
+		)
+		:setAlign("right")
+	vbox:addChild(newClassField)
+
+	-- == Script template Label
+	vbox:addChild(Label("Template"):setAnchors(0, 0, 1, 0))
+
+	-- == Script template DropdownButton
+	local dropdown = DropdownButton(nil, SCRIPT_OPTIONS)
+	dropdown:setAnchorsAndOffsets(
+		0, 0, 1, 0,
+		0, 0, 0, 20
+	)
+	dropdown:getPopupMenu():selectItem(1)
+	vbox:addChild(dropdown)
+
+	-- == New class path Label
+	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
+
+	-- == New class path LineEdit
+	local pathField = LineEdit(("src/nodes/%s.lua"):format(newClassField._text:lower()))
+		:setAnchorsAndOffsets(
+			0, 0, 1, 0,
+			0, 0, 0, 22
+		)
+		:setAlign("right")
+	vbox:addChild(pathField)
+	window:addChild(vbox)
+
+	-- Connect events
+	window:addAction("Cancel").clicked:connect(window, "close")
+	local extendButton = window:addAction("Extend")
+	extendButton.clicked:connectCallable(function(...)
+		local baseClassName = baseClassField._submittedText
+		local newClassName = newClassField._submittedText
+		local savePath = pathField._submittedText
+
+		-- Check if the base class exists
+		local success, baseClassOrErr = pcall(Adore.Any, baseClassName)
+		if not success then print(baseClassOrErr) return end
+		-- Check if the new class DOESN'T exist
+		local err
+		success, err = pcall(Adore.Any, newClassName)
+		if success then print(("Class '%s' already exists"):format(newClassField)) return end
+
+		-- Create the directories and open the file
+		local NativeFS = Adore.Libraries("NativeFS")
+		if NativeFS.getInfo(savePath) then
+			print(("Location '%s' is not empty"):format(savePath))
+			return
+		end
+
+		NativeFS.createDirectory(savePath:match("(.*)[/\\].*$"))
+		local file = NativeFS.newFile(savePath)
+		if not (file:isOpen() or file:open("w") or file:getMode() == "w") then
+			print("Can't open file")
+			return false
+		end
+
+		local dropdownOption = dropdown:getSelectedItem().template
+		if baseClassOrErr:is(Adore.Nodes("Physical2d")) then
+			-- Get a different template for Physical2d
+			dropdownOption = dropdownOption.."Physical2d"
+		end
+
+		local template = Templates[dropdownOption]
+
+		local symbols = {
+			BASE = baseClassName,
+			NEW = newClassName,
+			ADOREPATH = Adore.PATH
+		}
+		local newSource = template:gsub("%$(%u*)", function(match)
+			return symbols[match] or error(match)
+		end)
+
+		success, err = file:write(newSource)
+		if not success then print(err) return end
+
+		window:close()
+	end)
+
+	-- Show the popup
+	self:addChild(window)
+	window:popup()
 end
 
 return MainWindow
