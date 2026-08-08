@@ -18,6 +18,12 @@ function DropdownButton:new(icon, items)
 	self:getPopupMenu().itemSelected:connect(self, "_onPopupMenuItemSelected", false, false)
 end
 
+---Returns the last selected item
+---@return PopupMenu.Item?
+function DropdownButton:getSelectedItem()
+	return self._selectedItem
+end
+
 function DropdownButton:_onPopupMenuItemSelected(_, itemIndex, item)
 	if item ~= self._selectedItem then
 		self:setText(item.label or "")
