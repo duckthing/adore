@@ -1,5 +1,6 @@
 local PKG_NAME = ...
 local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
+---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
