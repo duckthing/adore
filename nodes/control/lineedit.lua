@@ -45,11 +45,15 @@ function LineEdit:new(text)
 	self._align = "left"
 	---@type Label.JustifyMode # The vertical placement of the field
 	self._justify = "center"
+	---@type boolean # If the field can be edited
+	self._editable = true
 
 	---@type boolean # When submitting an empty field, should we use the placeholder value?
 	self._usePlaceholderOnEmptySubmit = false
 	---@type "default" | "left" | "right" # Where the cursor is placed when the LineEdit is focused
-	self._moveWhenFocused = "default"
+	self._focusedPosition = "default"
+	---@type "default" | "left" | "right" # Where the cursor is placed when the LineEdit is unfocused
+	self._unfocusedPosition = "default"
 	---@type boolean # When focusing via keyboard, should we select all the text?
 	self._selectAllOnKeyboardFocus = true
 	---@type boolean # When focusing via mouse, should we select all the text?
@@ -142,21 +146,14 @@ function LineEdit:setPlaceholderText(text)
 	return self
 end
 
----Sets the vertical placement of the field
----@param justify Label.JustifyMode
-function LineEdit:setJustify(justify)
-	if self._justify ~= justify then
-		self._justify = justify
-		self:deferRefreshSelf()
-	end
-	return self
-end
-
 ---If unfocused, draws the most relevant text
 ---@param self LineEdit
 local function setFieldUnfocusedAlignment(self)
 	local field = self._inputField
-	if self._align ~= "right" then
+	local position = self._unfocusedPosition
+	if position == "default" then position = self._align end
+
+	if position ~= "right" then
 		field:setCursor(0)
 	else
 		field:setCursor(#field:getText())
@@ -173,6 +170,26 @@ function LineEdit:setAlign(align)
 			setFieldUnfocusedAlignment(self)
 		end
 		self:deferRefreshSelf()
+	end
+	return self
+end
+
+---Sets the vertical placement of the field
+---@param justify Label.JustifyMode
+function LineEdit:setJustify(justify)
+	if self._justify ~= justify then
+		self._justify = justify
+		self:deferRefreshSelf()
+	end
+	return self
+end
+
+---Sets whether the field can be edited
+---@param editable boolean
+function LineEdit:setEditable(editable)
+	if self._editable ~= editable then
+		self._editable = editable
+		self._inputField:setEditable(editable)
 	end
 	return self
 end
@@ -269,7 +286,7 @@ end
 
 function LineEdit:uiFocused(isMouse)
 	LineEdit.super.uiFocused(self, isMouse)
-	local placement = self._moveWhenFocused
+	local placement = self._focusedPosition
 	local inputField = self._inputField
 
 	if (not isMouse and self._selectAllOnKeyboardFocus) or (isMouse and self._selectAllOnMouseFocus) then
@@ -325,6 +342,28 @@ end
 function LineEdit._addDefinition(entry)
 	entry:newString("_text", "", nil, nil, "setText")
 	entry:newString("_placeholderText", "", nil, nil, "setPlaceholderText")
+	entry:newInteger("_fontSize", 0, nil, nil, nil, "setFontSize")
+	local alignMap = {
+		left = true,
+		center = true,
+		right = true,
+		justify = true,
+	}
+	entry:newEnum("_align", alignMap, "left", "setAlign")
+	local justifyMap = {
+		top = true,
+		center = true,
+		bottom = true,
+	}
+	entry:newEnum("_justify", justifyMap, "top", "setJustify")
+	entry:newBoolean("_editable", true, "setEditable")
+	local focusPositions = {
+		default = true,
+		left = true,
+		right = true,
+	}
+	entry:newEnum("_focusedPosition", focusPositions, "default")
+	entry:newEnum("_unfocusedPosition", focusPositions, "default")
 end
 
 return LineEdit
