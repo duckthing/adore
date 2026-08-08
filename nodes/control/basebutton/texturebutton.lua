@@ -19,9 +19,9 @@ function TextureButton:new(tSource)
 	---@type TextureSource? # The TextureSource used for this TextureButton
 	self._texture = tSource
 
-	---@type integer, integer # The texture offset
+	---@type integer, integer # [Internal] The texture offset
 	self._textureX, self._textureY = 0, 0
-	---@type integer, integer # The texture scale
+	---@type integer, integer # [Internal] The texture scale
 	self._textureScaleX, self._textureScaleY = 1, 1
 end
 
@@ -67,6 +67,19 @@ function TextureButton:setTextureShrink(shrink)
 		self:deferRefreshSelf()
 	end
 	return self
+end
+
+function TextureButton._addDefinition(entry)
+	local stretchModes = {
+		scale = true,
+		tile = true,
+		keep = true,
+		keepCentered = true,
+		keepAspect = true,
+		keepAspectCentered = true,
+	}
+	entry:newEnum("_stretchMode", stretchModes, "keepCentered", "setStretchMode")
+	entry:newBoolean("_allowTextureShrink", true, "setTextureShrink")
 end
 
 return TextureButton

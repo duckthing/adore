@@ -44,9 +44,9 @@ function Button:new(text, icon)
 
 	---@type number # The text offset
 	self._textBatchX, self._textBatchY = 0, 0
-	---@type integer, integer # The texture offset
+	---@type integer, integer # [Internal] The texture offset
 	self._iconX, self._iconY = 0, 0
-	---@type integer, integer # The texture scale
+	---@type integer, integer # [Internal] The texture scale
 	self._iconScale = 1
 
 	created = created + 1
@@ -163,6 +163,21 @@ end
 
 function Button._addDefinition(entry)
 	entry:newString("_text", "", nil, nil, "setText")
+	local alignModes = {
+		left = true,
+		center = true,
+		right = true,
+	}
+	local justifyModes = {
+		top = true,
+		center = true,
+		bottom = true,
+	}
+	entry:newEnum("_textAlign", alignModes, "center", "setTextAlign")
+	entry:newEnum("_iconAlign", alignModes, "center", "setIconAlign")
+	entry:newEnum("_iconJustify", justifyModes, "center", "setIconJustify")
+	entry:newBoolean("_iconExpand", false, "setIconExpand")
+	entry:newInteger("_fontSize", 0, 0, nil, nil, "setFontSize")
 end
 
 return Button

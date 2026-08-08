@@ -196,4 +196,17 @@ function VBox:_vboxWheelMoved(_, y)
 	end
 end
 
+function VBox._addDefinition(entry)
+	entry:newBoolean("_resizeToContent", false, "setResizeToContent")
+	entry:newBoolean("_allowScrolling", true, "setAllowScrolling")
+	local sortModes = {
+		start = true,
+		center = true,
+		["end"] = true,
+	}
+	entry:newEnum("_sortMode", sortModes, "start", "setSortMode")
+	entry:newNumber("_margin", 0, 0, nil, nil, "setMargin")
+	entry:newNumber("_padding", 0, 0, nil, nil, "setPadding")
+end
+
 return VBox
