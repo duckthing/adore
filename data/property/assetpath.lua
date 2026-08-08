@@ -22,7 +22,7 @@ end
 function AssetP:serialize(obj, propertyName, value, resources)
 	if value then
 		local collection = Loader.getCollection(self.collectionName)
-		local _, path = collection:getAssetPath(value)
+		local path, _ = collection:getAssetPath(value)
 
 		if path then
 			return path

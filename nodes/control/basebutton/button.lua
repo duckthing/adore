@@ -177,6 +177,7 @@ function Button._addDefinition(entry)
 	entry:newEnum("_iconAlign", alignModes, "center", "setIconAlign")
 	entry:newEnum("_iconJustify", justifyModes, "center", "setIconJustify")
 	entry:newBoolean("_iconExpand", false, "setIconExpand")
+	entry:newAssetPath("_font", "FontLoader", "", "setFont")
 	entry:newInteger("_fontSize", 0, 0, nil, nil, "setFontSize")
 end
 

@@ -354,15 +354,15 @@ end
 
 ---Gets the AssetID and path for a given asset
 ---@param asset any
----@return AssetID? id
 ---@return string? path
+---@return AssetID? id
 function AssetCollection:getAssetPath(asset)
 	local assets = self.assets
 	for i = 1, #assets do
 		local curr = assets[i]
 		if curr == asset then
 			-- `i` is the AssetID
-			return i, self.idToPath[i]
+			return self.idToPath[i], i
 		end
 	end
 	-- Not found
