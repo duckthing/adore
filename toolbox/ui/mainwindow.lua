@@ -335,8 +335,8 @@ function MainWindow:reloadScene()
 	if not srContainer then return end
 	if srContainer:is(GameScene) then
 		srContainer._running = true
+		srContainer:handleOnSubroot("reloadCurrentScene")
 	end
-	srContainer:handleOnSubroot("reloadCurrentScene")
 end
 
 ---Creates an empty EditableScene and selects it
@@ -370,7 +370,7 @@ end
 function MainWindow:saveScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return false end
-	local child = srContainer.subroot._instancedScene
+	local child = srContainer.subroot.children[1]
 	if not child then return false end
 	local savePath = srContainer._lastFilepath
 	local format = srContainer._lastFormat
@@ -412,7 +412,7 @@ end
 function MainWindow:saveSceneAs()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local child = srContainer.subroot._instancedScene
+	local child = srContainer.subroot.children[1]
 	if not child then return end
 
 	-- Create the popup
@@ -445,7 +445,7 @@ function MainWindow:saveSceneAs()
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
-		:setAlign("right")
+		:setUnfocusedPosition("right")
 	vbox:addChild(pathField)
 
 	-- == File format Label
@@ -508,7 +508,7 @@ function MainWindow:loadScene()
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
-		:setAlign("right")
+		:setUnfocusedPosition("right")
 	vbox:addChild(pathField)
 
 	-- == File format Label
@@ -590,7 +590,7 @@ function MainWindow:addNode()
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
-		:setAlign("right")
+		:setUnfocusedPosition("right")
 	vbox:addChild(pathField)
 	window:addChild(vbox)
 
@@ -600,7 +600,7 @@ function MainWindow:addNode()
 	addButton.clicked:connectCallable(function(...)
 		local className = pathField._submittedText
 
-		local success, ClassOrErr = pcall(Adore.Nodes, className)
+		local success, ClassOrErr = pcall(Adore.Any, className)
 		if success and ClassOrErr:is(Node) then
 			-- Create the scene and add the tab
 			srContainer:pushSubroot()
@@ -655,7 +655,7 @@ function MainWindow:extendNode()
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
-		:setAlign("right")
+		:setUnfocusedPosition("right")
 	vbox:addChild(baseClassField)
 
 	-- == New class name Label
@@ -667,7 +667,7 @@ function MainWindow:extendNode()
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
-		:setAlign("right")
+		:setUnfocusedPosition("right")
 	vbox:addChild(newClassField)
 
 	-- == Script template Label
@@ -691,7 +691,7 @@ function MainWindow:extendNode()
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
-		:setAlign("right")
+		:setUnfocusedPosition("right")
 	vbox:addChild(pathField)
 	window:addChild(vbox)
 

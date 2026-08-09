@@ -59,7 +59,7 @@ function AssetP:showPopup()
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
-		:setAlign("right")
+		:setUnfocusedPosition("right")
 	vbox:addChild(pathField)
 
 	-- Connect events
