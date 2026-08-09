@@ -9,13 +9,13 @@ local Node = Nodes("Node")
 local ViewportContainer = Nodes("ViewportContainer")
 local RootNode = Nodes("RootNode")
 local Viewport = Resources("Viewport")
+local Camera = Nodes("Camera")
 
 ---Not a class, to not pollute with useless suggestions
 ---@class Toolbox.EditableScene: ViewportContainer
 ---@overload fun(root: RootNode?): Toolbox.EditableScene
 local EScene = ViewportContainer:extend()
 EScene.CLASS_NAME = "EditableScene"
-EScene._pauseMode = "never"
 
 do
 	-- Mark this class as something that changes a Viewport
@@ -32,6 +32,13 @@ function EScene:new(root)
 
 	---@type RootNode? # The subroot contained by this scene
 	self.subroot = root
+
+	---@type boolean # If we are using the camera
+	self.cameraActive = true
+	---@type boolean # If we are not drawing with the subroot's Viewports
+	self.directDraw = true
+	---@type Camera # The camera used for the editor
+	self.camera = Camera()
 
 	---@type boolean # Whether this can call `:update`
 	self._running = false
@@ -164,6 +171,90 @@ function EScene:drawRootIntoViewport()
 	end
 end
 
+local oldReplaceTransform = love.graphics.replaceTransform
+local oldOrigin = love.graphics.origin
+local alwaysApplyTransform = nil
+local originOverride = function()
+	oldReplaceTransform(alwaysApplyTransform)
+end
+local replaceTransformOverride = function(...)
+	oldReplaceTransform(alwaysApplyTransform)
+	love.graphics.applyTransform(...)
+end
+
+---@param self Toolbox.EditableScene
+local function drawBackgroundGizmos(self)
+	local thickness = 3 * self.camera._zoom.x
+	local bounds = self._subViewport._boundingBox
+
+	love.graphics.push("all")
+	love.graphics.setLineWidth(thickness)
+	love.graphics.setColor(0, 1, 0, 0.8)
+	love.graphics.line(0, bounds.y, 0, bounds.y + bounds.h)
+	love.graphics.setColor(1, 0, 0, 0.8)
+	love.graphics.line(bounds.x, 0, bounds.x + bounds.w, 0)
+
+	love.graphics.setColor(0.3, 0.3, 0.7, 0.8)
+	love.graphics.rectangle("line", 0, 0, self._subViewport:getDimensions())
+	love.graphics.pop()
+end
+
+---@param self Toolbox.EditableScene
+---@param subroot RootNode
+local function drawDirectSubroot(self, subroot)
+	local layers = subroot._canvasLayers
+
+	-- Change the origin + graphics functions that set it
+	alwaysApplyTransform = self._subViewport._viewportTransform
+	love.graphics.replaceTransform = replaceTransformOverride
+	love.graphics.origin = originOverride
+
+	drawBackgroundGizmos(self)
+	for i = 1, #layers do
+		local layer = layers[i]
+		if layer:isVisibleInTree() then
+			---@cast layer CanvasLayer
+			love.graphics.push("all")
+			layer:_drawChildren()
+			love.graphics.pop()
+		end
+	end
+
+	-- Make the origin normal
+	love.graphics.replaceTransform = oldReplaceTransform
+	love.graphics.origin = oldOrigin
+end
+
+---Updates the Viewport with the drawn contents of the subroot, but skips its own layers
+function EScene:drawDirectRootIntoViewport()
+	local sx, sy, sw, sh = love.graphics.getScissor()
+	love.graphics.push("all")
+	love.graphics.origin()
+	love.graphics.setScissor()
+	self._subViewport:push()
+
+	local subroot = assert(self.subroot)
+	local oldRoot = Node._root
+	Node._root = subroot
+
+	local success, err = xpcall(drawDirectSubroot, handleSubrootError, self, subroot)
+	if not success then
+		print(("Errored while drawing subroot directly:"):format(tostring(self)))
+		print(err)
+
+		self._errorMessage, lastError = lastError
+	end
+
+	Node._root = oldRoot
+
+	self._subViewport:pop()
+	love.graphics.pop()
+	love.graphics.setScissor(sx, sy, sw, sh)
+	if not success then
+		self:drawErrorIntoViewport()
+	end
+end
+
 ---Draws the error message into the Viewport
 function EScene:drawErrorIntoViewport()
 	local sx, sy, sw, sh = love.graphics.getScissor()
@@ -184,7 +275,11 @@ end
 
 function EScene:_intDraw()
 	if not self._errorMessage then
-		self:drawRootIntoViewport()
+		if self.directDraw then
+			self:drawDirectRootIntoViewport()
+		else
+			self:drawRootIntoViewport()
+		end
 	else
 		self:drawErrorIntoViewport()
 	end
@@ -192,6 +287,33 @@ function EScene:_intDraw()
 	self._subViewport:drawFittedContents(self._localContentRect.x, self._localContentRect.y)
 end
 
-function EScene:update(dt) end
+local isDown = love.keyboard.isDown
+local SPEED_PER_SECOND = 500
+function EScene:update(dt)
+	if not self._visible then return end
+	local camera = self.camera
+	local speed = SPEED_PER_SECOND * dt * camera._zoom.x
+	local x, y = 0, 0
+	if isDown("a") then x = x - speed end
+	if isDown("d") then x = x + speed end
+	if isDown("w") then y = y - speed end
+	if isDown("s") then y = y + speed end
+	if isDown("-") then camera._zoom:iMult(1 + (dt * 5)) end
+	if isDown("=") then camera._zoom:iMult(1 - (dt * 5)) end
+
+	local subviewport = assert(self._subViewport)
+	if x ~= 0 or y ~= 0 then
+		camera:translate(x, y)
+	end
+
+	if self.cameraActive and not self._errorMessage then
+		-- subviewport._activeCamera = camera
+		camera:_updateCanvasTransform(self._subViewport:getDimensions())
+		subviewport._viewportTransform:setMatrix(camera:getCanvasTransform():getMatrix())
+	else
+		-- subviewport._activeCamera = nil
+		subviewport._viewportTransform:reset()
+	end
+end
 
 return EScene
