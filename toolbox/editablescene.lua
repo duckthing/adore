@@ -306,6 +306,14 @@ function EScene:update(dt)
 		camera:translate(x, y)
 	end
 
+	local layers = self.subroot._canvasLayers
+	for i = 1, #layers do
+		local layer = layers[i]
+		if layer:ownsViewport() then
+			layer._viewport:performRefreshesUntilDone()
+		end
+	end
+
 	if self.cameraActive and not self._errorMessage then
 		-- subviewport._activeCamera = camera
 		camera:_updateCanvasTransform(self._subViewport:getDimensions())

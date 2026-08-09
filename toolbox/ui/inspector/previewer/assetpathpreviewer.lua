@@ -78,6 +78,7 @@ function AssetP:showPopup()
 	window:addChild(vbox)
 	self:addChild(window)
 	window:popup()
+	pathField:grabFocus(false)
 end
 
 function AssetP:onInput(item)

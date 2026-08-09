@@ -475,6 +475,7 @@ function MainWindow:saveSceneAs()
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
+	pathField:grabFocus(false)
 end
 
 ---Loads the scene and opens it
@@ -556,6 +557,7 @@ function MainWindow:loadScene()
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
+	pathField:grabFocus(false)
 end
 
 function MainWindow:addNode()
@@ -585,20 +587,20 @@ function MainWindow:addNode()
 	vbox:addChild(Label("Class Name"):setAnchors(0, 0, 1, 0))
 
 	-- == Class name LineEdit
-	local pathField = LineEdit((instanceUnder ~= srContainer.subroot and instanceUnder.CLASS_NAME) or "Node")
+	local classField = LineEdit((instanceUnder ~= srContainer.subroot and instanceUnder.CLASS_NAME) or "Node")
 		:setAnchorsAndOffsets(
 			0, 0, 1, 0,
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
-	vbox:addChild(pathField)
+	vbox:addChild(classField)
 	window:addChild(vbox)
 
 	-- Connect events
 	window:addAction("Cancel").clicked:connect(window, "close")
 	local addButton = window:addAction("Add")
 	addButton.clicked:connectCallable(function(...)
-		local className = pathField._submittedText
+		local className = classField._submittedText
 
 		local success, ClassOrErr = pcall(Adore.Any, className)
 		if success and ClassOrErr:is(Node) then
@@ -620,6 +622,7 @@ function MainWindow:addNode()
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
+	classField:grabFocus(false)
 end
 
 function MainWindow:extendNode()
@@ -751,6 +754,7 @@ function MainWindow:extendNode()
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
+	newClassField:grabFocus(false)
 end
 
 return MainWindow
