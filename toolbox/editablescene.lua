@@ -4,6 +4,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Resources = Adore.Resources
+local min, max = math.min, math.max
 
 local Node = Nodes("Node")
 local ViewportContainer = Nodes("ViewportContainer")
@@ -186,14 +187,21 @@ end
 local function drawBackgroundGizmos(self)
 	local thickness = 3 * self.camera._zoom.x
 	local bounds = self._subViewport._boundingBox
+	local left, top, bw, bh = bounds:unpack()
+	local right, bottom = left + bw, top + bh
+	local originX = max(left, min(0, right))
+	local originY = max(top, min(0, bottom))
 
 	love.graphics.push("all")
-	love.graphics.setLineWidth(thickness)
-	love.graphics.setColor(0, 1, 0, 0.8)
-	love.graphics.line(0, bounds.y, 0, bounds.y + bounds.h)
-	love.graphics.setColor(1, 0, 0, 0.8)
-	love.graphics.line(bounds.x, 0, bounds.x + bounds.w, 0)
 
+	-- Draw the X/Y axis
+	love.graphics.setLineWidth(thickness)
+	love.graphics.setColor(0, 1, 0, originX == 0 and 0.8 or 0.6)
+	love.graphics.line(originX, top, originX, bottom)
+	love.graphics.setColor(1, 0, 0, originY == 0 and 0.8 or 0.6)
+	love.graphics.line(left, originY, right, originY)
+
+	-- Draw the Viewport bounds
 	love.graphics.setColor(0.3, 0.3, 0.7, 0.8)
 	love.graphics.rectangle("line", 0, 0, self._subViewport:getDimensions())
 	love.graphics.pop()
