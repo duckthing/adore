@@ -18,6 +18,7 @@ function GScene:new(root)
 	self._running = true
 	self.cameraActive = false
 	self.directDraw = false
+	self.overrideSize = false
 end
 
 return GScene

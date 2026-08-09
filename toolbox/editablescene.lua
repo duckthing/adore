@@ -34,6 +34,11 @@ function EScene:new(root)
 	---@type RootNode? # The subroot contained by this scene
 	self.subroot = root
 
+	---@type boolean # Should the subroot's size be fixed?
+	self.overrideSize = true
+	---@type integer, integer # The overridden size of the Viewport
+	self.overrideW, self.overrideH = 600, 400
+
 	---@type boolean # If we are using the camera
 	self.cameraActive = true
 	---@type boolean # If we are not drawing with the subroot's Viewports
@@ -51,11 +56,23 @@ function EScene:new(root)
 	self._lastFormat = nil
 end
 
+---Handles resizing on the subroot
+function EScene:resizeSubroot(w, h)
+	if not self.overrideSize then
+		self:handleOnSubroot("resize", w, h)
+	else
+		w, h = self.overrideW, self.overrideH
+		if w ~= self.subroot._windowW or h ~= self.subroot._windowH then
+			self:handleOnSubroot("resize", w, h)
+		end
+	end
+end
+
 function EScene:_setCanonRect(x, y, w, h)
 	self._viewportFits = w > 1 and h > 1
 	if self._viewportFits then
 		self:resizeViewport(w, h)
-		self.subroot:resize(self._subViewport:getDimensions())
+		self:resizeSubroot(self._subViewport:getDimensions())
 		self:drawRootIntoViewport()
 	end
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
@@ -203,7 +220,7 @@ local function drawBackgroundGizmos(self)
 
 	-- Draw the Viewport bounds
 	love.graphics.setColor(0.3, 0.3, 0.7, 0.8)
-	love.graphics.rectangle("line", 0, 0, self._subViewport:getDimensions())
+	love.graphics.rectangle("line", 0, 0, self.subroot._windowW, self.subroot._windowH)
 	love.graphics.pop()
 end
 
