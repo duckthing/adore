@@ -108,6 +108,7 @@ end
 
 function Label._addDefinition(entry)
 	entry:newString("_text", "", nil, nil, "setText")
+	entry:newAssetPath("_font", "FontLoader", DEFAULT_FONT, "setFont")
 	entry:newInteger("_fontSize", 0, nil, nil, nil, "setFontSize")
 	local alignMap = {
 		left = true,

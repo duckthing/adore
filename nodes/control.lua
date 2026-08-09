@@ -1274,6 +1274,7 @@ function Control._addDefinition(entry)
 	entry:newString("_currentOriginalSubclass", "normal", nil, nil, "setSubclass")
 	entry:newString("_variantName", "", nil, nil, "setVariant")
 	entry:newColor("albedo")
+	entry:newBoolean("clipChildren", false)
 end
 
 return Control

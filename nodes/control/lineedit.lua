@@ -7,6 +7,11 @@ local max = math.max
 
 local FontLoader = Adore.Loader.getCollection("FontLoader")
 
+---@alias LineEdit.FocusPosition
+---| "default" # Depends on justify
+---| "left"
+---| "right"
+
 ---@class LineEdit: Control
 ---@field super Control
 ---@overload fun(text: string?): LineEdit
@@ -50,9 +55,9 @@ function LineEdit:new(text)
 
 	---@type boolean # When submitting an empty field, should we use the placeholder value?
 	self._usePlaceholderOnEmptySubmit = false
-	---@type "default" | "left" | "right" # Where the cursor is placed when the LineEdit is focused
+	---@type LineEdit.FocusPosition # Where the cursor is placed when the LineEdit is focused
 	self._focusedPosition = "default"
-	---@type "default" | "left" | "right" # Where the cursor is placed when the LineEdit is unfocused
+	---@type LineEdit.FocusPosition # Where the cursor is placed when the LineEdit is unfocused
 	self._unfocusedPosition = "default"
 	---@type boolean # When focusing via keyboard, should we select all the text?
 	self._selectAllOnKeyboardFocus = true
@@ -133,6 +138,17 @@ function LineEdit:setFont(font)
 	return self
 end
 
+---Sets the font size of this LineEdit. Set to `nil` or `0` to use the default.
+---@param size number
+---@return self
+function LineEdit:setFontSize(size)
+	if self._fontSize ~= size then
+		self._fontSize = size
+		self:deferRefreshSelf()
+	end
+	return self
+end
+
 ---Sets the placeholder text of the LineEdit. This appears when there is no text entered.
 ---@param text string
 ---@return self
@@ -184,6 +200,29 @@ function LineEdit:setJustify(justify)
 	return self
 end
 
+---Sets what the LineEdit will show when unfocused
+---@param newPosition LineEdit.FocusPosition
+---@return self
+function LineEdit:setUnfocusedPosition(newPosition)
+	if self._unfocusedPosition ~= newPosition then
+		self._unfocusedPosition = newPosition
+		if not self:hasFocus() then
+			setFieldUnfocusedAlignment(self)
+		end
+	end
+	return self
+end
+
+---Sets what the LineEdit will show when focused
+---@param newPosition LineEdit.FocusPosition
+---@return self
+function LineEdit:setFocusedPosition(newPosition)
+	if self._focusedPosition ~= newPosition then
+		self._focusedPosition = newPosition
+	end
+	return self
+end
+
 ---Sets whether the field can be edited
 ---@param editable boolean
 function LineEdit:setEditable(editable)
@@ -198,7 +237,11 @@ function LineEdit:mousepressed(mx, my, button, pressCount)
 	-- Currently focused
 	local pos = self._fieldPosition
 	local lcr = self._localContentRect
-	self._inputField:mousepressed(mx - lcr.x - pos.x, my - lcr.y - pos.y, button, pressCount)
+	local lx, ly = self:toLocal(mx, my)
+	lx, ly =
+		lx - pos.x,
+		ly - pos.y
+	self._inputField:mousepressed(lx, ly, button, pressCount)
 
 	if not self:hasFocus() then
 		if button == 1 then
@@ -212,7 +255,11 @@ function LineEdit:mousemoved(mx, my)
 	if self:hasFocus() then
 		local pos = self._fieldPosition
 		local lcr = self._localContentRect
-		self._inputField:mousemoved(mx - lcr.x - pos.x, my - lcr.y - pos.y)
+		local lx, ly = self:toLocal(mx, my)
+		lx, ly =
+			lx - pos.x,
+			ly - pos.y
+		self._inputField:mousemoved(lx, ly)
 		return self._inputField:isBusy()
 	end
 end
@@ -220,7 +267,11 @@ end
 function LineEdit:mousereleased(mx, my, button)
 	local pos = self._fieldPosition
 	local lcr = self._localContentRect
-	self._inputField:mousereleased(mx - lcr.x - pos.x, my - lcr.y - pos.y, button)
+	local lx, ly = self:toLocal(mx, my)
+	lx, ly =
+		lx - pos.x,
+		ly - pos.y
+	self._inputField:mousereleased(lx, ly, button)
 end
 
 ---From a key, returns `true` if it's going to be considered in `:textinput`
@@ -362,8 +413,8 @@ function LineEdit._addDefinition(entry)
 		left = true,
 		right = true,
 	}
-	entry:newEnum("_focusedPosition", focusPositions, "default")
-	entry:newEnum("_unfocusedPosition", focusPositions, "default")
+	entry:newEnum("_focusedPosition", focusPositions, "default", "setFocusedPosition")
+	entry:newEnum("_unfocusedPosition", focusPositions, "default", "setUnfocusedPosition")
 end
 
 return LineEdit
