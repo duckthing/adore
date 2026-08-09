@@ -1383,6 +1383,13 @@ function Root:resume()
 	end
 end
 
+---Returns `true` if this RootNode owns the Viewport.
+---Since RootNodes always own their Viewport, this always returns true.
+---@return true
+function Root:ownsViewport()
+	return true
+end
+
 -- local appleCakeProfileRootUpdate
 -- local appleCakeProfileRootPostUpdate
 -- local appleCakeProfileMem = 0

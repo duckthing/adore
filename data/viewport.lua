@@ -555,6 +555,24 @@ function Viewport:performRefreshes()
 	-- appleCakeProfilePerformRefreshes:stop()
 end
 
+-- Perform the deferred refreshes that Controls requested.
+-- If requested `MAX_REFRESHES` times, it's probably an infinite loop.
+function Viewport:performRefreshesUntilDone()
+	for i = 1, MAX_REFRESHES do
+		-- Break if there's nothing to do
+		if not next(self._deferredRefresh) then
+			break
+		end
+
+		self:performRefreshes()
+
+		if i == MAX_REFRESHES then
+			print(("[Adore.Viewport:update] Performed %d refreshes in one step; stopping"):format(MAX_REFRESHES))
+			break
+		end
+	end
+end
+
 ---Sets the target dimensions of the Viewport
 ---@param targetW integer
 ---@param targetH integer
@@ -888,23 +906,8 @@ function Viewport:update(dt)
 		end
 	end
 
-	-- TODO: Move the loop inside of a new method?
+	self:performRefreshesUntilDone()
 
-	-- Perform the deferred refreshes that Controls requested.
-	-- If requested `MAX_REFRESHES` times, it's probably an infinite loop.
-	for i = 1, MAX_REFRESHES do
-		-- Break if there's nothing to do
-		if not next(self._deferredRefresh) then
-			break
-		end
-
-		self:performRefreshes()
-
-		if i == MAX_REFRESHES then
-			print(("[Adore.Viewport:update] Performed %d refreshes in one step; stopping"):format(MAX_REFRESHES))
-			break
-		end
-	end
 	-- appleCakeProfileUpdate:stop()
 end
 
