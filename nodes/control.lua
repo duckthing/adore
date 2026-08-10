@@ -79,6 +79,10 @@ Control._inputMode = "pass"
 Control._mouseInputMode = "pass"
 ---@type boolean # Whether this Control is in the modal stack; use `:isModal()` instead
 Control._pushedAsModal = false
+---@type boolean # [As a modal] Should this be drawn on the root Viewport?
+Control._modalDrawOnTop = false
+---@type boolean # [As a modal] Should former modals be drawn as well, in the event multiple are pushed?
+Control._modalDrawPreviousModals = true
 
 function Control:new()
 	Control.super.new(self)
@@ -1275,6 +1279,8 @@ function Control._addDefinition(entry)
 	entry:newString("_variantName", "", nil, nil, "setVariant")
 	entry:newColor("albedo")
 	entry:newBoolean("clipChildren", false)
+	entry:newBoolean("_modalDrawOnTop", false)
+	entry:newBoolean("_modalDrawPreviousModals", true)
 end
 
 return Control

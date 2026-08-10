@@ -9,7 +9,7 @@ local ceil = math.ceil
 ---@overload fun(items: PopupMenu.Item[]?): PopupMenu
 local PopupMenu = Popup:extend()
 PopupMenu.CLASS_NAME = "PopupMenu"
-PopupMenu._drawPreviousModals = true
+PopupMenu._modalDrawPreviousModals = true
 
 ---@class PopupMenu.Item
 ---@field label string?

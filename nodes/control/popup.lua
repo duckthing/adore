@@ -9,11 +9,9 @@ local min, max = math.min, math.max
 ---@overload fun(): Popup
 local Popup = Control:extend()
 Popup.CLASS_NAME = "Popup"
+Popup._modalDrawOnTop = true
+Popup._modalDrawPreviousModals = false
 
----@type boolean # Should this be drawn on the root Viewport?
-Popup._drawOnTop = true
----@type boolean # Should former modals be drawn as well, in the event multiple are pushed?
-Popup._drawPreviousModals = false
 ---@type boolean # Should this Popup be resized according to a parent Control (if below one)?
 Popup._resizeWithParent = true
 ---@type boolean # Can this Popup be closed through pressing the unfocus key? (default: `Esc`)
@@ -38,7 +36,7 @@ end
 ---@return Viewport
 local function getTargetViewport(self)
 	local viewport
-	if self._drawOnTop then
+	if self._modalDrawOnTop then
 		viewport = self:getRoot():getViewport()
 	else
 		viewport = self:getViewport()
@@ -123,7 +121,7 @@ function Popup:_setCanonRect() end
 Popup._setModalRect = Popup.super._setCanonRect
 
 function Popup:_intDraw()
-	if not self._drawOnTop and self:isModal() then
+	if not self._modalDrawOnTop and self:isModal() then
 		-- Only draws on the current Viewport
 		Popup.super._intDraw(self)
 	end
@@ -133,8 +131,6 @@ end
 Popup._intModalDraw = Popup.super._intDraw
 
 function Popup._addDefinition(entry)
-	entry:newBoolean("_drawOnTop", true)
-	entry:newBoolean("_drawPreviousModals", false)
 	entry:newBoolean("_resizeWithParent", true)
 	entry:newBoolean("_unfocusToClose", true)
 	entry:newBoolean("_destroyOnClose", false)
