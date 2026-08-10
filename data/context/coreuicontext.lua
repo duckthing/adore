@@ -201,7 +201,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 				local uiEnterOrLeftHandled = false
 
 				-- Send mousemoved events to focused Control, even if there's no overlap with the Control
-				local mouseMovedHandled = fMouseMoved(focused, focusedX, focusedY)
+				local mouseMovedHandled = fMouseMoved(focused, focusedX, focusedY, dx, dy, isTouch)
 
 				if focused:doesPointOverlap(focusedX, focusedY) then
 					if not focused._hovered then
@@ -245,7 +245,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 	if newControl then
 		local ncMouseMoved = newControl.mousemoved
 		-- The "new control" might be the same as the old one
-		if ncMouseMoved and newControl:canReceiveInput(true, x, y) and ncMouseMoved(newControl, nx, ny) then
+		if ncMouseMoved and newControl:canReceiveInput(true, x, y) and ncMouseMoved(newControl, nx, ny, dx, dy, isTouch) then
 			return self.sinkHandledInput
 		end
 	else
@@ -255,7 +255,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 			if mMouseMoved and modal:canReceiveInput(true, x, y) then
 				local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
 
-				if mMouseMoved(modal, modalX, modalY) then
+				if mMouseMoved(modal, modalX, modalY, dx, dy, isTouch) then
 					return self.sinkHandledInput
 				end
 			end

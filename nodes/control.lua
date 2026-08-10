@@ -25,7 +25,7 @@ local TEMP_TRANSFORM = love.math.newTransform()
 
 ---@class Control: Node
 ---@field super Control
----@field mousemoved fun(self, mx: integer, my: integer): boolean? handled
+---@field mousemoved fun(self, mx: integer, my: integer, globalDx: integer, globalDy: integer, isTouch: boolean): boolean? handled
 ---@field mousepressed fun(self, mx: integer, my: integer, button: integer, isTouch: boolean, pressCount: integer): boolean? handled
 ---@field mousereleased fun(self, mx: integer, my: integer, button: integer): boolean? handled
 ---@field wheelmoved fun(self, wx: integer, wy: integer): boolean? handled
