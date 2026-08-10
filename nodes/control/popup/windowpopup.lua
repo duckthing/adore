@@ -104,10 +104,18 @@ function WindowPopup:setCloseButtonVisible(visible)
 	return self
 end
 
+---Override; returns `true` if the WindowPopup was closed
+---@return boolean closed
+function WindowPopup:submit()
+	self:close()
+	return true
+end
+
 ---Adds the given Button to the actionbar, and then returns it so you can connect to it
 ---@param name string
+---@param defaultMethod "close" | "submit" | string? # The method on this WindowPopup connected to this Button
 ---@return Button
-function WindowPopup:addAction(name)
+function WindowPopup:addAction(name, defaultMethod)
 	local bar = self._actionbar
 	if not bar then
 		-- Create the actionbar if it doesn't exist
@@ -133,6 +141,12 @@ function WindowPopup:addAction(name)
 		width * -0.5, 0, width * 0.5, 0
 	)
 	bar:addChild(button)
+
+	if defaultMethod then
+		-- Connect a default method (like :close)
+		button.clicked:connect(self, defaultMethod, false, false)
+	end
+
 	return button
 end
 
