@@ -60,12 +60,13 @@ function AssetP:showPopup()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+	pathField.textSubmitted:connect(window, "submit")
 	vbox:addChild(pathField)
 
 	-- Connect events
-	window:addAction("Cancel").clicked:connect(window, "close")
-	local setButton = window:addAction("Set")
-	setButton.clicked:connectCallable(function(...)
+	window:addAction("Cancel", "close")
+	window:addAction("Set", "submit")
+	window.submit = function(...)
 		local success, newAsset = pcall(Collection.get, Collection, pathField._text)
 		if success then
 			self:attemptSet(newAsset)
@@ -73,7 +74,7 @@ function AssetP:showPopup()
 		else
 			print(newAsset)
 		end
-	end)
+	end
 
 	window:addChild(vbox)
 	self:addChild(window)

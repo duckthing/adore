@@ -446,6 +446,7 @@ function MainWindow:saveSceneAs()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+	pathField.textSubmitted:connect(window, "submit", false, false)
 	vbox:addChild(pathField)
 
 	-- == File format Label
@@ -464,13 +465,13 @@ function MainWindow:saveSceneAs()
 	window:addChild(vbox)
 
 	-- Connect events
-	window:addAction("Cancel").clicked:connect(window, "close")
-	local save = window:addAction("Save")
-	save.clicked:connectCallable(function(...)
+	window:addAction("Cancel", "close")
+	window:addAction("Save", "submit")
+	window.submit = function(...)
 		srContainer._lastFilepath = pathField._submittedText
 		srContainer._lastFormat = dropdown._selectedItem.label
 		if self:saveScene() then window:close() end
-	end)
+	end
 
 	-- Show the popup
 	self:addChild(window)
@@ -510,6 +511,7 @@ function MainWindow:loadScene()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+	pathField.textSubmitted:connect(window, "submit", false, false)
 	vbox:addChild(pathField)
 
 	-- == File format Label
@@ -528,9 +530,9 @@ function MainWindow:loadScene()
 	window:addChild(vbox)
 
 	-- Connect events
-	window:addAction("Cancel").clicked:connect(window, "close")
-	local load = window:addAction("Load")
-	load.clicked:connectCallable(function(...)
+	window:addAction("Cancel", "close")
+	window:addAction("Load", "submit")
+	window.submit = function(...)
 		local path = pathField._submittedText
 		local format = dropdown._selectedItem.label
 
@@ -552,7 +554,7 @@ function MainWindow:loadScene()
 		else
 			print(err)
 		end
-	end)
+	end
 
 	-- Show the popup
 	self:addChild(window)
@@ -593,13 +595,14 @@ function MainWindow:addNode()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+	classField.textSubmitted:connect(window, "submit", false, false)
 	vbox:addChild(classField)
 	window:addChild(vbox)
 
 	-- Connect events
-	window:addAction("Cancel").clicked:connect(window, "close")
-	local addButton = window:addAction("Add")
-	addButton.clicked:connectCallable(function(...)
+	window:addAction("Cancel", "close")
+	window:addAction("Add", "submit")
+	window.submit = function(...)
 		local className = classField._submittedText
 
 		local success, ClassOrErr = pcall(Adore.Any, className)
@@ -617,7 +620,7 @@ function MainWindow:addNode()
 		else
 			print(ClassOrErr)
 		end
-	end)
+	end
 
 	-- Show the popup
 	self:addChild(window)
@@ -696,12 +699,13 @@ function MainWindow:extendNode()
 		)
 		:setUnfocusedPosition("right")
 	vbox:addChild(pathField)
+	pathField.textSubmitted:connect(window, "submit", false, false)
 	window:addChild(vbox)
 
 	-- Connect events
-	window:addAction("Cancel").clicked:connect(window, "close")
-	local extendButton = window:addAction("Extend")
-	extendButton.clicked:connectCallable(function(...)
+	window:addAction("Cancel", "close")
+	window:addAction("Extend", "submit")
+	window.submit = function(...)
 		local baseClassName = baseClassField._submittedText
 		local newClassName = newClassField._submittedText
 		local savePath = pathField._submittedText
@@ -749,7 +753,7 @@ function MainWindow:extendNode()
 		if not success then print(err) return end
 
 		window:close()
-	end)
+	end
 
 	-- Show the popup
 	self:addChild(window)
