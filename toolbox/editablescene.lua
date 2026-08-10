@@ -46,6 +46,9 @@ function EScene:new(root)
 	---@type Camera # The camera used for the editor
 	self.camera = Camera()
 
+	---@type boolean # [Internal] If we're actively panning
+	self.panning = false
+
 	---@type boolean # Whether this can call `:update`
 	self._running = false
 	---@type string? # The error message from the last method call
@@ -313,24 +316,10 @@ function EScene:_intDraw()
 end
 
 local isDown = love.keyboard.isDown
-local SPEED_PER_SECOND = 500
 function EScene:update(dt)
 	if not self._visible then return end
+
 	local camera = self.camera
-	local speed = SPEED_PER_SECOND * dt * camera._zoom.x
-	local x, y = 0, 0
-	if isDown("a") then x = x - speed end
-	if isDown("d") then x = x + speed end
-	if isDown("w") then y = y - speed end
-	if isDown("s") then y = y + speed end
-	if isDown("-") then camera._zoom:iMult(1 + (dt * 5)) end
-	if isDown("=") then camera._zoom:iMult(1 - (dt * 5)) end
-
-	local subviewport = assert(self._subViewport)
-	if x ~= 0 or y ~= 0 then
-		camera:translate(x, y)
-	end
-
 	local layers = self.subroot._canvasLayers
 	for i = 1, #layers do
 		local layer = layers[i]
@@ -339,6 +328,7 @@ function EScene:update(dt)
 		end
 	end
 
+	local subviewport = assert(self._subViewport)
 	if self.cameraActive and not self._errorMessage then
 		-- subviewport._activeCamera = camera
 		camera:_updateCanvasTransform(self._subViewport:getDimensions())
@@ -346,6 +336,61 @@ function EScene:update(dt)
 	else
 		-- subviewport._activeCamera = nil
 		subviewport._viewportTransform:reset()
+	end
+end
+
+function EScene:mousemoved(_, _, dx, dy)
+	-- Don't handle anything without free-cam
+	if not self.cameraActive then return false end
+
+	if self.panning then
+		-- Pan with the mouse
+		local camera = self.camera
+		local speed = -camera._zoom.x
+		camera:translate(dx * speed, dy * speed)
+		return true
+	end
+end
+
+function EScene:mousepressed(mx, my, button, isTouch, pressCount)
+	-- Don't handle anything without free-cam
+	if not self.cameraActive then return false end
+	if button == 3 then
+		-- Start panning
+		self.panning = true
+		self:pushModal()
+		return true
+	end
+end
+
+function EScene:mousereleased(mx, my, button)
+	-- Don't handle anything without free-cam
+	if not self.cameraActive then return false end
+	if button == 3 and self.panning then
+		-- Stop panning
+		self.panning = false
+		self:popModal()
+		return true
+	end
+end
+
+function EScene:wheelmoved(wx, wy)
+	-- Don't handle anything without free-cam
+	if not self.cameraActive then return false end
+
+	-- Do zooming
+	if wx == 0 then
+		local camera = self.camera
+		local zoom = camera._zoom
+		local newZoomValue = zoom.x
+		if wy > 0 then
+			newZoomValue = newZoomValue * 0.8
+		elseif wy < 0 then
+			newZoomValue = newZoomValue * 1.2
+		end
+		newZoomValue = max(0.02, min(newZoomValue, 1000))
+		camera:setZoom(newZoomValue, newZoomValue)
+		return true
 	end
 end
 
