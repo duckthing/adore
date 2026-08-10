@@ -174,6 +174,7 @@ function Button._addDefinition(entry)
 		bottom = true,
 	}
 	entry:newEnum("_textAlign", alignModes, "center", "setTextAlign")
+	entry:newAssetPath("_icon", "TextureLoader", nil, "setIcon")
 	entry:newEnum("_iconAlign", alignModes, "center", "setIconAlign")
 	entry:newEnum("_iconJustify", justifyModes, "center", "setIconJustify")
 	entry:newBoolean("_iconExpand", false, "setIconExpand")
