@@ -83,7 +83,10 @@ function LineEdit:getMinimumSize()
 	return minW, max(minH, self._textBatch:getFont():getHeight())
 end
 
-function LineEdit:submit()
+---Submits the entered contents
+---@param fireEvent boolean?
+function LineEdit:submit(fireEvent)
+	if fireEvent == nil then fireEvent = true end
 	local usedText = self._text
 	if #usedText == 0 and self._usePlaceholderOnEmptySubmit then
 		-- If the entered text is empty, and we want to use to placeholder, swap it.
@@ -91,7 +94,9 @@ function LineEdit:submit()
 	end
 	self._submittedText = usedText
 	self._inputField:releaseMouse()
-	self.textSubmitted:fire(usedText)
+	if fireEvent then
+		self.textSubmitted:fire(usedText)
+	end
 	self:deferRefreshSelf()
 end
 
@@ -364,7 +369,7 @@ function LineEdit:uiFocusLost()
 		setFieldUnfocusedAlignment(self)
 	end
 	self._inputField:releaseMouse()
-	self:submit()
+	self:submit(false)
 end
 
 function LineEdit:onRefreshed()
