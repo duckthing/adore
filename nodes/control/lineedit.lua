@@ -25,6 +25,8 @@ local DEFAULT_FONT = FontLoader:get("")
 LineEdit._font = DEFAULT_FONT
 ---@type integer?
 LineEdit._fontSize = 0
+---@type boolean
+LineEdit._submitOnFocusLost = true
 
 function LineEdit:new(text)
 	LineEdit.super.new(self)
@@ -218,6 +220,16 @@ function LineEdit:setUnfocusedPosition(newPosition)
 	return self
 end
 
+---Sets whether or not this LineEdit submits its contents when losing focus
+---@param shouldSubmit boolean
+---@return LineEdit
+function LineEdit:setSubmitOnFocusLost(shouldSubmit)
+	if self._submitOnFocusLost ~= shouldSubmit then
+		self._submitOnFocusLost = shouldSubmit
+	end
+	return self
+end
+
 ---Sets what the LineEdit will show when focused
 ---@param newPosition LineEdit.FocusPosition
 ---@return self
@@ -369,7 +381,7 @@ function LineEdit:uiFocusLost()
 		setFieldUnfocusedAlignment(self)
 	end
 	self._inputField:releaseMouse()
-	self:submit(false)
+	self:submit(self._submitOnFocusLost)
 end
 
 function LineEdit:onRefreshed()
@@ -420,6 +432,7 @@ function LineEdit._addDefinition(entry)
 	}
 	entry:newEnum("_focusedPosition", focusPositions, "default", "setFocusedPosition")
 	entry:newEnum("_unfocusedPosition", focusPositions, "default", "setUnfocusedPosition")
+	entry:newBoolean("_submitOnFocusLost", true, "setSubmitOnFocusLost")
 end
 
 return LineEdit
