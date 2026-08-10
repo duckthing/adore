@@ -446,6 +446,7 @@ function MainWindow:saveSceneAs()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+		:setSubmitOnFocusLost(false)
 	pathField.textSubmitted:connect(window, "submit", false, false)
 	vbox:addChild(pathField)
 
@@ -511,6 +512,7 @@ function MainWindow:loadScene()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+		:setSubmitOnFocusLost(false)
 	pathField.textSubmitted:connect(window, "submit", false, false)
 	vbox:addChild(pathField)
 
@@ -595,6 +597,7 @@ function MainWindow:addNode()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+		:setSubmitOnFocusLost(false)
 	classField.textSubmitted:connect(window, "submit", false, false)
 	vbox:addChild(classField)
 	window:addChild(vbox)
@@ -698,8 +701,9 @@ function MainWindow:extendNode()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
-	vbox:addChild(pathField)
+		:setSubmitOnFocusLost(false)
 	pathField.textSubmitted:connect(window, "submit", false, false)
+	vbox:addChild(pathField)
 	window:addChild(vbox)
 
 	-- Connect events

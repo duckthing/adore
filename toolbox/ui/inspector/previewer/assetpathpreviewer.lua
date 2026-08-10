@@ -60,6 +60,7 @@ function AssetP:showPopup()
 			0, 0, 0, 22
 		)
 		:setUnfocusedPosition("right")
+		:setSubmitOnFocusLost(false)
 	pathField.textSubmitted:connect(window, "submit")
 	vbox:addChild(pathField)
 
