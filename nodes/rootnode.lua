@@ -863,8 +863,7 @@ end
 
 function Root:_beforeDraw()
 	love.graphics.push("all")
-	love.graphics.origin()
-	love.graphics.applyTransform(self._viewport._viewportTransform)
+	love.graphics.replaceTransform(self._viewport._viewportTransform)
 end
 
 function Root:_afterDraw()
