@@ -97,7 +97,8 @@ function MainWindow:new(toolbox, subroot)
 			260, 36, -260, -240
 	)
 	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
-		self.sceneTree:setStartNode(tabInfo.node)
+		self.sceneTree:setStartNode((tabInfo and tabInfo.node) or nil)
+		self.inspector:onNodeSelectionChanged(nil)
 		self:updateButtonTexture()
 	end)
 	self.tabContainer = tabContainer
@@ -223,6 +224,7 @@ function MainWindow:new(toolbox, subroot)
 	end
 
 	--======== INSPECTOR
+	---@type Toolbox.Inspector
 	local inspector = Inspector(toolbox, self.sceneTree)
 		:setAnchorsAndOffsets(
 			1, 0, 1, 1,

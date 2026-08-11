@@ -25,23 +25,6 @@ local Previewer = require(PKG_NAME..".ui.inspector.previewer")
 Previewer.Toolbox = Toolbox
 end
 
-local toolboxContext = Adore.Resources("ShortcutContext")(
-	{
-		toggleFullView = function(context, isRepeat)
-			Toolbox.mainWindow:toggleFull()
-			return true
-		end
-	},
-	{
-		normal = {
-			["`"] = "toggleFullView",
-		}
-	}
-)
--- 1 below CoreUIContext, so text input in the editor shouldn't get in the way
-toolboxContext._priority = 999
-toolboxContext.name = "ToolboxContext"
-
 ---Returns the subroot container
 ---@return Toolbox.EditableScene?
 function Toolbox:getSubrootContainer()
@@ -69,11 +52,15 @@ return setmetatable(Toolbox, {
 		local subrootContext = require(PKG_NAME..".subrootcontext")(Toolbox)
 		Toolbox.subrootContext = subrootContext
 		subrootContext:push()
-		toolboxContext:push()
+
+		---@type Toolbox.ToolboxShortcuts
+		local ToolboxShortcuts = require(PKG_NAME..".toolboxshortcuts")
+		ToolboxShortcuts:push()
+		ToolboxShortcuts:setToolbox(self)
 
 		if options and options.keybinds then
 			-- Keybinds exist, set them
-			toolboxContext.pressedKeybinds = options.keybinds
+			ToolboxShortcuts.pressedKeybinds = options.keybinds
 		end
 
 		local defaultCallbacks = originalRoot._defaultCallbacks
