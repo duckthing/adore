@@ -20,32 +20,39 @@ local mainWindow
 ---@type ShortcutContext.ActionMap
 local actions = {
 	addNode = function(context, isRepeat)
-		if mainWindow._fullView then return end
+		if mainWindow._fullView then return false end
 		mainWindow:addNode()
+		return true
 	end,
 	saveScene = function(context, isRepeat)
-		if mainWindow._fullView then return end
+		if mainWindow._fullView then return false end
 		mainWindow:saveScene()
+		return true
 	end,
 	saveSceneAs = function(context, isRepeat)
-		if mainWindow._fullView then return end
+		if mainWindow._fullView then return false end
 		mainWindow:saveSceneAs()
+		return true
 	end,
 	loadScene = function(context, isRepeat)
-		if mainWindow._fullView then return end
+		if mainWindow._fullView then return false end
 		mainWindow:loadScene()
+		return true
 	end,
 	reloadScene = function(context, isRepeat)
-		if mainWindow._fullView then return end
+		if mainWindow._fullView then return false end
 		mainWindow:reloadScene()
+		return true
 	end,
 	closeScene = function(context, isRepeat)
-		if mainWindow._fullView then return end
+		if mainWindow._fullView then return false end
 		mainWindow:closeScene()
+		return true
 	end,
 
 	toggleFullView = function(context, isRepeat)
 		mainWindow:toggleFull()
+		return true
 	end
 }
 ---@type ShortcutContext.Keybinds?
