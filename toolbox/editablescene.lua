@@ -85,12 +85,14 @@ end
 ---Creates a subroot
 function EScene:createSubroot()
 	self:pushSubroot()
-	self.subroot = RootNode({
+	local subroot = RootNode({
 		hideSceneWarning = true,
 		drawControlDebug = true,
 		physicsWorld = love.physics.newWorld(),
 		ownsPhysicsWorld = true,
 	}, Adore.Resources("DefaultTheme")())
+	subroot._viewport._adoreSelectable = false
+	self.subroot = subroot
 	self:popSubroot()
 end
 

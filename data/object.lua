@@ -15,6 +15,8 @@ Object.CLASS_NAME = "Object"
 Object.INHERITED_BY = {}
 ---@type boolean # [Default: `true`] Whether this Object can be serialized
 Object._adorePersist = true
+---@type boolean # [Default: `true`] Should this Object be shown in Toolbox
+Object._adoreSelectable = true
 
 ---@type AdoreInit
 local Adore = require ""

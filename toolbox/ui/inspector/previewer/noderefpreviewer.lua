@@ -17,12 +17,16 @@ function NodeRefP:new(node, property, propertyName, inspector)
 end
 
 function NodeRefP:newValueLabel(object, property, propertyName, inspector)
-	---@type boolean
+	---@type Object
 	local val = property:get(object, propertyName)
-	local button = Button(tostring(val))
+	local selectable = val and val._adoreSelectable
+	local name = tostring(val)
+	if not selectable then name = ("%s [INTERNAL]"):format(name) end
+	local button = Button(name)
 		:setAnchors(1, 0, 1, 1)
 		:setOffsets(0, 0, -100, 0)
 	button.clicked:connect(self, "onInput")
+	button:setDisabled(not selectable)
 
 	return button
 end

@@ -71,8 +71,8 @@ function Inspector:onNodeSelectionChanged(node)
 	local vbox = self.vbox
 	vbox:clearChildren(true)
 
-	-- Node is nil
-	if node == nil then
+	-- Node is nil/not selectable
+	if not (node and node._adoreSelectable) then
 		self.nameLabel:setText("")
 		return
 	end
