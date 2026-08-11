@@ -567,7 +567,10 @@ end
 function MainWindow:addNode()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local instanceUnder = self.sceneTree:getSelectedNode() or srContainer.subroot._instancedScene or srContainer.subroot
+	local instanceUnder = self.sceneTree:getSelectedNode() or srContainer.subroot._instancedScene
+	if not (instanceUnder and instanceUnder._valid) then
+		instanceUnder = srContainer.subroot
+	end
 
 	-- Create the popup
 	local window = WindowPopup()
@@ -609,17 +612,21 @@ function MainWindow:addNode()
 		local className = classField._submittedText
 
 		local success, ClassOrErr = pcall(Adore.Any, className)
-		if success and ClassOrErr:is(Node) then
-			-- Create the scene and add the tab
-			srContainer:pushSubroot()
+		if success then
+			if ClassOrErr:is(Node) or ClassOrErr == Node then
+				-- Create the scene and add the tab
+				srContainer:pushSubroot()
 
-			local newNode = ClassOrErr()
-			instanceUnder:addChild(newNode)
+				local newNode = ClassOrErr()
+				instanceUnder:addChild(newNode)
 
-			srContainer:popSubroot()
-			self.sceneTree:updateNodes()
-			self.sceneTree:selectNode(newNode)
-			window:close()
+				srContainer:popSubroot()
+				self.sceneTree:updateNodes()
+				self.sceneTree:selectNode(newNode)
+				window:close()
+			else
+				print(("Class '%s' is not a Node"):format(className))
+			end
 		else
 			print(ClassOrErr)
 		end
