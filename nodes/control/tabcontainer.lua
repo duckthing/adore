@@ -76,6 +76,8 @@ function TabContainer:updateTabs()
 		-- Select a default tab
 		tabBar:onTabInfoUpdated()
 		self._internalTabBar:selectTab(1)
+	elseif #tabs == 0 then
+		self._internalTabBar:selectTab(0)
 	end
 end
 
@@ -168,17 +170,18 @@ end
 function TabContainer:_onTabSelected(_, index)
 	self._currentTab = index
 	local tabInfo = self._internalTabBar._tabs[index]
-	if not tabInfo then return self end
 	self.tabSelected:fire(self, index, tabInfo)
 
-	local selectedChild = tabInfo.node
+	if tabInfo then
+		local selectedChild = tabInfo.node
 
-	local children = self.children
-	for i = 1, #children do
-		local child = children[i]
-		child:setVisible(child == selectedChild)
+		local children = self.children
+		for i = 1, #children do
+			local child = children[i]
+			child:setVisible(child == selectedChild)
+		end
+		self._internalTabBar:setVisible(self._showTabBar)
 	end
-	self._internalTabBar:setVisible(self._showTabBar)
 
 	self:deferRefreshSelf()
 
@@ -200,14 +203,16 @@ function TabContainer:selectTab(index)
 			end
 		end
 
-		if type(index) ~= "number" then
-			-- Not found
-			return self
-		end
 	end
 	---@cast index integer
 
-	self._internalTabBar:selectTab(index)
+	if type(index) ~= "number" then
+		-- Didn't find it, select nothing
+		self._internalTabBar:selectTab(1)
+	else
+		-- Found the index
+		self._internalTabBar:selectTab(index)
+	end
 	return self
 end
 

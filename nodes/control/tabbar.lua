@@ -48,8 +48,8 @@ end
 ---@return self
 function TabBar:onTabInfoUpdated()
 	local oldTabIndex = self._currentTab
-	self._currentTab = 0
 	if oldTabIndex > 0 then
+		self._currentTab = 0
 		self:selectTab(oldTabIndex)
 	end
 	self:deferRefreshSelf()
@@ -62,10 +62,18 @@ end
 function TabBar:selectTab(index)
 	local newIndex = min(#self._tabs, index)
 	if newIndex ~= self._currentTab then
-		self._currentTab = newIndex
 		local newTab = self._tabs[newIndex]
-		self.tabSelected:fire(self, newIndex, newTab)
-		self:deferRefreshSelf()
+		if newTab then
+			-- Valid tab
+			self._currentTab = newIndex
+			self.tabSelected:fire(self, newIndex, newTab)
+			self:deferRefreshSelf()
+		else
+			-- Invalid tab
+			self._currentTab = 0
+			self.tabSelected:fire(self, 0, nil)
+			self:deferRefreshSelf()
+		end
 	end
 	return self
 end
