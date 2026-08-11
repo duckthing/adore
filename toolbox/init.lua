@@ -11,11 +11,6 @@ local Toolbox = {}
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local MainWindow = require(PKG_NAME..".ui.mainwindow")
-if ADORE_NODE2D_CULL then
-	print("[Adore.Toolbox] Node2d culling is enabled; Node2d elements might not appear correctly")
-	print("[Adore.Toolbox] Please disable ADORE_NODE2D_CULL next time")
-	ADORE_NODE2D_CULL = false
-end
 
 ---@type Node
 local Node = nil

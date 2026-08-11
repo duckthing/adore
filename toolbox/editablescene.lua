@@ -12,6 +12,8 @@ local RootNode = Nodes("RootNode")
 local Viewport = Resources("Viewport")
 local Camera = Nodes("Camera")
 
+local lgReplaceTransform = love.graphics.replaceTransform
+
 ---Not a class, to not pollute with useless suggestions
 ---@class Toolbox.EditableScene: ViewportContainer
 ---@overload fun(root: RootNode?): Toolbox.EditableScene
@@ -61,14 +63,7 @@ end
 
 ---Handles resizing on the subroot
 function EScene:resizeSubroot(w, h)
-	if not self.overrideSize then
-		self:handleOnSubroot("resize", w, h)
-	else
-		w, h = self.overrideW, self.overrideH
-		if w ~= self.subroot._windowW or h ~= self.subroot._windowH then
-			self:handleOnSubroot("resize", w, h)
-		end
-	end
+	self:handleOnSubroot("resize", w, h)
 end
 
 function EScene:_setCanonRect(x, y, w, h)
@@ -76,7 +71,7 @@ function EScene:_setCanonRect(x, y, w, h)
 	if self._viewportFits then
 		self:resizeViewport(w, h)
 		self:resizeSubroot(self._subViewport:getDimensions())
-		self:drawRootIntoViewport()
+		self:drawGameRootIntoViewport()
 	end
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
 end
@@ -140,6 +135,13 @@ local function handleSubrootError(error)
 	return ("%s%s"):format(error, traceback)
 end
 
+local function handleDirectDrawError(error)
+	local traceback = debug.traceback("")
+	lastError = ("%s\n%s"):format(error, traceback)
+	return ("%s%s"):format(error, traceback)
+end
+
+
 ---Calls a method on the subroot, pushing and popping as necessary
 ---@param methodName string
 ---@param ... unknown
@@ -175,7 +177,7 @@ function EScene:isRunning()
 end
 
 ---Updates the Viewport with the drawn contents of the subroot
-function EScene:drawRootIntoViewport()
+function EScene:drawGameRootIntoViewport()
 	local sx, sy, sw, sh = love.graphics.getScissor()
 	love.graphics.push("all")
 	love.graphics.origin()
@@ -190,17 +192,6 @@ function EScene:drawRootIntoViewport()
 	if not success then
 		self:drawErrorIntoViewport()
 	end
-end
-
-local oldReplaceTransform = love.graphics.replaceTransform
-local oldOrigin = love.graphics.origin
-local alwaysApplyTransform = nil
-local originOverride = function()
-	oldReplaceTransform(alwaysApplyTransform)
-end
-local replaceTransformOverride = function(...)
-	oldReplaceTransform(alwaysApplyTransform)
-	love.graphics.applyTransform(...)
 end
 
 ---@param self Toolbox.EditableScene
@@ -227,55 +218,101 @@ local function drawBackgroundGizmos(self)
 	love.graphics.pop()
 end
 
+local drawDirectSubroot
+do
+local tempTransform = love.math.newTransform()
+
+local alwaysApplyTransform = nil
+local replaceTransformOverride = function(newTransform)
+	lgReplaceTransform(alwaysApplyTransform)
+	if newTransform ~= alwaysApplyTransform then
+		love.graphics.applyTransform(newTransform)
+	end
+end
+
 ---@param self Toolbox.EditableScene
 ---@param subroot RootNode
-local function drawDirectSubroot(self, subroot)
-	local layers = subroot._canvasLayers
-
-	-- Change the origin + graphics functions that set it
-	alwaysApplyTransform = self._subViewport._viewportTransform
-	love.graphics.replaceTransform = replaceTransformOverride
-	love.graphics.origin = originOverride
-
+function drawDirectSubroot(self, subroot)
 	drawBackgroundGizmos(self)
+
+	local layers = subroot._canvasLayers
+	local ownViewport = assert(self._subViewport)
+	---@type love.Transform # The Transform to reset back to
+	local ownTransform = ownViewport._viewportTransform
+	---@type love.Transform # The Transform used while drawing, which may be modified slightly from `ownTransform`
+	local usedTransform = tempTransform:setMatrix(ownTransform:getMatrix())
+
+	local camera = self.camera
+	local oldX, oldY = camera._position:unpack()
+
+	-- Change the origin for replaceTransform (for Controls)
+	alwaysApplyTransform = usedTransform
+	love.graphics.replaceTransform = replaceTransformOverride
+
+	love.graphics.origin()
 	for i = 1, #layers do
 		local layer = layers[i]
+		---@cast layer CanvasLayer
 		if layer:isVisibleInTree() then
-			---@cast layer CanvasLayer
+			local viewport = layer._viewport
+			local oldTransform = viewport._viewportTransform
+			viewport._viewportTransform = usedTransform
+			local scaleFactor = 1 / viewport._pixelScale
+
+			camera:setPosition(oldX * scaleFactor, oldY * scaleFactor)
+			camera:_updateCanvasTransform(viewport:getDimensions())
+			usedTransform:setMatrix(camera:getCanvasTransform():getMatrix())
+			-- TODO: Scale `usedTransform` by `scaleFactor`?
+			-- A pixel in this Viewport is not equal to a pixel in the root Viewport.
+			-- However, leaving it unscaled makes it easy to gauge how the UI looks on top of the game world.
+			-- Unscaled also makes 100% zoom always pixel perfect.
+
 			love.graphics.push("all")
-			layer:_drawChildren()
+			layer:drawLayer()
 			love.graphics.pop()
+
+			viewport._viewportTransform = oldTransform
 		end
 	end
 
-	-- Make the origin normal
-	love.graphics.replaceTransform = oldReplaceTransform
-	love.graphics.origin = oldOrigin
+	-- Reset back to normal
+	camera:setPosition(oldX, oldY)
+	love.graphics.replaceTransform = lgReplaceTransform
+end
 end
 
 ---Updates the Viewport with the drawn contents of the subroot, but skips its own layers
-function EScene:drawDirectRootIntoViewport()
+function EScene:drawEditableRootIntoViewport()
 	local sx, sy, sw, sh = love.graphics.getScissor()
 	love.graphics.push("all")
 	love.graphics.origin()
 	love.graphics.setScissor()
-	self._subViewport:push()
+	local subviewport = assert(self._subViewport)
+	subviewport:push()
+	---@type integer # The stack depth after pushing
+	local formerDepth = love.graphics.getStackDepth()
 
 	local subroot = assert(self.subroot)
 	local oldRoot = Node._root
 	Node._root = subroot
 
-	local success, err = xpcall(drawDirectSubroot, handleSubrootError, self, subroot)
+	local success, err = xpcall(drawDirectSubroot, handleDirectDrawError, self, subroot)
 	if not success then
-		print(("Errored while drawing subroot directly:"):format(tostring(self)))
+		print("Errored while drawing subroot directly:")
 		print(err)
 
 		self._errorMessage, lastError = lastError
+		love.graphics.replaceTransform = lgReplaceTransform
+
+		-- Pop the stack until we're back at the original state
+		for i = love.graphics.getStackDepth(), formerDepth + 1, -1 do
+			love.graphics.pop()
+		end
 	end
 
 	Node._root = oldRoot
 
-	self._subViewport:pop()
+	subviewport:pop()
 	love.graphics.pop()
 	love.graphics.setScissor(sx, sy, sw, sh)
 	if not success then
@@ -304,9 +341,9 @@ end
 function EScene:_intDraw()
 	if not self._errorMessage then
 		if self.directDraw then
-			self:drawDirectRootIntoViewport()
+			self:drawEditableRootIntoViewport()
 		else
-			self:drawRootIntoViewport()
+			self:drawGameRootIntoViewport()
 		end
 	else
 		self:drawErrorIntoViewport()
@@ -315,8 +352,7 @@ function EScene:_intDraw()
 	self._subViewport:drawFittedContents(self._localContentRect.x, self._localContentRect.y)
 end
 
-local isDown = love.keyboard.isDown
-function EScene:update(dt)
+function EScene:update(_)
 	if not self._visible then return end
 
 	local camera = self.camera
@@ -360,6 +396,9 @@ function EScene:mousepressed(mx, my, button, isTouch, pressCount)
 		self.panning = true
 		self:pushModal()
 		return true
+	elseif button == 1 and self._errorMessage then
+		-- Clear the error message
+		self._errorMessage = nil
 	end
 end
 
