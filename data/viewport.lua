@@ -232,7 +232,6 @@ function Viewport:new(options)
 	self.shouldDrawPhysics = options.shouldDrawPhysics or false
 
 	self:_onOptionsChanged()
-	self:_updateViewportTransform()
 end
 
 do
@@ -326,10 +325,11 @@ function Viewport:_onOptionsChanged()
 			self._stencilCanvas = love.graphics.newCanvas(targetW, targetH, stencilOption)
 		end
 	end
+	self:_updateViewportTransform()
 end
 end
 
----Updates the Viewport's draw parameters when auto-drawing
+---Updates the Viewport's canvas size, position and scale to fit the window
 function Viewport:_updateViewportTransform()
 	-- Update the canvas positioning
 	local aspect, scaleMode =
@@ -385,7 +385,6 @@ function Viewport:fitInto(w, h)
 	self._windowW, self._windowH =
 		w, h
 	self:_onOptionsChanged()
-	self:_updateViewportTransform()
 end
 
 ---Queues a refresh for a `Control` for later. Usually performed at the end of `Viewport:update()`.
