@@ -774,4 +774,19 @@ function MainWindow:extendNode()
 	newClassField:grabFocus(false)
 end
 
+function MainWindow:deleteSelectedNode()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local selectedNode = self.sceneTree:getSelectedNode()
+	if not (selectedNode and selectedNode:is(Node)) then return end
+
+	srContainer:pushSubroot()
+	selectedNode.parent:removeChild(selectedNode)
+	srContainer:popSubroot()
+
+	local sceneTree = self.sceneTree
+	sceneTree:selectNode(nil)
+	sceneTree:updateNodes()
+end
+
 return MainWindow
