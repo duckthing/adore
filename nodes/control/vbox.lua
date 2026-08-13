@@ -71,6 +71,10 @@ function VBox:forceRefresh()
 	if resizeToContent then
 		selfH = containerH
 		chosenOffsetY = 0
+		if lcr.h < containerH then
+			-- Need to grow vertically to fit everything
+			self:deferRefreshSelf()
+		end
 	else
 		chosenOffsetY = max(0, min(self._offsetY, containerH - selfH))
 	end
@@ -99,10 +103,6 @@ function VBox:forceRefresh()
 			child:onRefreshed()
 			currY = currY + childH + margin
 		end
-	end
-
-	if resizeToContent then
-		self._localContentRect.h = max(self._localContentRect.h, containerH)
 	end
 
 	self._offsetY = chosenOffsetY

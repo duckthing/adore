@@ -66,6 +66,10 @@ function HBox:forceRefresh()
 	if resizeToContent then
 		selfW = containerW
 		chosenOffsetX = 0
+		if lcr.w < containerW then
+			-- Need to grow horizontally to fit everything
+			self:deferRefreshSelf()
+		end
 	else
 		chosenOffsetX = max(0, min(self._offsetX, containerW - selfW))
 	end
@@ -94,10 +98,6 @@ function HBox:forceRefresh()
 			child:onRefreshed()
 			currX = currX + childW + margin
 		end
-	end
-
-	if resizeToContent then
-		-- self._localContentRect.w = max(self._localContentRect.w, containerW)
 	end
 
 	self._offsetX = chosenOffsetX
