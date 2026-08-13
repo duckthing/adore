@@ -37,7 +37,7 @@ function DrawButton:themeUpdate(button)
 	local text = button._text
 	local textBatch = button._textBatch
 	local textAlign = button._textAlign
-	local tbOldHeight = textBatch:getHeight()
+	local tbOldWidth, tbOldHeight = textBatch:getDimensions()
 
 	textBatch:setFont((button._font or DEFAULT_FONT)[button._fontSize or DEFAULT_FONT_SIZE])
 
@@ -101,9 +101,10 @@ function DrawButton:themeUpdate(button)
 	end
 
 	textBatch:setf(text, availableW, textAlign)
-	AutoWrap[button._autowrap](textBatch, text, buttonW, button._textAlign)
+	local wrapMode = button._autowrap
+	AutoWrap[wrapMode](textBatch, text, buttonW, button._textAlign)
 
-	local tbHeight = textBatch:getHeight()
+	local tbWidth, tbHeight = textBatch:getDimensions()
 	if buttonH < tbHeight then
 		button:_setCanonRect(lcr.x, lcr.y, buttonW, tbHeight)
 		availableH = tbHeight
@@ -111,6 +112,13 @@ function DrawButton:themeUpdate(button)
 		-- TextBatch is smaller now
 		-- Refresh again, as the Button might have refreshed with the wrong minimum height
 		button:deferRefreshSelf()
+		return
+	elseif wrapMode == "none" and tbWidth ~= tbOldWidth then
+		-- TextBatch width is different now
+		-- Refresh again, as the Button might have refreshed with the wrong minimum width
+		-- (Which matters more when wrapping is disabled)
+		button:deferRefreshSelf()
+		return
 	end
 
 	button._textBatchX, button._textBatchY =

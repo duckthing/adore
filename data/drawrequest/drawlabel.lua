@@ -15,15 +15,16 @@ local DEFAULT_FONT_SIZE = 0
 ---@param label Label
 function DrawLabel:themeUpdate(label)
 	DrawLabel.super.themeUpdate(self, label)
+	local lcr = label._localContentRect
 	local text = label._text
 	local textBatch = label._textBatch
-	local tbOldHeight = textBatch:getHeight()
+	local wrapMode= label._autowrap
+	local tbOldWidth, tbOldHeight = textBatch:getDimensions()
 
 	textBatch:setFont((label._font or DEFAULT_FONT)[label._fontSize or DEFAULT_FONT_SIZE])
-	AutoWrap[label._autowrap](textBatch, text, label._localContentRect.w, label._align)
+	AutoWrap[wrapMode](textBatch, text, lcr.w, label._align)
 
-	local lcr = label._localContentRect
-	local tbHeight = textBatch:getHeight()
+	local tbWidth, tbHeight = textBatch:getDimensions()
 	local labelHeight = lcr.h
 
 	if labelHeight < tbHeight then
@@ -32,9 +33,16 @@ function DrawLabel:themeUpdate(label)
 		label._textBatchY = 0
 		return
 	elseif tbHeight < tbOldHeight then
-		-- TextBatch is smaller now
+		-- TextBatch height is smaller now
 		-- Refresh again, as the Label might have refreshed with the wrong minimum height
 		label:deferRefreshSelf()
+		return
+	elseif wrapMode == "none" and tbWidth ~= tbOldWidth then
+		-- TextBatch width is different now
+		-- Refresh again, as the Label might have refreshed with the wrong minimum width
+		-- (Which matters more when wrapping is disabled)
+		label:deferRefreshSelf()
+		return
 	end
 
 	local justify = label._justify

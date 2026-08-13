@@ -130,6 +130,17 @@ function Button:setTextAlign(align)
 	return self
 end
 
+---Sets how the text wraps
+---@param autowrap AutoWrap.Mode
+---@return self
+function Button:setTextAutoWrap(autowrap)
+	if self._autowrap ~= autowrap then
+		self._autowrap = autowrap
+		self:deferRefreshSelf()
+	end
+	return self
+end
+
 ---Sets the icon alignment, which changes where the icon is horizontally
 ---@param align love.AlignMode
 ---@return self
@@ -185,7 +196,7 @@ function Button._addDefinition(entry)
 		basic = true,
 	}
 	entry:newEnum("_textAlign", alignModes, "center", "setTextAlign")
-	entry:newEnum("_autowrap", wrapMap, "none", "setAutoWrap")
+	entry:newEnum("_autowrap", wrapMap, "none", "setTextAutoWrap")
 	entry:newAssetPath("_icon", "TextureLoader", nil, "setIcon")
 	entry:newEnum("_iconAlign", alignModes, "center", "setIconAlign")
 	entry:newEnum("_iconJustify", justifyModes, "center", "setIconJustify")
