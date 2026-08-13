@@ -83,6 +83,17 @@ local menuActions = {
 		"Project",
 		{}
 	},
+	{
+		"Editor",
+		{
+			{label = "Reset Camera", func = function(window)
+				---@cast window Toolbox.MainWindow
+				local srContainer = window:getSubrootContainer()
+				if not (srContainer and srContainer.cameraActive) then return end
+				srContainer.camera:setPosition(0, 0):setZoom(1, 1)
+			end},
+		}
+	},
 }
 
 ---@param toolbox Toolbox
@@ -122,19 +133,19 @@ function MainWindow:new(toolbox, subroot)
 	--======== MENU BAR
 	local menuBar = HBox()
 		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			-4, 0, -180, 32
+			0, 0, 0, 0,
+			4, 4, 8, 32
 		)
-		:setMargin(4)
-		:setPadding(12)
+		:setMargin(20)
+		:setPadding(8)
 		:setVariant("topbar")
+		:setResizeToContent(true)
 
 	for i = 1, #menuActions do
 		local action = menuActions[i]
 		local button = MenuButton(action[1], nil, action[2])
-			:setAnchorsAndOffsets(
-				0, 0, 0, 1,
-				0, 0, 60, 0
+			:setAnchors(
+				0, 0, 0, 1
 			)
 
 		button:getPopupMenu().itemSelected:connectCallable(function(_, itemIndex, item)
@@ -149,10 +160,12 @@ function MainWindow:new(toolbox, subroot)
 	local gameActionBar = HBox()
 		:setAnchorsAndOffsets(
 			1, 0, 1, 0,
-			-176, 0, 4, 32
+			-4, 4, -4, 32
 		)
 		:setMargin(4)
 		:setVariant("topbar")
+		:setResizeToContent(true)
+		:setGrowDirection(0, 1)
 
 	for i = 1, #gameActions do
 		local action = gameActions[i]
@@ -237,7 +250,7 @@ function MainWindow:new(toolbox, subroot)
 	local fileBrowser = FileBrowser(toolbox)
 		:setAnchorsAndOffsets(
 			0, 1, 1, 1,
-			264, -233, -264, 0
+			265, -231, -265, 0
 		)
 	self.fileBrowser = fileBrowser
 
