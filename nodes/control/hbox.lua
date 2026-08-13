@@ -59,20 +59,20 @@ function HBox:forceRefresh()
 	end
 	containerW = containerW + (max(0, #children) - 1) * margin
 
-	self._calculatedWidth = containerW
-	self._calculatedHeight = containerH
-
 	local chosenOffsetX
 	if resizeToContent then
 		selfW = containerW
 		chosenOffsetX = 0
-		if lcr.w < containerW then
-			-- Need to grow horizontally to fit everything
+		if self._calculatedWidth ~= containerW then
+			-- Content width changed, and we rely on it for size
 			self:deferRefreshSelf()
 		end
 	else
 		chosenOffsetX = max(0, min(self._offsetX, containerW - selfW))
 	end
+
+	self._calculatedWidth = containerW
+	self._calculatedHeight = containerH
 
 	local currX = selfX + -chosenOffsetX
 	if sortMode == "start" then

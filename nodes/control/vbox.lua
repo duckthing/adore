@@ -64,20 +64,20 @@ function VBox:forceRefresh()
 	end
 	containerH = containerH + (max(0, #children) - 1) * margin
 
-	self._calculatedWidth = containerW
-	self._calculatedHeight = containerH
-
 	local chosenOffsetY
 	if resizeToContent then
 		selfH = containerH
 		chosenOffsetY = 0
-		if lcr.h < containerH then
-			-- Need to grow vertically to fit everything
+		if self._calculatedHeight ~= containerH then
+			-- Content height changed, and we rely on it for size
 			self:deferRefreshSelf()
 		end
 	else
 		chosenOffsetY = max(0, min(self._offsetY, containerH - selfH))
 	end
+
+	self._calculatedWidth = containerW
+	self._calculatedHeight = containerH
 
 	local currY = selfY + -chosenOffsetY
 	if sortMode == "start" then
