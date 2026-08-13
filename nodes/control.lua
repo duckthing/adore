@@ -40,6 +40,10 @@ Control.CLASS_NAME = "Control"
 Control.albedo = {1, 1, 1, 1}
 ---@type boolean # Whether this Control should prevent children from being drawn out of bounds
 Control.clipChildren = false
+---In a range of [0..1], where 0 is the left/top and 1 is the right/bottom, how should this Control grow?
+---When below the minimum size and a grow factor of 0, the Control expands towards the right/bottom.
+---@type number, number
+Control._growHorizontal, Control._growVertical = 0, 0
 
 -- The default variant can also be found underneath Theme[Control.CLASS_ID][""]
 local DEFAULT_SUBCLASS_MAP = {
@@ -104,7 +108,7 @@ function Control:new()
 
 	---@type Vec2? # The minimum size of the Control; get more customization by overridding `:getMinimumSize()`
 	self._minimumSize = nil
-	---@type Vec2? # The maximum size of the Control; get more customization by overridding `:getMaxmumSize()`
+	---@type Vec2? # The maximum size of the Control; get more customization by overridding `:getMaximumSize()`
 	self._maximumSize = nil
 
 	---@type integer # How deep this Control is; 0 is outside the tree, 1 is the top-level, and greater is a child
@@ -458,6 +462,19 @@ function Control:setMouseInputMode(mode)
 	return self
 end
 
+---Sets the grow direction of this Control.
+---If a parameter is `nil`, it won't be modified.
+---@generic T: Control
+---@param self T | Control
+---@param vertical number
+---@param horizontal number
+---@return T
+function Control:setGrowDirection(vertical, horizontal)
+	if vertical then self._growVertical = vertical end
+	if horizontal then self._growHorizontal = horizontal end
+	return self
+end
+
 ---Sets the minimum size of the Control, and defers a self refresh if needed
 ---@generic T: Control
 ---@param self T | Control
@@ -653,23 +670,44 @@ function Control:_getRectFromParentSize(w, h)
 		h * aBottom + oBottom
 
 	if canonRight < canonLeft then
-		canonLeft, canonRight = canonRight, canonLeft
+		canonRight = canonLeft
 	end
 
 	if canonBottom < canonTop then
-		canonBottom, canonTop = canonTop, canonBottom
+		canonBottom = canonTop
 	end
 
 	local canonW, canonH =
 		canonRight - canonLeft,
 		canonBottom - canonTop
 
-	local minW, minH = self:getMinimumSize()
+	-- Shrink to be under the maximum size
 	local maxW, maxH = self:getMaximumSize()
+	if canonW > maxW then
+		local difference = canonW - maxW
+		canonLeft = canonLeft + difference * self._growHorizontal
+		canonW = maxW
+	end
+	if canonH > maxH then
+		local difference = canonH - maxH
+		canonRight = canonRight + difference * self._growVertical
+		canonH = maxH
+	end
 
-	return canonLeft, canonTop,
-		max(minW, min(canonW, maxW)),
-		max(minH, min(canonH, maxH))
+	-- Grow to be above the minimum size
+	local minW, minH = self:getMinimumSize()
+	if canonW < minW then
+		local difference = minW - canonW
+		canonLeft = canonLeft - difference * self._growHorizontal
+		canonW = minW
+	end
+	if canonH < minH then
+		local difference = minH - canonH
+		canonRight = canonRight - difference * self._growVertical
+		canonH = minH
+	end
+
+	return canonLeft, canonTop, canonW, canonH
 end
 
 ---Returns a (read-only) `love.Transform` that contains the parent's offset/rotation/scale
@@ -1259,6 +1297,8 @@ function Control._addDefinition(entry)
 	entry:newVec2("_scale", Vec2(1, 1), "setScaleVec")
 	entry:newVec2("_minimumSize", nil, "setMinimumSizeVec")
 	entry:newVec2("_maximumSize", nil, "setMaximumSizeVec")
+	entry:newNumber("_growVertical", 0, 0, 1, nil, "%deferRefreshSelf")
+	entry:newNumber("_growHorizontal", 0, 0, 1, nil, "%deferRefreshSelf")
 
 	local inputModes = {
 		pass = true,

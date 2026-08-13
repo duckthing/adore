@@ -43,7 +43,7 @@ function HBox:forceRefresh()
 	local sortMode = self._sortMode
 
 	if resizeToContent then
-		selfH = 0
+		selfW = 0
 	end
 
 	-- Calculate the size required
@@ -64,7 +64,7 @@ function HBox:forceRefresh()
 
 	local chosenOffsetX
 	if resizeToContent then
-		selfH = containerH
+		selfW = containerW
 		chosenOffsetX = 0
 	else
 		chosenOffsetX = max(0, min(self._offsetX, containerW - selfW))
@@ -97,7 +97,7 @@ function HBox:forceRefresh()
 	end
 
 	if resizeToContent then
-		self._localContentRect.w = max(self._localContentRect.w, containerW)
+		-- self._localContentRect.w = max(self._localContentRect.w, containerW)
 	end
 
 	self._offsetX = chosenOffsetX

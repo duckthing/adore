@@ -153,9 +153,11 @@ function Node2d:globalTranslate(x, y)
 end
 
 ---Sets the relative position
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param x number
 ---@param y number
----@return self self
+---@return T
 function Node2d:setPosition(x, y)
 	self._position.x, self._position.y =
 		x, y
