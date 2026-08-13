@@ -15,7 +15,7 @@ function BooleanP:newValueLabel(object, property, propertyName)
 	local val = property:get(object, propertyName)
 	local button = Button(tostring(val))
 		:setAnchors(1, 0, 1, 1)
-		:setOffsets(0, 0, -40, 0)
+		:setOffsets(-40, 0, 0, 0)
 	button.clicked:connect(self, "attemptSet")
 
 	return button

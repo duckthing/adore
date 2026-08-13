@@ -24,7 +24,7 @@ function NodeRefP:newValueLabel(object, property, propertyName, inspector)
 	if not selectable then name = ("%s [INTERNAL]"):format(name) end
 	local button = Button(name)
 		:setAnchors(1, 0, 1, 1)
-		:setOffsets(0, 0, -100, 0)
+		:setOffsets(-100, 0, 0, 0)
 	button.clicked:connect(self, "onInput")
 	button:setDisabled(not selectable)
 

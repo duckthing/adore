@@ -16,7 +16,7 @@ function EnumP:newValueLabel(object, property, propertyName)
 	local val = property:get(object, propertyName)
 	local button = Button(tostring(val))
 		:setAnchors(1, 0, 1, 1)
-		:setOffsets(0, 0, -80, 0)
+		:setOffsets(-80, 0, 0, 0)
 	button.clicked:connect(self, "showPopup")
 
 	return button
