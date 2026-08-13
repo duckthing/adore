@@ -28,6 +28,8 @@ local commonPaths = {
 	bitlib = "common.bitlib",
 	---@type NoiseGen
 	NoiseGen = "common.noisegen",
+	---@type FormBuilder
+	FormBuilder = "common.formbuilder",
 	AutoWrap = "common.autowrap",
 	Expression = "lib.expression",
 	---@type Adore.Loader
