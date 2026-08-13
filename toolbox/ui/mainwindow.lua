@@ -18,6 +18,7 @@ local WindowPopup = Nodes("WindowPopup")
 local LineEdit = Nodes("LineEdit")
 local MenuButton = Nodes("MenuButton")
 local DropdownButton = Nodes("DropdownButton")
+local FormBuilder = Adore.Common("FormBuilder")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -426,7 +427,20 @@ function MainWindow:saveSceneAs()
 
 	window:getTitleLabel():setText("Save to...")
 
-	local vbox = VBox()
+	---@type Form
+	local form = {
+		{type = "body", text = "File Path"},
+		{id = "path", type = "textfield",
+				value = srContainer._lastFilepath
+			or ("scenes/%s.json"):format(tostring(child):lower())},
+		{type = "body", text = "File Path"},
+		{id = "format", type = "dropdown", items = FORMAT_OPTIONS,
+				value = srContainer and srContainer._lastFormat == "binary" and 2 or 1},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
+
 	vbox:setAnchorsAndOffsets(
 			0, 0, 1, 1,
 			10, 10, -10, 0
@@ -434,35 +448,12 @@ function MainWindow:saveSceneAs()
 		:setResizeToContent(true)
 		:setMargin(4)
 
-	-- Create the fields
-	-- == File path Label
-	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
-
-	-- == File path LineEdit
-	local pathField = LineEdit(
-			srContainer._lastFilepath
-			or ("scenes/%s.json"):format(tostring(child):lower())
-		)
-		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			0, 0, 0, 22
-		)
+	local pathField = sheet:getElement("path")
+	---@cast pathField LineEdit
+	pathField
 		:setUnfocusedPosition("right")
 		:setSubmitOnFocusLost(false)
 	pathField.textSubmitted:connect(window, "submit", false, false)
-	vbox:addChild(pathField)
-
-	-- == File format Label
-	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
-
-	-- == File format DropdownButton
-	local dropdown = DropdownButton(nil, FORMAT_OPTIONS)
-	dropdown:setAnchorsAndOffsets(
-		0, 0, 1, 0,
-		0, 0, 0, 20
-	)
-	dropdown:getPopupMenu():selectItem(srContainer._lastFormat == "binary" and 2 or 1)
-	vbox:addChild(dropdown)
 
 	-- Add those fields
 	window:addChild(vbox)
@@ -472,7 +463,9 @@ function MainWindow:saveSceneAs()
 	window:addAction("Save", "submit")
 	window.submit = function(...)
 		srContainer._lastFilepath = pathField._submittedText
-		srContainer._lastFormat = dropdown._selectedItem.label
+		local item = sheet:getValue("format")
+		---@cast item PopupMenu.Item
+		srContainer._lastFormat = item.label
 		if self:saveScene() then window:close() end
 	end
 
@@ -495,42 +488,28 @@ function MainWindow:loadScene()
 
 	window:getTitleLabel():setText("Load scene...")
 
-	local vbox = VBox()
-	vbox:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			10, 10, -10, 0
-		)
+	---@type Form
+	local form = {
+		{type = "body", text = "File Path"},
+		{id = "path", type = "textfield",
+				value = srContainer and srContainer._lastFilepath or "scenes/myscene.json"},
+		{type = "body", text = "File Path"},
+		{id = "format", type = "dropdown", items = FORMAT_OPTIONS,
+				value = srContainer and srContainer._lastFormat == "binary" and 2 or 1},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
+	vbox:setOffsets(10, 10, -10, 0)
 		:setResizeToContent(true)
 		:setMargin(4)
 
-	-- Create the fields
-	-- == File path Label
-	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
-
-	-- == File path LineEdit
-	local pathField = LineEdit(srContainer and srContainer._lastFilepath or "scenes/myscene.json")
-		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			0, 0, 0, 22
-		)
+	local pathField = sheet:getElement("path")
+	---@cast pathField LineEdit
+	pathField
 		:setUnfocusedPosition("right")
 		:setSubmitOnFocusLost(false)
-	pathField.textSubmitted:connect(window, "submit", false, false)
-	vbox:addChild(pathField)
-
-	-- == File format Label
-	vbox:addChild(Label("Format"):setAnchors(0, 0, 1, 0))
-
-	-- == File format DropdownButton
-	local dropdown = DropdownButton(nil, FORMAT_OPTIONS)
-	dropdown:setAnchorsAndOffsets(
-		0, 0, 1, 0,
-		0, 0, 0, 20
-	)
-	dropdown:getPopupMenu():selectItem(srContainer and srContainer._lastFormat == "binary" and 2 or 1)
-	vbox:addChild(dropdown)
-
-	-- Add those fields
+		.textSubmitted:connect(window, "submit", false, false)
 	window:addChild(vbox)
 
 	-- Connect events
@@ -538,7 +517,7 @@ function MainWindow:loadScene()
 	window:addAction("Load", "submit")
 	window.submit = function(...)
 		local path = pathField._submittedText
-		local format = dropdown._selectedItem.label
+		local format = sheet:getValue("format").label
 
 		local scene, err = ObjectSaver.loadFromFilePath(path, format, "SceneFactory", true)
 		if scene then
@@ -563,7 +542,7 @@ function MainWindow:loadScene()
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
-	pathField:grabFocus(false)
+	sheet:getElement("path"):grabFocus(false)
 end
 
 function MainWindow:addNode()
@@ -583,7 +562,15 @@ function MainWindow:addNode()
 
 	window:getTitleLabel():setText("Add node...")
 
-	local vbox = VBox()
+	---@type Form
+	local form = {
+		{type = "body", text = "Class Name"},
+		{id = "class", type = "textfield",
+				value = (instanceUnder ~= srContainer.subroot and instanceUnder.CLASS_NAME) or "Node"},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
 	vbox:setAnchorsAndOffsets(
 			0, 0, 1, 1,
 			10, 10, -10, 0
@@ -591,20 +578,11 @@ function MainWindow:addNode()
 		:setResizeToContent(true)
 		:setMargin(4)
 
-	-- Create the fields
-	-- == Class name Label
-	vbox:addChild(Label("Class Name"):setAnchors(0, 0, 1, 0))
-
-	-- == Class name LineEdit
-	local classField = LineEdit((instanceUnder ~= srContainer.subroot and instanceUnder.CLASS_NAME) or "Node")
-		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			0, 0, 0, 22
-		)
-		:setUnfocusedPosition("right")
+	local classField = sheet:getElement("class")
+	---@cast classField LineEdit
+	classField:setUnfocusedPosition("right")
 		:setSubmitOnFocusLost(false)
 	classField.textSubmitted:connect(window, "submit", false, false)
-	vbox:addChild(classField)
 	window:addChild(vbox)
 
 	-- Connect events
@@ -655,64 +633,39 @@ function MainWindow:extendNode()
 
 	window:getTitleLabel():setText("Extend node...")
 
-	local vbox = VBox()
-	vbox:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			10, 10, -10, 0
-		)
+	local defaultNewClassName = "New"..((selectedNode ~= srContainer.subroot and selectedNode.CLASS_NAME) or "Node")
+
+	---@type Form
+	local form = {
+		{type = "body", text = "Base Class Name"},
+		{id = "baseClass", type = "textfield", value = selectedNode.CLASS_NAME},
+		{type = "body", text = "New Class Name"},
+		{id = "newClass", type = "textfield", value = defaultNewClassName},
+		{type = "body", text = "Template"},
+		{id = "template", type = "dropdown", items = SCRIPT_OPTIONS},
+		{id = "newClassPath", type = "textfield", value =
+			("src/nodes/%s.lua"):format(defaultNewClassName:lower())},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
+	vbox:setOffsets(10, 10, -10, 0)
 		:setResizeToContent(true)
 		:setMargin(4)
 
-	-- Create the fields
-	-- == Class name Label
-	vbox:addChild(Label("Base Class Name"):setAnchors(0, 0, 1, 0))
+	local baseClassField = sheet:getElement("baseClass")
+	---@cast baseClassField LineEdit
+	baseClassField:setUnfocusedPosition("right")
 
-	-- == Class name LineEdit
-	local baseClassField = LineEdit(selectedNode.CLASS_NAME)
-		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			0, 0, 0, 22
-		)
-		:setUnfocusedPosition("right")
-	vbox:addChild(baseClassField)
+	local newClassField = sheet:getElement("newClass")
+	---@cast newClassField LineEdit
+	newClassField:setUnfocusedPosition("right")
 
-	-- == New class name Label
-	vbox:addChild(Label("New Class Name"):setAnchors(0, 0, 1, 0))
-
-	-- == New class name LineEdit
-	local newClassField = LineEdit("New"..((selectedNode ~= srContainer.subroot and selectedNode.CLASS_NAME) or "Node"))
-		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			0, 0, 0, 22
-		)
-		:setUnfocusedPosition("right")
-	vbox:addChild(newClassField)
-
-	-- == Script template Label
-	vbox:addChild(Label("Template"):setAnchors(0, 0, 1, 0))
-
-	-- == Script template DropdownButton
-	local dropdown = DropdownButton(nil, SCRIPT_OPTIONS)
-	dropdown:setAnchorsAndOffsets(
-		0, 0, 1, 0,
-		0, 0, 0, 20
-	)
-	dropdown:getPopupMenu():selectItem(1)
-	vbox:addChild(dropdown)
-
-	-- == New class path Label
-	vbox:addChild(Label("File Path"):setAnchors(0, 0, 1, 0))
-
-	-- == New class path LineEdit
-	local pathField = LineEdit(("src/nodes/%s.lua"):format(newClassField._text:lower()))
-		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			0, 0, 0, 22
-		)
-		:setUnfocusedPosition("right")
+	local pathField = sheet:getElement("newClassPath")
+	---@cast pathField LineEdit
+	pathField:setUnfocusedPosition("right")
 		:setSubmitOnFocusLost(false)
 	pathField.textSubmitted:connect(window, "submit", false, false)
-	vbox:addChild(pathField)
 	window:addChild(vbox)
 
 	-- Connect events
@@ -745,7 +698,10 @@ function MainWindow:extendNode()
 			return false
 		end
 
+		local dropdown = sheet:getElement("template")
+		---@cast dropdown DropdownButton
 		local dropdownOption = dropdown:getSelectedItem().template
+
 		if baseClassOrErr:is(Adore.Nodes("Physical2d")) then
 			-- Get a different template for Physical2d
 			dropdownOption = dropdownOption.."Physical2d"
