@@ -30,6 +30,11 @@ local actions = {
 		mainWindow:addNode()
 		return true
 	end,
+	newScene = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		mainWindow:newScene()
+		return true
+	end,
 	saveScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
 		mainWindow:saveScene()
@@ -77,6 +82,7 @@ local pressedKeybinds = {
 		a = "addNode",
 		s = "saveScene",
 		o = "loadScene",
+		n = "newScene",
 		r = "reloadScene",
 		w = "closeScene",
 	},
