@@ -2,6 +2,7 @@
 local Adore = require ""
 local DrawRequest = Adore.Resources("DrawRequest")
 local Color = Adore.Common("Color")
+local AutoWrap = Adore.Common("AutoWrap")
 local mixRGBA = Color.mixRGBA
 local FontLoader = Adore.Loader.getCollection("FontLoader")
 
@@ -100,6 +101,7 @@ function DrawButton:themeUpdate(button)
 	end
 
 	textBatch:setf(text, availableW, textAlign)
+	AutoWrap[button._autowrap](textBatch, text, buttonW, button._textAlign)
 
 	local tbHeight = textBatch:getHeight()
 	if buttonH < tbHeight then

@@ -12,6 +12,8 @@ local Button = BaseButton:extend()
 Button.CLASS_NAME = "Button"
 ---@type love.AlignMode # Where the text lies horizontally
 Button._textAlign = "center"
+---@type AutoWrap.Mode # The autowrap mode of the text
+Button._autowrap = "none"
 ---@type love.AlignMode # Where the icon lies horizontally. If centered, the text will draw on top of the icon.
 Button._iconAlign = "left"
 ---@type Label.JustifyMode # Where the icon lies vertically
@@ -58,12 +60,17 @@ end
 
 function Button:getMinimumSize()
 	local minW, minH = Button.super.getMinimumSize(self)
+	local textBatch = self._textBatch
+	if self._autowrap == "none" then
+		-- Minimum width with no wrapping is always the width of the text
+		minW = max(minW, textBatch:getWidth())
+	end
 	local icon = self._icon
 	if icon and self._iconExpand then
 		local _, _, iconW, iconH = icon.quad:getViewport()
-		return max(minW, iconW), max(minH, self._textBatch:getHeight(), iconH)
+		return max(minW, iconW), max(minH, textBatch:getHeight(), iconH)
 	else
-		return minW, max(minH, self._textBatch:getHeight())
+		return minW, max(minH, textBatch:getHeight())
 	end
 end
 
@@ -173,7 +180,12 @@ function Button._addDefinition(entry)
 		center = true,
 		bottom = true,
 	}
+	local wrapMap = {
+		none = true,
+		basic = true,
+	}
 	entry:newEnum("_textAlign", alignModes, "center", "setTextAlign")
+	entry:newEnum("_autowrap", wrapMap, "none", "setAutoWrap")
 	entry:newAssetPath("_icon", "TextureLoader", nil, "setIcon")
 	entry:newEnum("_iconAlign", alignModes, "center", "setIconAlign")
 	entry:newEnum("_iconJustify", justifyModes, "center", "setIconJustify")

@@ -28,6 +28,7 @@ local commonPaths = {
 	bitlib = "common.bitlib",
 	---@type NoiseGen
 	NoiseGen = "common.noisegen",
+	AutoWrap = "common.autowrap",
 	Expression = "lib.expression",
 	---@type Adore.Loader
 	["Adore.Loader"] = "loader",

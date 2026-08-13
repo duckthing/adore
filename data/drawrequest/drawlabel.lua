@@ -2,6 +2,7 @@
 local Adore = require ""
 local DrawRequest = Adore.Resources("DrawRequest")
 local FontLoader = Adore.Loader.getCollection("FontLoader")
+local AutoWrap = Adore.Common("AutoWrap")
 
 ---@class DrawRequest.Label: DrawRequest
 ---@overload fun(): DrawRequest.Label
@@ -19,7 +20,7 @@ function DrawLabel:themeUpdate(label)
 	local tbOldHeight = textBatch:getHeight()
 
 	textBatch:setFont((label._font or DEFAULT_FONT)[label._fontSize or DEFAULT_FONT_SIZE])
-	textBatch:setf(text, label._localContentRect.w, label._align)
+	AutoWrap[label._autowrap](textBatch, text, label._localContentRect.w, label._align)
 
 	local lcr = label._localContentRect
 	local tbHeight = textBatch:getHeight()

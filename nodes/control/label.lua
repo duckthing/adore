@@ -26,11 +26,13 @@ Label._fontSize = 0
 Label._align = "left"
 ---@type Label.JustifyMode # The vertical placement of the text
 Label._justify = "top"
+---@type AutoWrap.Mode # The autowrap mode of the text
+Label._autowrap = "none"
 
 function Label:new(text)
 	Label.super.new(self)
-
 	self.albedo = {1, 1, 1, 1}
+
 	---@type string # The contents of the Label
 	self._text = text or ""
 	---@type love.Text # The drawn part
@@ -42,7 +44,12 @@ end
 
 function Label:getMinimumSize()
 	local minW, minH = Label.super.getMinimumSize(self)
-	return minW, max(minH, self._textBatch:getHeight())
+	local textBatch = self._textBatch
+	if self._autowrap == "none" then
+		-- Minimum width with no wrapping is always the width of the text
+		minW = max(minW, textBatch:getWidth())
+	end
+	return minW, max(minH, textBatch:getHeight())
 end
 
 ---Sets the text inside the Label
@@ -101,6 +108,17 @@ function Label:setJustify(justify)
 	return self
 end
 
+---Sets how the text wraps
+---@param autowrap AutoWrap.Mode
+---@return self
+function Label:setAutoWrap(autowrap)
+	if self._autowrap ~= autowrap then
+		self._autowrap = autowrap
+		self:deferRefreshSelf()
+	end
+	return self
+end
+
 function Label:forceDestroy(recursive)
 	Label.super.forceDestroy(self, recursive)
 	self._textBatch:release()
@@ -123,6 +141,11 @@ function Label._addDefinition(entry)
 		bottom = true,
 	}
 	entry:newEnum("_justify", justifyMap, "top", "setJustify")
+	local wrapMap = {
+		none = true,
+		basic = true,
+	}
+	entry:newEnum("_autowrap", wrapMap, "none", "setAutoWrap")
 end
 
 return Label
