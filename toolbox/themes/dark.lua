@@ -21,7 +21,7 @@ local function onRequire()
 		function(_, control)
 			local lcr = control._localContentRect
 			love.graphics.setColor(0.15, 0.15, 0.2)
-			love.graphics.rectangle("fill", lcr.x, lcr.y - 12, lcr.w, lcr.h + 12, 4)
+			love.graphics.rectangle("fill", lcr.x, lcr.y, lcr.w, lcr.h, 4)
 		end
 	))
 

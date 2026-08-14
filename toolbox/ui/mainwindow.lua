@@ -96,6 +96,13 @@ local menuActions = {
 	},
 }
 
+local toolActions = {
+	{label = "Select"},
+	{label = "Move"},
+	{label = "Rotate"},
+	{label = "Scale"},
+}
+
 ---@param toolbox Toolbox
 function MainWindow:new(toolbox, subroot)
 	MainWindow.super.new(self)
@@ -134,7 +141,7 @@ function MainWindow:new(toolbox, subroot)
 	local menuBar = HBox()
 		:setAnchorsAndOffsets(
 			0, 0, 0, 0,
-			4, 4, 8, 32
+			4, 4, 4, 32
 		)
 		:setMargin(20)
 		:setPadding(8)
@@ -154,6 +161,29 @@ function MainWindow:new(toolbox, subroot)
 		end)
 
 		menuBar:addChild(button)
+	end
+
+	--======== TOOL BAR (middle of screen)
+	local toolBar = HBox()
+		:setAnchorsAndOffsets(
+			0.5, 0, 0.5, 0,
+			0, 4, 0, 32
+		)
+		:setMargin(4)
+		:setPadding(8)
+		:setResizeToContent(true)
+		:setVariant("topbar")
+		:setGrowDirection(nil, 0.5)
+
+	for i = 1, #toolActions do
+		local action = toolActions[i]
+		local button = Button(action.label, action.icon)
+			:setAnchors(
+				0, 0, 0, 1
+			)
+			:setVariant("flat")
+
+		toolBar:addChild(button)
 	end
 
 	--======== GAME BAR
@@ -260,6 +290,7 @@ function MainWindow:new(toolbox, subroot)
 	editor:addChild(fileBrowser)
 	editor:addChild(gameActionBar)
 	editor:addChild(menuBar)
+	editor:addChild(toolBar)
 	editor:addChild(tabContainer)
 	editor:hide()
 
