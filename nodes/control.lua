@@ -117,15 +117,18 @@ function Control:new()
 	self._topLevelNode = nil
 	---@type boolean # Whether we're in the Shash
 	self._inShash = false
+	---@type Control? # The previously focused Control when this Control was pushed as a modal; will get reverted to this when popping this modal
+	self._previousFocused = nil
+
 	---@type Theme? # The Theme that will be used on this Control and any children.
 	---This value can be `nil`; if you want to know what Theme will be applied right here, use `:getAppliedTheme()`.
 	self._theme = nil
 	---@type Theme # The applied Theme on this Control; in order of priority, it's `self._theme`, or `parent._inheritedTheme`, or `Root:getDefaultTheme()`
 	self._inheritedTheme = self:getRoot():getDefaultTheme()
+	---@type {[string]: DrawRequest} # The subclass name to DrawRequest map for **this class specifically**
+	self._inheritedDRMap = nil
 	---@type string # What subclass will be used (from the theme)
 	self._currentSubclass = self.subclassMap.normal
-	---@type Control? # The previously focused Control when this Control was pushed as a modal; will get reverted to this when popping this modal
-	self._previousFocused = nil
 
 	---@type Rect2 # The calculated Rect2 of this Control
 	self._localContentRect = Rect2(0, 0, 0, 0)
@@ -805,8 +808,7 @@ end
 ---Returns the DrawRequest that is used for this Control
 ---@return DrawRequest
 function Control:getAppliedDrawable()
-	local activeTheme = self._inheritedTheme
-	local classMap = activeTheme._calculatedMap[self.CLASS_ID]
+	local classMap = self._inheritedDRMap
 	return classMap[self._currentSubclass] or classMap[""]
 end
 
@@ -1041,21 +1043,17 @@ end
 function Control:_eOnThemeChanged()
 	local ownTheme = self._theme
 	local inheritedTheme = self._inheritedTheme
-	if ownTheme == nil then
+	if ownTheme == nil or (ownTheme and ownTheme ~= inheritedTheme) then
 		-- Inherit the theme from the parent
 		local parent = self.parent
-		self._inheritedTheme = (parent and parent._inheritedTheme) or self:getRoot():getDefaultTheme()
+		local chosenTheme = (parent and parent._inheritedTheme) or self:getRoot():getDefaultTheme()
+		self._inheritedTheme = chosenTheme
+		self._inheritedDRMap = chosenTheme._calculatedMap[self.CLASS_ID]
 
 		-- Get the new subclass variant
 		forceSetVariant(self, self._variantName)
 
 		if self._inheritedTheme ~= inheritedTheme then
-			-- The inherited theme changed
-			self:shallowEmit("_eOnThemeChanged")
-		end
-	else
-		-- Check if our own theme is different
-		if ownTheme ~= inheritedTheme then
 			-- The inherited theme changed
 			self:shallowEmit("_eOnThemeChanged")
 		end
