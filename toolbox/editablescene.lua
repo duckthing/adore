@@ -91,7 +91,16 @@ function EScene:createSubroot()
 		physicsWorld = love.physics.newWorld(),
 		ownsPhysicsWorld = true,
 	}, Adore.Resources("DefaultTheme")())
-	subroot._viewport._adoreSelectable = false
+	local subrootViewport = subroot._viewport
+	subrootViewport._adoreSelectable = false
+	subrootViewport.getSafeArea = function()
+		-- Use the overridden dimensions when using free-cam
+		if self.cameraActive then
+			return 0, 0, self.overrideW, self.overrideH
+		else
+			return self:getRoot()._viewport:getSafeArea()
+		end
+	end
 	self.subroot = subroot
 	self:popSubroot()
 end
@@ -216,7 +225,7 @@ local function drawBackgroundGizmos(self)
 
 	-- Draw the Viewport bounds
 	love.graphics.setColor(0.3, 0.3, 0.7, 0.8)
-	love.graphics.rectangle("line", 0, 0, self.subroot._windowW, self.subroot._windowH)
+	love.graphics.rectangle("line", self.subroot._viewport:getSafeArea())
 	love.graphics.pop()
 end
 
