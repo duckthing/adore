@@ -1,10 +1,7 @@
 local PKG_NAME = ...
 local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
----@type AdoreInit
-local Adore = require(ADORE_PATH)
-local Nodes = Adore.Nodes
-local Resources = Adore.Resources
 
+---@type Toolbox.EditableScene
 local EScene = require(ADORE_PATH..".toolbox.editablescene")
 
 ---@class Toolbox.GameScene: Toolbox.EditableScene
@@ -20,5 +17,8 @@ function GScene:new(root)
 	self.directDraw = false
 	self.overrideSize = false
 end
+
+local EMPTY_ARRAY = {}
+function GScene:getTools() return EMPTY_ARRAY end
 
 return GScene

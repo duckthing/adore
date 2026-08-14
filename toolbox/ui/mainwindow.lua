@@ -96,13 +96,6 @@ local menuActions = {
 	},
 }
 
-local toolActions = {
-	{label = "Select"},
-	{label = "Move"},
-	{label = "Rotate"},
-	{label = "Scale"},
-}
-
 ---@param toolbox Toolbox
 function MainWindow:new(toolbox, subroot)
 	MainWindow.super.new(self)
@@ -119,6 +112,7 @@ function MainWindow:new(toolbox, subroot)
 		self.sceneTree:setStartNode((tabInfo and tabInfo.node) or nil)
 		self.inspector:onNodeSelectionChanged(nil)
 		self:updateButtonTexture()
+		self:populateToolbar()
 	end)
 	self.tabContainer = tabContainer
 
@@ -174,17 +168,7 @@ function MainWindow:new(toolbox, subroot)
 		:setResizeToContent(true)
 		:setVariant("topbar")
 		:setGrowDirection(nil, 0.5)
-
-	for i = 1, #toolActions do
-		local action = toolActions[i]
-		local button = Button(action.label, action.icon)
-			:setAnchors(
-				0, 0, 0, 1
-			)
-			:setVariant("flat")
-
-		toolBar:addChild(button)
-	end
+	self.toolbar = toolBar
 
 	--======== GAME BAR
 	local gameActionBar = HBox()
@@ -787,6 +771,27 @@ function MainWindow:deleteSelectedNode()
 	local sceneTree = self.sceneTree
 	sceneTree:selectNode(nil)
 	sceneTree:updateNodes()
+end
+
+function MainWindow:populateToolbar()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local toolActions = srContainer:getTools()
+	local toolbar = self.toolbar
+	toolbar:clearChildren()
+	local toolCount = #toolActions
+	toolbar:setVisible(toolCount > 0)
+	for i = 1, toolCount do
+		local action = toolActions[i]
+		local button = Button(action.label, action.icon)
+			:setAnchors(
+				0, 0, 0, 1
+			)
+			:setVariant("flat")
+		button.clicked:connect(srContainer, "selectTool", false, false)
+
+		toolbar:addChild(button)
+	end
 end
 
 return MainWindow

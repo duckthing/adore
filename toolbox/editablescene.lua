@@ -11,6 +11,8 @@ local ViewportContainer = Nodes("ViewportContainer")
 local RootNode = Nodes("RootNode")
 local Viewport = Resources("Viewport")
 local Camera = Nodes("Camera")
+---@type Toolbox.Tool
+local Tool = require(ADORE_PATH..".toolbox.tool")
 
 local lgReplaceTransform = love.graphics.replaceTransform
 
@@ -25,6 +27,18 @@ do
 	local arr = Node.OVERRIDES_VIEWPORT
 	arr[#arr+1] = EScene
 end
+
+local tools = {
+	select = Tool(),
+}
+
+---@type {label: string?, icon: TextureSource?}[]
+local availableTools = {
+	{label = "Select"},
+	{label = "Move"},
+	{label = "Rotate"},
+	{label = "Scale"},
+}
 
 function EScene:new(root)
 	EScene.super.new(self, Viewport({}))
@@ -51,6 +65,9 @@ function EScene:new(root)
 	---@type boolean # [Internal] If we're actively panning
 	self.panning = false
 
+	---@type Toolbox.Tool
+	self.tool = tools.select
+
 	---@type boolean # Whether this can call `:update`
 	self._running = false
 	---@type string? # The error message from the last method call
@@ -59,6 +76,22 @@ function EScene:new(root)
 	self._lastFilepath = nil
 	---@type ObjectSaver.Format? # The last format this was saved in
 	self._lastFormat = nil
+end
+
+---Returns an array of tool descriptions; used for populating the topbar
+---@return {label: string?, icon: TextureSource?}[]
+function EScene:getTools()
+	return availableTools
+end
+
+---Selects a Toolbox.Tool by string name
+function EScene:selectTool(name)
+	local oldTool = self.tool
+	if oldTool and oldTool:isBusy() then return end
+	local newTool = tools[name]
+	if newTool ~= self.tool then
+		self.tool = newTool
+	end
 end
 
 ---Handles resizing on the subroot
@@ -365,6 +398,7 @@ end
 
 function EScene:update(_)
 	if not self._visible then return end
+	Tool.srContainer = self
 
 	local camera = self.camera
 	local layers = self.subroot._canvasLayers
@@ -386,62 +420,42 @@ function EScene:update(_)
 	end
 end
 
-function EScene:mousemoved(_, _, dx, dy)
+function EScene:mousemoved(...)
 	-- Don't handle anything without free-cam
 	if not self.cameraActive then return false end
 
-	if self.panning then
-		-- Pan with the mouse
-		local camera = self.camera
-		local speed = -camera._zoom.x
-		camera:translate(dx * speed, dy * speed)
-		return true
-	end
+	self.tool:mousemoved(...)
 end
 
 function EScene:mousepressed(mx, my, button, isTouch, pressCount)
 	-- Don't handle anything without free-cam
 	if not self.cameraActive then return false end
-	if button == 3 then
-		-- Start panning
-		self.panning = true
+
+	if self.tool:mousepressed(mx, my, button, isTouch, pressCount) then
 		self:pushModal()
 		return true
 	elseif button == 1 and self._errorMessage then
 		-- Clear the error message
 		self._errorMessage = nil
+		return true
 	end
 end
 
-function EScene:mousereleased(mx, my, button)
+function EScene:mousereleased(...)
 	-- Don't handle anything without free-cam
 	if not self.cameraActive then return false end
-	if button == 3 and self.panning then
-		-- Stop panning
-		self.panning = false
+
+	self.tool:mousereleased(...)
+	if not self.tool:isBusy() then
 		self:popModal()
-		return true
 	end
 end
 
-function EScene:wheelmoved(wx, wy)
+function EScene:wheelmoved(...)
 	-- Don't handle anything without free-cam
 	if not self.cameraActive then return false end
 
-	-- Do zooming
-	if wx == 0 then
-		local camera = self.camera
-		local zoom = camera._zoom
-		local newZoomValue = zoom.x
-		if wy > 0 then
-			newZoomValue = newZoomValue * 0.8
-		elseif wy < 0 then
-			newZoomValue = newZoomValue * 1.2
-		end
-		newZoomValue = max(0.02, min(newZoomValue, 1000))
-		camera:setZoom(newZoomValue, newZoomValue)
-		return true
-	end
+	self.tool:wheelmoved(...)
 end
 
 return EScene
