@@ -143,8 +143,8 @@ function MainWindow:new(toolbox, subroot)
 			0, 0, 0, 0,
 			4, 4, 4, 32
 		)
-		:setMargin(20)
-		:setPadding(8)
+		:setMargin(4)
+		:setPadding(4)
 		:setVariant("topbar")
 		:setResizeToContent(true)
 
@@ -169,7 +169,7 @@ function MainWindow:new(toolbox, subroot)
 			0.5, 0, 0.5, 0,
 			0, 4, 0, 32
 		)
-		:setMargin(4)
+		:setMargin(0)
 		:setPadding(8)
 		:setResizeToContent(true)
 		:setVariant("topbar")
