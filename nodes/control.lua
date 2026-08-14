@@ -469,8 +469,8 @@ end
 ---If a parameter is `nil`, it won't be modified.
 ---@generic T: Control
 ---@param self T | Control
----@param vertical number
----@param horizontal number
+---@param vertical number?
+---@param horizontal number?
 ---@return T
 function Control:setGrowDirection(vertical, horizontal)
 	if vertical then self._growVertical = vertical end
