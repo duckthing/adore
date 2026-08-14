@@ -66,22 +66,34 @@ local function onRequire()
 		})
 
 		-- Button (with contents)
-		default:setDrawable(Button, "", DrawButton(buttonColors.normal, 4, nil, buttonColors.normalText))
-		default:setDrawable(Button, "hovered", DrawButton(buttonColors.hovered, 4, nil, buttonColors.hoveredText))
-		default:setDrawable(Button, "pressed", DrawButton(buttonColors.pressed, 4, nil, buttonColors.pressedText))
-		default:setDrawable(Button, "disabled", DrawButton(buttonColors.disabled, 4, nil, buttonColors.disabledText))
+		do
+			-- Normal variant
 
-		default:setVariant(Button, "flat", {
-			normal = "flatnormal",
-			hovered = "flathovered",
-			focused = "flathovered",
-			pressed = "flatpressed",
-			disabled = "flatdisabled",
-		})
-		default:setDrawable(Button, "flatnormal", DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText))
-		default:setDrawable(Button, "flathovered", DrawButton(buttonColors.transparent, 4, nil, buttonColors.hoveredText))
-		default:setDrawable(Button, "flatpressed", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
-		default:setDrawable(Button, "flatdisabled", DrawButton(buttonColors.transparent, 4, nil, buttonColors.disabledText))
+			---@param dr DrawRequest.Button
+			---@return DrawRequest.Button
+			local function wm(dr)
+				-- Applies the margin
+			dr:setContentMargin(8, 8)
+				return dr
+			end
+			default:setDrawable(Button, "", wm(DrawButton(buttonColors.normal, 4, nil, buttonColors.normalText)))
+			default:setDrawable(Button, "hovered", wm(DrawButton(buttonColors.hovered, 4, nil, buttonColors.hoveredText)))
+			default:setDrawable(Button, "pressed", wm(DrawButton(buttonColors.pressed, 4, nil, buttonColors.pressedText)))
+			default:setDrawable(Button, "disabled", wm(DrawButton(buttonColors.disabled, 4, nil, buttonColors.disabledText)))
+
+			-- Flat variant
+			default:setVariant(Button, "flat", {
+				normal = "flatnormal",
+				hovered = "flathovered",
+				focused = "flathovered",
+				pressed = "flatpressed",
+				disabled = "flatdisabled",
+			})
+			default:setDrawable(Button, "flatnormal", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText)))
+			default:setDrawable(Button, "flathovered", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.hoveredText)))
+			default:setDrawable(Button, "flatpressed", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText)))
+			default:setDrawable(Button, "flatdisabled", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.disabledText)))
+		end
 
 		-- TextureButton
 		default:setDrawable(TextureButton, "", DrawTextureButton(nil, 4, buttonColors.normalText))
@@ -90,7 +102,7 @@ local function onRequire()
 		default:setDrawable(TextureButton, "disabled", DrawTextureButton(nil, 4, buttonColors.disabledText))
 
 		-- LineEdit
-		default:setDrawable(LineEdit, "", DrawLineEdit(buttonColors.normal))
+		default:setDrawable(LineEdit, "", DrawLineEdit(buttonColors.normal):setContentMargin(8, 8))
 
 		-- TabBar
 		default:setDrawable(TabBar, "", DrawTabBar())

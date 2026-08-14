@@ -698,16 +698,24 @@ function Control:_getRectFromParentSize(w, h)
 	end
 
 	-- Grow to be above the minimum size
-	local minW, minH = self:getMinimumSize()
-	if canonW < minW then
-		local difference = minW - canonW
-		canonLeft = canonLeft - difference * self._growHorizontal
-		canonW = minW
-	end
-	if canonH < minH then
-		local difference = minH - canonH
-		canonRight = canonRight - difference * self._growVertical
-		canonH = minH
+	do
+		local ow, oh = self:getAppliedDrawable():getContentMargin()
+
+		local minW, minH = self:getMinimumSize()
+		minW, minH =
+			minW + ow,
+			minH + oh
+
+		if canonW < minW then
+			local difference = minW - canonW
+			canonLeft = canonLeft - difference * self._growHorizontal
+			canonW = minW
+		end
+		if canonH < minH then
+			local difference = minH - canonH
+			canonRight = canonRight - difference * self._growVertical
+			canonH = minH
+		end
 	end
 
 	return canonLeft, canonTop, canonW, canonH

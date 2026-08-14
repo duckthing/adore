@@ -8,6 +8,7 @@ local DrawTabContainer = DrawRequest:extend()
 DrawTabContainer.CLASS_NAME = "DrawTabContainer"
 
 function DrawTabContainer:new()
+	DrawTabContainer.super.new(self)
 end
 
 ---@param tabContainer TabContainer
