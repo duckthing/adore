@@ -955,122 +955,8 @@ function Root:setMouseMode(mode)
 	love.mouse.setRelativeMode(mode == "centered")
 end
 
-local deepestDepth = -math.huge
-local deepestLayer = -math.huge
+do
 local deepestElement = nil
-
----@param obj Control
----@param mouseX integer
----@param mouseY integer
-local function shashForEachControl(obj, mouseX, mouseY)
-	if obj._visible then
-		---@type CanvasLayer
-		local layerNode = Node._root._controlTopLevelLayers[obj._topLevelNode]
-		if layerNode == nil then return end
-
-		-- Only continue if the current layer is equal or greater than the deepest layer depth
-		-- TODO: Remove layer depth? The loop already starts from the highest layer
-		local layerDepth = layerNode._layerIndex
-		-- if layerDepth < deepestLayer then return end
-
-		local objDepth = obj._depth
-
-		if objDepth > deepestDepth then
-			-- Found the new deepest object
-			if obj:canReceiveInput(true, mouseX, mouseY) then
-				deepestDepth = objDepth
-				deepestLayer = layerDepth
-				deepestElement = obj
-			end
-		end
-	end
-end
-
-
----@param obj Control
----@param mouseX integer
----@param mouseY integer
----@param check fun(control: Control, ...): boolean
----@param ... unknown
-local function shashForEachControlWithCheck(obj, mouseX, mouseY, check, ...)
-	if obj._visible then
-		---@type CanvasLayer
-		local layerNode = Node._root._controlTopLevelLayers[obj._topLevelNode]
-		if layerNode == nil then return end
-
-		-- Only continue if the current layer is equal or greater than the deepest layer depth
-		-- TODO: Remove layer depth? The loop already starts from the highest layer
-		local layerDepth = layerNode._layerIndex
-		-- if layerDepth < deepestLayer then return end
-
-		local objDepth = obj._depth
-
-		if objDepth > deepestDepth then
-			-- Found the new deepest object
-			if check(obj, ...) and obj:canReceiveInput(true, mouseX, mouseY) and obj:doesPointOverlap(mouseX, mouseY) then
-				deepestDepth = objDepth
-				deepestLayer = layerDepth
-				deepestElement = obj
-			end
-		end
-	end
-end
-
----@param obj Control
----@param mouseX integer
----@param mouseY integer
----@param member string
-local function shashForEachWithMember(obj, mouseX, mouseY, member)
-	if obj._visible and obj[member] then
-		---@type CanvasLayer
-		local layerNode = Node._root._controlTopLevelLayers[obj._topLevelNode]
-		if layerNode == nil then return end
-
-		-- Only continue if the current layer is equal or greater than the deepest layer depth
-		local layerDepth = layerNode._layerIndex
-		if layerDepth < deepestLayer then return end
-
-		local objDepth = obj._depth
-
-		if objDepth > deepestDepth then
-			-- Found the new deepest object
-			if obj:canReceiveInput(false, mouseX, mouseY) then
-				deepestDepth = objDepth
-				deepestLayer = layerDepth
-				deepestElement = obj
-			end
-		end
-	end
-end
-
----@param obj Control
----@param mouseX integer
----@param mouseY integer
----@param member string
-local function shashForEachMouseableWithMember(obj, mouseX, mouseY, member)
-	if obj._visible and obj[member] then
-		---@type CanvasLayer
-		local layerNode = Node._root._controlTopLevelLayers[obj._topLevelNode]
-		if layerNode == nil then return end
-
-		-- Only continue if the current layer is equal or greater than the deepest layer depth
-		local layerDepth = layerNode._layerIndex
-		if layerDepth < deepestLayer then return end
-
-		local objDepth = obj._depth
-
-		if objDepth > deepestDepth then
-			-- Found the new deepest object
-			if obj:canReceiveInput(true, mouseX, mouseY) then
-				deepestDepth = objDepth
-				deepestLayer = layerDepth
-				deepestElement = obj
-			end
-		end
-	end
-end
-
-local function noop() return true end
 
 ---Returns the highest Control at a certain **screen** point
 ---@param x integer
@@ -1081,8 +967,6 @@ local function noop() return true end
 ---@return integer? px # The local X coordinate for the Control
 ---@return integer? py # The local Y coordinate for the Control
 function Root:getControlAtPoint(x, y, check, ...)
-	deepestLayer = -math.huge
-	deepestDepth = -math.huge
 	deepestElement = nil
 
 	-- Goes from the highest layer to the lowest
@@ -1095,18 +979,19 @@ function Root:getControlAtPoint(x, y, check, ...)
 	local modal = self._modalStack[#self._modalStack]
 	if modal then
 		-- If there's a modal, we only check the Viewport that it is in
-		local viewport = modal:getViewport()
-		local lx, ly = tx, ty
+		local viewport = assert(modal:getViewport())
+		local vx, vy = tx, ty
 		if viewport ~= rootViewport then
-			---@diagnostic disable-next-line: need-check-nil
-			lx, ly = viewport:windowToViewportPoint(tx, ty)
-			---@cast viewport Viewport
+			vx, vy = viewport:windowToViewportPoint(tx, ty)
 		end
-		local shash = viewport._controlShash
-		shash:each(lx, ly, 1, 1, shashForEachControlWithCheck, lx, ly, check or noop, ...)
-		if deepestElement then
-			return deepestElement, lx, ly
+
+		local deepestControl = viewport:getControlAtPoint(vx, vy, check, ...)
+
+		if deepestControl then
+			-- Found an element under the modal
+			return deepestControl, vx, vy
 		else
+			-- Can't go past the modal
 			return
 		end
 	end
@@ -1115,23 +1000,23 @@ function Root:getControlAtPoint(x, y, check, ...)
 		-- Check all layers for the best Control
 		local layer = self._canvasLayers[i]
 		local viewport = layer._viewport
-		local lx, ly = tx, ty
-		if viewport ~= rootViewport then
-			lx, ly = viewport:windowToViewportPoint(tx, ty)
-		end
-		local shash = viewport._controlShash
-		shash:each(lx, ly, 1, 1, shashForEachControlWithCheck, lx, ly, check or noop, ...)
 
-		if deepestElement then
-			fx, fy = lx, ly
-			break
+		-- Convert to Viewport space
+		local vx, vy = tx, ty
+		if viewport ~= rootViewport then
+			vx, vy = viewport:windowToViewportPoint(tx, ty)
+		end
+
+		local deepestControl = viewport:getControlAtPoint(vx, vy)
+		if deepestControl then
+			return deepestControl, vx, vy
 		end
 	end
 
 	return deepestElement, fx, fy
 end
 
----Returns the highest Control at a certain point that has 'member'
+---Returns the highest Control at a certain **screen* point that has 'member'
 ---@param x integer
 ---@param y integer
 ---@param member string
@@ -1140,36 +1025,28 @@ end
 ---@return integer? px # The local X coordinate for the Control
 ---@return integer? py # The local Y coordinate for the Control
 function Root:getControlAtPointWithMember(x, y, member, mouseable)
-	deepestDepth = -math.huge
-	deepestElement = nil
-
 	local rootViewport = self._viewport
 	local tx, ty = rootViewport:windowToViewportPoint(x, y)
 	local fx, fy = nil, nil
 
-	local check = shashForEachWithMember
-	if mouseable then
-		check = shashForEachMouseableWithMember
-	end
-
 	for i = #self._canvasLayers, 1, -1 do
 		local layer = self._canvasLayers[i]
 		local viewport = layer:getViewport()
-		---@cast viewport Viewport
-		local shash = viewport._controlShash
-		local lx, ly = tx, ty
-		if viewport ~= rootViewport then
-			lx, ly = viewport:windowToViewportPoint(tx, ty)
-		end
-		shash:each(lx, ly, 1, 1, check, lx, ly, member)
+		if viewport then
+			local vx, vy = tx, ty
+			if viewport ~= rootViewport then
+				vx, vy = viewport:windowToViewportPoint(tx, ty)
+			end
 
-		if deepestElement then
-			fx, fy = lx, ly
-			break
+			local found = viewport:getControlAtPointWithMember(vx, vy, member, mouseable)
+			if found then
+				return found, vx, vy
+			end
 		end
 	end
 
 	return deepestElement, fx, fy
+end
 end
 
 ---Pushes the Control to the focused stack. The Control at the top receives all input events first.

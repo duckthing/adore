@@ -1022,6 +1022,124 @@ function Viewport:getWorldMousePosition()
 	return self:screenToViewportPoint(Node._root:getMousePosition())
 end
 
+do
+local deepestDepth = -math.huge
+local deepestElement = nil
+
+---Used in the foreach of searching for a Control
+local shashFunctions = {}
+Viewport._shashFunctions = shashFunctions
+
+---@param obj Control
+---@param mouseX integer
+---@param mouseY integer
+function shashFunctions.forEachControl(obj, mouseX, mouseY)
+	if obj._visible then
+		local objDepth = obj._depth
+		if objDepth > deepestDepth then
+			-- Found the new deepest object
+			if obj:canReceiveInput(true, mouseX, mouseY) then
+				deepestDepth = objDepth
+				deepestElement = obj
+			end
+		end
+	end
+end
+
+---@param obj Control
+---@param mouseX integer
+---@param mouseY integer
+---@param check fun(control: Control, ...): boolean
+---@param ... unknown
+function shashFunctions.forEachControlWithCheck(obj, mouseX, mouseY, check, ...)
+	if obj._visible then
+		local objDepth = obj._depth
+		if objDepth > deepestDepth then
+			-- Found the new deepest object
+			if check(obj, ...) and obj:canReceiveInput(true, mouseX, mouseY) and obj:doesPointOverlap(mouseX, mouseY) then
+				deepestDepth = objDepth
+				deepestElement = obj
+			end
+		end
+	end
+end
+
+---@param obj Control
+---@param mouseX integer
+---@param mouseY integer
+---@param member string
+function shashFunctions.forEachWithMember(obj, mouseX, mouseY, member)
+	if obj._visible and obj[member] then
+		local objDepth = obj._depth
+		if objDepth > deepestDepth then
+			-- Found the new deepest object
+			if obj:canReceiveInput(false, mouseX, mouseY) then
+				deepestDepth = objDepth
+				deepestElement = obj
+			end
+		end
+	end
+end
+
+---@param obj Control
+---@param mouseX integer
+---@param mouseY integer
+---@param member string
+function shashFunctions.forEachMouseableWithMember(obj, mouseX, mouseY, member)
+	if obj._visible and obj[member] then
+		local objDepth = obj._depth
+
+		if objDepth > deepestDepth then
+			-- Found the new deepest object
+			if obj:canReceiveInput(true, mouseX, mouseY) then
+				deepestDepth = objDepth
+				deepestElement = obj
+			end
+		end
+	end
+end
+
+local function noop() return true end
+
+---Returns the highest Control at a certain **Viewport** point
+---@param vx integer
+---@param vy integer
+---@param check (fun(control: Control, ...): boolean)?
+---@param ... unknown # These are sent into the check function
+---@return Control? control
+---@return integer? depth
+function Viewport:getControlAtPoint(vx, vy, check, ...)
+	local shash = self._controlShash
+	deepestDepth = -math.huge
+	deepestElement = nil
+	shash:each(vx, vy, 1, 1, shashFunctions.forEachControlWithCheck, vx, vy, check or noop, ...)
+
+	return deepestElement
+end
+
+
+---Returns the highest Control at a certain **Viewport** point that has 'member'
+---@param vx integer
+---@param vy integer
+---@param member string
+---@param mouseable boolean? # If this member should be able to receive mouse input
+---@return Control? control
+---@return integer? depth
+function Viewport:getControlAtPointWithMember(vx, vy, member, mouseable)
+	local check = Viewport._shashFunctions.forEachWithMember
+	if mouseable then
+		check = Viewport._shashFunctions.forEachMouseableWithMember
+	end
+
+	local shash = self._controlShash
+	deepestDepth = -math.huge
+	deepestElement = nil
+	shash:each(vx, vy, 1, 1, check, vx, vy, member)
+
+	return deepestElement, deepestDepth
+end
+end
+
 ---Releases all resources inside of the Viewport
 function Viewport:release()
 	self._mainCanvas:release()

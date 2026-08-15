@@ -48,7 +48,7 @@ function WindowPopup:new()
 	self._closeButton = Button("X")
 		:setAnchorsAndOffsets(
 			1, 0, 1, 0,
-			0, 0, -titleHeight, titleHeight
+			-titleHeight, 0, 0, titleHeight
 		)
 		:setTextAlign("center")
 		:setVariant("flat")
