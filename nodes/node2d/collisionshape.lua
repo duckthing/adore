@@ -70,6 +70,7 @@ function CollisionShape:_addFixture()
 			if shape then
 				self._fixture = parent:_addShape(shape, self._density)
 				self._fixture:setUserData(self)
+				self:_onGlobalBoundsChanged()
 			end
 		end
 	end
@@ -96,6 +97,14 @@ end
 function CollisionShape:onViewportRemoved(oldViewport)
 	CollisionShape.super.onViewportRemoved(self, oldViewport)
 	self:_destroyFixture()
+end
+
+function CollisionShape:doesPointOverlap(worldX, worldY)
+	local fixture = self._fixture
+	if fixture then
+		return fixture:testPoint(worldX, worldY)
+	end
+	return false
 end
 
 function CollisionShape._addDefinition(entry)

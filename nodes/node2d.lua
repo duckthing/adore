@@ -304,6 +304,18 @@ function Node2d:setRelativeTransform(relative)
 	return self
 end
 
+---Returns `true` if the given world point overlaps with this Node2d
+---@param worldX number
+---@param worldY number
+---@return boolean
+function Node2d:doesPointOverlap(worldX, worldY)
+	if self._globalContentRect:containsPoint(worldX, worldY) then
+		local localX, localY = self._globalTransform:inverseTransformPoint(worldX, worldY)
+		return self._localContentRect:containsPoint(localX, localY)
+	end
+	return false
+end
+
 -- local appleCakeProfileNode2dDraw
 -- local appleCakeArgs = {class = ""}
 

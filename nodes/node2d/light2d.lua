@@ -29,7 +29,7 @@ function Light2d:_intDraw()
 	self:_afterDraw()
 end
 
-function Light2d:draw() end
+Light2d.draw = Node2d.draw
 
 function Light2d:_drawLight()
 	-- Don't override; it calls `:draw()` when it's time to draw a light
