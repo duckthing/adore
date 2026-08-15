@@ -32,7 +32,7 @@ function Tool:isBusy()
 end
 
 function Tool:mousepressed(mx, my, button, isTouch, pressCount)
-	if button == 3 then
+	if button == 3 or (button == 1 and love.keyboard.isDown("space")) then
 		-- Start panning
 		self.panning = true
 		return true
@@ -52,7 +52,7 @@ function Tool:mousemoved(mx, my, dx, dy, isTouch)
 end
 
 function Tool:mousereleased(mx, my, button)
-	if button == 3 and self.panning then
+	if self.panning then
 		-- Stop panning
 		self.panning = false
 		return true

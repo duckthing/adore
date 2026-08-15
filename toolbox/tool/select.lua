@@ -93,11 +93,4 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 	return false
 end
 
-function SelectTool:mousereleased(mx, my, button)
-	if button ~= 1 then
-		return SelectTool.super.mousereleased(self, mx, my, button)
-	end
-	return false
-end
-
 return SelectTool
