@@ -5,16 +5,18 @@ local Adore = require(ADORE_PATH)
 local min, max = math.min, math.max
 
 ---@class Toolbox.Tool: SimpleObject
+---@field super Toolbox.Tool
 ---@field mousemoved fun(self, mx: integer, my: integer, globalDx: integer, globalDy: integer, isTouch: boolean): boolean? handled
 ---@field mousepressed fun(self, mx: integer, my: integer, button: integer, isTouch: boolean, pressCount: integer): boolean? handled
 ---@field mousereleased fun(self, mx: integer, my: integer, button: integer): boolean? handled
 ---@field wheelmoved fun(self, wx: integer, wy: integer): boolean? handled
----@field textinput fun(self, text: string): boolean? handled
 ---@overload fun(): Toolbox.Tool
 local Tool = Adore.Libraries("SimpleObject"):extend()
 
 ---@type Toolbox.EditableScene
 Tool.srContainer = nil
+---@type Toolbox.MainWindow
+Tool.mainWindow = nil
 ---@type boolean # If this Tool is busy and should not be switched away from
 Tool._busy = false
 
@@ -73,10 +75,6 @@ function Tool:wheelmoved(wx, wy)
 		camera:setZoom(newZoomValue, newZoomValue)
 		return true
 	end
-	return false
-end
-
-function Tool:textinput(text)
 	return false
 end
 

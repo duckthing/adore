@@ -29,6 +29,8 @@ local EditableScene = require(ADORE_PATH..".toolbox.editablescene")
 ---@type Toolbox.GameScene
 local GameScene = require(ADORE_PATH..".toolbox.gamescene")
 local Templates = require(ADORE_PATH..".toolbox.scripttemplates")
+---@type Toolbox.Tool
+local Tool = require(ADORE_PATH..".toolbox.tool")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
@@ -101,6 +103,7 @@ function MainWindow:new(toolbox, subroot)
 	MainWindow.super.new(self)
 	self:setAnchors(0, 0, 1, 1)
 	self.toolbox = toolbox
+	Tool.mainWindow = self
 
 	--======== GAME TABS
 	local tabContainer = TabContainer()
@@ -788,7 +791,7 @@ function MainWindow:populateToolbar()
 				0, 0, 0, 1
 			)
 			:setVariant("flat")
-		button.clicked:connect(srContainer, "selectTool", false, false)
+		button.clicked:connect(srContainer, "_onSelectToolPressed", false, false)
 
 		toolbar:addChild(button)
 	end

@@ -11,8 +11,11 @@ local ViewportContainer = Nodes("ViewportContainer")
 local RootNode = Nodes("RootNode")
 local Viewport = Resources("Viewport")
 local Camera = Nodes("Camera")
+
 ---@type Toolbox.Tool
 local Tool = require(ADORE_PATH..".toolbox.tool")
+---@type Toolbox.Tool.Select
+local SelectTool = require(ADORE_PATH..".toolbox.tool.select")
 
 local lgReplaceTransform = love.graphics.replaceTransform
 
@@ -29,7 +32,7 @@ do
 end
 
 local tools = {
-	select = Tool(),
+	Select = SelectTool(),
 }
 
 ---@type {label: string?, icon: TextureSource?}[]
@@ -66,7 +69,7 @@ function EScene:new(root)
 	self.panning = false
 
 	---@type Toolbox.Tool
-	self.tool = tools.select
+	self.tool = tools.Select
 
 	---@type boolean # Whether this can call `:update`
 	self._running = false
@@ -82,6 +85,11 @@ end
 ---@return {label: string?, icon: TextureSource?}[]
 function EScene:getTools()
 	return availableTools
+end
+
+---@param button Button
+function EScene:_onSelectToolPressed(button)
+	self:selectTool(button._text)
 end
 
 ---Selects a Toolbox.Tool by string name
@@ -290,7 +298,6 @@ function drawDirectSubroot(self, subroot)
 	local oldX, oldY = camera._position:unpack()
 
 	-- Change the origin for replaceTransform (for Controls)
-	alwaysApplyTransform = usedTransform
 	love.graphics.replaceTransform = replaceTransformOverride
 
 	love.graphics.origin()
@@ -298,14 +305,26 @@ function drawDirectSubroot(self, subroot)
 		local layer = layers[i]
 		---@cast layer CanvasLayer
 		if layer:isVisibleInTree() then
+			---@class Viewport
 			local viewport = layer._viewport
 			local oldTransform = viewport._viewportTransform
-			viewport._viewportTransform = usedTransform
+
+			-- Alt-transform is used for converting Toolbox-space to Viewport world-space
+			local altTransform = viewport._toolboxTransform
+			if not altTransform then
+				altTransform = love.math.newTransform()
+				---@type love.Transform # Toolbox-exclusive transform; converts from the Toolbox window to Viewport world-space
+				viewport._toolboxTransform = altTransform
+			end
+
+			viewport._viewportTransform = altTransform
 			local scaleFactor = 1 / viewport._pixelScale
 
 			camera:setPosition(oldX * scaleFactor, oldY * scaleFactor)
 			camera:_updateCanvasTransform(viewport:getDimensions())
-			usedTransform:setMatrix(camera:getCanvasTransform():getMatrix())
+			altTransform:setMatrix(camera:getCanvasTransform():getMatrix())
+			alwaysApplyTransform = altTransform
+
 			-- TODO: Scale `usedTransform` by `scaleFactor`?
 			-- A pixel in this Viewport is not equal to a pixel in the root Viewport.
 			-- However, leaving it unscaled makes it easy to gauge how the UI looks on top of the game world.
