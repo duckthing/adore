@@ -32,21 +32,13 @@ local function controlBelongsToLayer(control, desiredLayer)
 	return control:hasAncestor(desiredLayer) and control:isVisibleInTree()
 end
 
----Used to select visible Node2ds below the current layer
----@param node Node
----@param desiredLayer CanvasLayer | RootNode
----@return boolean
-local function node2dBelongsToLayer(node, desiredLayer)
-	return node:hasAncestor(desiredLayer) and node:isVisibleInTree()
-		and node:is(Node2d)
-end
-
+---Returns `true` if this Node2d overlaps the point and has drawn contents
 ---@param node Node2d
 ---@param layer CanvasLayer | RootNode
 ---@param worldX integer
 ---@param worldY integer
 ---@return Node?
-local function node2dOverlaps(node, layer, worldX, worldY)
+local function node2dOverlapsAndDrawn(node, layer, worldX, worldY)
 	local gcr = node._globalContentRect
 	if gcr and node:doesPointOverlap(worldX, worldY) then
 		if (node.draw ~= Node2d.draw and not node:is(Light2d)) or node:is(CollisionShape) then
@@ -86,14 +78,10 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 			end
 
 			-- ...or try to get the highest Node2d
-			local deepestInLayer = layer:getDeepestNode(node2dBelongsToLayer, layer)
+			local deepestInLayer = layer:getNode2dAtPoint(worldX, worldY, node2dOverlapsAndDrawn)
 			if deepestInLayer then
-				local result = deepestInLayer
-					:traverseUpwards(node2dOverlaps, node2dBelongsToLayer, layer, worldX, worldY)
-				if result then
-					toSelect = result
-					break
-				end
+				toSelect = deepestInLayer
+				break
 			end
 		end
 
