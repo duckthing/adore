@@ -178,6 +178,14 @@ local function controlToLocal(rootViewport, control, rootX, rootY)
 	return rootX, rootY
 end
 
+---@param control Control
+---@param x number
+---@param y number
+---@return boolean
+local function checkCanReceiveMouseInput(control, x, y)
+	return control:canReceiveInput(true, x, y)
+end
+
 function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 	local root = self.root
 	local rootViewport = root._viewport
@@ -226,7 +234,7 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 
 	-- Check if we're hovering a different Control
 	local oldControl = root._hoveredControl
-	local newControl, nx, ny = root:getControlAtPoint(x, y)
+	local newControl, nx, ny = root:getControlAtPoint(x, y, checkCanReceiveMouseInput, x, y)
 
 	if oldControl ~= newControl then
 		-- If we're here, they're different
