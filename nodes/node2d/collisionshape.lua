@@ -76,6 +76,13 @@ function CollisionShape:_addFixture()
 	end
 end
 
+function CollisionShape:_onGlobalBoundsChanged()
+	local fixture = self._fixture
+	if fixture then
+		self._globalContentRect:iSetFromPoints(fixture:getBoundingBox())
+	end
+end
+
 ---Destroys a `love.Fixture` created by this CollisionShape, if it exists
 ---@private
 function CollisionShape:_destroyFixture()
