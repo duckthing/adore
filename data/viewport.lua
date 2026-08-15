@@ -1056,7 +1056,7 @@ function shashFunctions.forEachControlWithCheck(obj, mouseX, mouseY, check, ...)
 		local objDepth = obj._depth
 		if objDepth > deepestDepth then
 			-- Found the new deepest object
-			if check(obj, ...) and obj:canReceiveInput(true, mouseX, mouseY) and obj:doesPointOverlap(mouseX, mouseY) then
+			if check(obj, ...) and obj:doesPointOverlap(mouseX, mouseY) then
 				deepestDepth = objDepth
 				deepestElement = obj
 			end
@@ -1114,7 +1114,9 @@ function Viewport:getControlAtPoint(vx, vy, check, ...)
 	deepestElement = nil
 	shash:each(vx, vy, 1, 1, shashFunctions.forEachControlWithCheck, vx, vy, check or noop, ...)
 
-	return deepestElement
+	if deepestElement then
+		return deepestElement, deepestDepth
+	end
 end
 
 
@@ -1136,7 +1138,9 @@ function Viewport:getControlAtPointWithMember(vx, vy, member, mouseable)
 	deepestElement = nil
 	shash:each(vx, vy, 1, 1, check, vx, vy, member)
 
-	return deepestElement, deepestDepth
+	if deepestElement then
+		return deepestElement, deepestDepth
+	end
 end
 end
 

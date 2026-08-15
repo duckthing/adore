@@ -980,13 +980,14 @@ function Root:getControlAtPoint(x, y, check, ...)
 	if modal then
 		-- If there's a modal, we only check the Viewport that it is in
 		local viewport = assert(modal:getViewport())
+
+		-- Convert to Viewport space
 		local vx, vy = tx, ty
 		if viewport ~= rootViewport then
 			vx, vy = viewport:windowToViewportPoint(tx, ty)
 		end
 
 		local deepestControl = viewport:getControlAtPoint(vx, vy, check, ...)
-
 		if deepestControl then
 			-- Found an element under the modal
 			return deepestControl, vx, vy
@@ -1007,7 +1008,7 @@ function Root:getControlAtPoint(x, y, check, ...)
 			vx, vy = viewport:windowToViewportPoint(tx, ty)
 		end
 
-		local deepestControl = viewport:getControlAtPoint(vx, vy)
+		local deepestControl = viewport:getControlAtPoint(vx, vy, check, ...)
 		if deepestControl then
 			return deepestControl, vx, vy
 		end
