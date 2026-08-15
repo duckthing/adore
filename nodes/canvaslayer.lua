@@ -1,7 +1,11 @@
 ---@type AdoreInit
 local Adore = require ""
-local Node = Adore.Nodes("Node")
 local Viewport = Adore.Resources("Viewport")
+
+local Nodes = Adore.Nodes
+local Node = Nodes("Node")
+local Node2d = Nodes("Node2d")
+
 local min, max = math.min, math.max
 
 ---A `CanvasLayer` provides a different `Viewport` to render on that is independent from the current `Viewport`.
@@ -131,6 +135,54 @@ function CanvasLayer:removeViewport()
 	viewport:release()
 	self._viewport = nil
 	self:shallowEmit("_eAncestorViewportChanged", self:getTreeViewport())
+end
+
+do
+---Used to select visible Node2ds below the current layer
+---@param node Node
+---@param desiredLayer CanvasLayer | RootNode
+---@return boolean
+local function node2dBelongsToLayer(node, desiredLayer)
+	return node:hasAncestor(desiredLayer) and node:isVisibleInTree()
+		and node:is(Node2d)
+end
+
+---Returns `true` if this Node2d overlaps the given point
+---@param node Node2d
+---@param layer CanvasLayer | RootNode
+---@param worldX integer
+---@param worldY integer
+---@return Node?
+local function node2dOverlaps(node, layer, worldX, worldY)
+	local gcr = node._globalContentRect
+	if gcr and node:doesPointOverlap(worldX, worldY) then
+		return node
+	end
+end
+
+---Returns the highest visible Node2d at a certain **Viewport** point, and returns the result from `forEach`.
+---
+---**Very slow!** Use this method only if you have to.
+---Consider using a spatial hash (`Adore.Libraries("Shash")`) or the physics world for better performance.
+---@param self CanvasLayer | RootNode
+---@param vx integer
+---@param vy integer
+---@param forEach (fun(node: Node, ...): any)?
+---@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns `true` if the current node is valid to travel to
+---@param ... unknown # Passed into `forEach`
+---@return Node2d? node2d
+function CanvasLayer:getNode2dAtPoint(vx, vy, forEach, currNodeValidator, ...)
+	forEach = forEach or node2dOverlaps
+	currNodeValidator = currNodeValidator or node2dBelongsToLayer
+	local deepestInLayer = self:getDeepestNode(currNodeValidator, self)
+	if deepestInLayer then
+		local result = deepestInLayer
+			:traverseUpwards(forEach, currNodeValidator, self, vx, vy, ...)
+		if result then
+			return result
+		end
+	end
+end
 end
 
 function CanvasLayer:_eAncestorViewportChanged(newViewport)

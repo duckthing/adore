@@ -339,9 +339,10 @@ local TreeIter = {}
 local TreeIterMT = {__index = TreeIter}
 
 ---Goes downward the Scene Tree all descendents, and returns if the value returned by `forEach` is not nil.
+---`currNodeValidator` can skip a path and Nodes on said path if it returns `false`.
 ---@param node Node
 ---@param forEach fun(node: Node, ...: unknown): any?
----@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns true if the current node is valid to travel to
+---@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns `true` if the current node is valid to travel to
 ---@param ... unknown # Passed into both functions
 function TreeIter:traverseDownExcludeSelf(node, forEach, currNodeValidator, ...)
 	if not currNodeValidator then currNodeValidator = returnTrue end
@@ -359,9 +360,10 @@ function TreeIter:traverseDownExcludeSelf(node, forEach, currNodeValidator, ...)
 end
 
 ---Goes downward the Scene Tree through ourselves and all descendents, and returns if the value returned by `forEach` is not nil.
+---`currNodeValidator` can skip a path and Nodes on said path if it returns `false`.
 ---@param node Node
 ---@param forEach fun(node: Node, ...: unknown): any?
----@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns true if the current node is valid to travel to
+---@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns `true` if the current node is valid to travel to
 ---@param ... unknown # Passed into both functions
 function TreeIter:traverseDownSelf(node, forEach, currNodeValidator, ...)
 	if not currNodeValidator then currNodeValidator = returnTrue end
@@ -386,9 +388,10 @@ function TreeIter:traverseDownSelf(node, forEach, currNodeValidator, ...)
 end
 
 ---Goes downward the Scene Tree through ourselves, all descendents, and later neighbors's descendents, and returns if the value returned by `forEach` is not nil.
+---`currNodeValidator` can skip a path and Nodes on said path if it returns `false`.
 ---@param node Node
 ---@param forEach fun(node: Node, ...: unknown): any?
----@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns true if the current node is valid to travel to
+---@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns `true` if the current node is valid to travel to
 ---@param ... unknown # Passed into both functions
 function TreeIter:traverseDownwards(node, forEach, currNodeValidator, ...)
 	if not currNodeValidator then currNodeValidator = returnTrue end
@@ -424,9 +427,10 @@ end
 ---Goes through ourselves and up through the Scene Tree, and returns if the value returned by `forEach` is not nil.
 ---Imagine the Scene Tree in a Tree format, with all groups expanded. It will go 'up' towards neighboring children.
 ---The "above" Node will either be the deepest Node in an earlier sibling, the earlier sibling, or the parent.
+---`currNodeValidator` can skip a path and Nodes on said path if it returns `false`.
 ---@param node Node
 ---@param forEach fun(node: Node, ...: unknown): any?
----@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns true if the current node is valid to travel to
+---@param currNodeValidator (fun(node: Node, ...: unknown): boolean)? # Returns `true` if the current node is valid to travel to
 ---@param ... unknown # Passed into both functions
 function TreeIter:traverseUpwards(node, forEach, currNodeValidator, ...)
 	if not currNodeValidator then currNodeValidator = returnTrue end

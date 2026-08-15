@@ -6,6 +6,7 @@ local Resources = Adore.Resources
 local Node = Nodes("Node")
 local Control = Nodes("Control")
 local Timer = Nodes("TimerNode")
+local CanvasLayer = Nodes("CanvasLayer")
 local Tween = Resources("Tween")
 local Viewport = Resources("Viewport")
 local CoreUIContext = Resources("CoreUIContext")
@@ -1049,6 +1050,8 @@ function Root:getControlAtPointWithMember(x, y, member, mouseable)
 	return deepestElement, fx, fy
 end
 end
+
+Root.getNode2dAtPoint = CanvasLayer.getNode2dAtPoint
 
 ---Pushes the Control to the focused stack. The Control at the top receives all input events first.
 ---@param control Control

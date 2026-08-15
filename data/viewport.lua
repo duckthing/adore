@@ -1101,7 +1101,7 @@ end
 
 local function noop() return true end
 
----Returns the highest Control at a certain **Viewport** point
+---Returns the highest Control at a certain **Viewport world** point
 ---@param vx integer
 ---@param vy integer
 ---@param check (fun(control: Control, ...): boolean)?
@@ -1119,8 +1119,7 @@ function Viewport:getControlAtPoint(vx, vy, check, ...)
 	end
 end
 
-
----Returns the highest Control at a certain **Viewport** point that has 'member'
+---Returns the highest Control at a certain **Viewport world** point that has 'member'
 ---@param vx integer
 ---@param vy integer
 ---@param member string
