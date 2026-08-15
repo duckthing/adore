@@ -558,12 +558,40 @@ function Node:traverseUpwards(forEach, currNodeValidator, ...)
 	return treeIter:traverseUpwards(self, forEach, currNodeValidator, ...)
 end
 
----Returns the deepest Node, or nil if this Node doesn't have children.
+---Returns the deepest Node, or `nil` if this Node doesn't have children.
+---If `check` is passed, it runs the function per descendant, and returns the highest Node whose result is `true`.
+---* "Deepest" means the child closest to the end of the child array
+---@param check (fun(descendant: Node, ...): boolean)?
+---@param ... unknown # Passed into `check`
 ---@return Node?
-function Node:getDeepestNode()
+function Node:getDeepestNode(check, ...)
 	local currNode = self
-	while currNode and #currNode.children > 0 do
-		currNode = currNode.children[#currNode.children]
+
+	if check then
+		-- Get the deepest child that passes `check`
+		while currNode do
+			local children = currNode.children
+			local newNode
+			for i = #children, 1, -1 do
+				local child = children[i]
+				if child and check(child, ...) then
+					-- Continue checking this child
+					newNode = child
+					break
+				end
+			end
+
+			if newNode then
+				currNode = newNode
+			else
+				break
+			end
+		end
+	else
+		-- No check function, just get the deepest child
+		while currNode and #currNode.children > 0 do
+			currNode = currNode.children[#currNode.children]
+		end
 	end
 
 	if currNode ~= self then

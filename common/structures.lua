@@ -447,10 +447,11 @@ function TreeIter:traverseUpwards(node, forEach, currNodeValidator, ...)
 			return self:traverseUpwards(parent, forEach, currNodeValidator, ...)
 		else
 			-- Get the previous sibling, and continue iterating with either its
-			-- deepest node or itself
+			-- deepest (valid) node or itself (if valid)
 			local previousNode = parent.children[ownIndex - 1]
+
 			return self:traverseUpwards(
-				previousNode:getDeepestNode() or previousNode,
+				previousNode:getDeepestNode(currNodeValidator, ...) or previousNode,
 			forEach, currNodeValidator, ...)
 		end
 	end
