@@ -48,6 +48,7 @@ local function node2dOverlapsAndDrawn(node, layer, worldX, worldY)
 end
 
 function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
+	if SelectTool.super.mousepressed(self, mx, my, button, isTouch, pressCount) then return true end
 	if button == 1 then
 		local srContainer = self.srContainer
 		local subroot = assert(srContainer.subroot)
@@ -87,10 +88,9 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 
 		Tool.mainWindow.sceneTree:selectNode(toSelect)
 		Tool.mainWindow.inspector:onNodeSelectionChanged(toSelect)
-		return false
-	else
-		return SelectTool.super.mousepressed(self, mx, my, button, isTouch, pressCount)
+		return true
 	end
+	return false
 end
 
 function SelectTool:mousereleased(mx, my, button)

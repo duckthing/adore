@@ -7,10 +7,13 @@ local Resources = Adore.Resources
 local min, max = math.min, math.max
 
 local Node = Nodes("Node")
+local Node2d = Nodes("Node2d")
+local Control = Nodes("Control")
 local ViewportContainer = Nodes("ViewportContainer")
 local RootNode = Nodes("RootNode")
 local Viewport = Resources("Viewport")
 local Camera = Nodes("Camera")
+local Rect2 = Adore.Common("Rect2")
 
 ---@type Toolbox.Tool
 local Tool = require(ADORE_PATH..".toolbox.tool")
@@ -246,6 +249,8 @@ function EScene:drawGameRootIntoViewport()
 	end
 end
 
+local drawDirectSubroot
+do
 ---@param self Toolbox.EditableScene
 local function drawBackgroundGizmos(self)
 	local thickness = 3 * self.camera._zoom.x
@@ -270,10 +275,70 @@ local function drawBackgroundGizmos(self)
 	love.graphics.pop()
 end
 
-local drawDirectSubroot
-do
-local tempTransform = love.math.newTransform()
+local tempRect2 = Rect2()
 
+---@param self Toolbox.EditableScene
+local function drawForegroundGizmos(self)
+	local mainWindow = Tool.mainWindow
+	local selected = mainWindow.sceneTree:getSelectedNode()
+
+	if selected then
+		local zoom = self.camera._zoom.x
+		local thickness = 3 * zoom
+		local pixelScale = selected:getViewport()._pixelScale
+		local scaleFactor = 1 / pixelScale
+
+		love.graphics.push("transform")
+		love.graphics.setLineWidth(thickness * scaleFactor)
+		love.graphics.scale(pixelScale)
+
+		if selected:is(Node2d) then
+			---@cast selected Node2d
+			local gcr = selected._globalContentRect
+			local transform = selected._globalTransform
+
+			-- Draw local bounding box
+			love.graphics.setColor(0.5, 0.5, 0.5, 0.8)
+			love.graphics.push("transform")
+			love.graphics.applyTransform(transform)
+			love.graphics.rectangle("line", selected._localContentRect:unpack())
+			love.graphics.pop()
+
+			-- Draw global bounding box
+			love.graphics.setColor(0.8, 0.5, 0.5)
+			love.graphics.rectangle("line", gcr:unpack())
+
+			-- Draw axes
+			local globalX, globalY = selected:getPosition(true)
+			love.graphics.setColor(1, 0, 0, 0.8)
+			love.graphics.line(globalX, globalY, selected:toGlobal(zoom * 10, 0))
+			love.graphics.setColor(0, 1, 0, 0.8)
+			love.graphics.line(globalX, globalY, selected:toGlobal(0, zoom * 10))
+
+		elseif selected:is(Control) then
+			---@cast selected Control
+			local lcr = selected._localContentRect
+			local transform = selected._globalTransform
+			tempRect2:iCopyRect(lcr):iTransformBox(transform)
+
+			-- Draw local bounding box
+			love.graphics.push("transform")
+			love.graphics.applyTransform(transform)
+			love.graphics.setColor(0.5, 0.5, 0.5, 0.7)
+			love.graphics.rectangle("line", lcr:unpack())
+			love.graphics.pop()
+
+			-- Draw global bounding box
+			love.graphics.setColor(0.8, 0.5, 0.5)
+			love.graphics.rectangle("line", tempRect2:unpack())
+		end
+
+		love.graphics.pop()
+	end
+end
+
+
+local tempTransform = love.math.newTransform()
 local alwaysApplyTransform = nil
 local replaceTransformOverride = function(newTransform)
 	lgReplaceTransform(alwaysApplyTransform)
@@ -300,6 +365,7 @@ function drawDirectSubroot(self, subroot)
 	-- Change the origin for replaceTransform (for Controls)
 	love.graphics.replaceTransform = replaceTransformOverride
 
+	love.graphics.push("all")
 	love.graphics.origin()
 	for i = 1, #layers do
 		local layer = layers[i]
@@ -341,6 +407,9 @@ function drawDirectSubroot(self, subroot)
 	-- Reset back to normal
 	camera:setPosition(oldX, oldY)
 	love.graphics.replaceTransform = lgReplaceTransform
+	love.graphics.pop()
+
+	drawForegroundGizmos(self)
 end
 end
 
