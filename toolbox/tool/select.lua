@@ -3,8 +3,10 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
-local Node2d, Control = Nodes("Node2d"), Nodes("Control")
-local min, max = math.min, math.max
+
+local Node2d = Nodes("Node2d")
+local Light2d = Nodes("Light2d")
+local CollisionShape = Nodes("CollisionShape")
 
 ---@type Toolbox.Tool
 local Tool = require(ADORE_PATH..".toolbox.tool")
@@ -22,13 +24,35 @@ function SelectTool:new()
 	SelectTool.super.new(self)
 end
 
----Used to only select visible Controls below the current layer
+---Used to select visible Controls below the current layer
 ---@param control Control
 ---@param desiredLayer CanvasLayer | RootNode
 ---@return boolean
-local function isBelowCanvasLayer(control, desiredLayer)
-	local result = control:hasAncestor(desiredLayer)
+local function controlBelongsToLayer(control, desiredLayer)
 	return control:hasAncestor(desiredLayer) and control:isVisibleInTree()
+end
+
+---Used to select visible Node2ds below the current layer
+---@param node Node
+---@param desiredLayer CanvasLayer | RootNode
+---@return boolean
+local function node2dBelongsToLayer(node, desiredLayer)
+	return node:hasAncestor(desiredLayer) and node:isVisibleInTree()
+		and node:is(Node2d)
+end
+
+---@param node Node2d
+---@param layer CanvasLayer | RootNode
+---@param worldX integer
+---@param worldY integer
+---@return Node?
+local function node2dOverlaps(node, layer, worldX, worldY)
+	local gcr = node._globalContentRect
+	if gcr and node:doesPointOverlap(worldX, worldY) then
+		if (node.draw ~= Node2d.draw and not node:is(Light2d)) or node:is(CollisionShape) then
+			return node
+		end
+	end
 end
 
 function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
@@ -53,10 +77,23 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 			end
 
 			local worldX, worldY = toolboxTransform:inverseTransformPoint(usedX, usedY)
-			local highestControl = viewport:getControlAtPoint(worldX, worldY, isBelowCanvasLayer, layer)
+
+			-- Get the highest Control...
+			local highestControl = viewport:getControlAtPoint(worldX, worldY, controlBelongsToLayer, layer)
 			if highestControl then
 				toSelect = highestControl
 				break
+			end
+
+			-- ...or try to get the highest Node2d
+			local deepestInLayer = layer:getDeepestNode(node2dBelongsToLayer, layer)
+			if deepestInLayer then
+				local result = deepestInLayer
+					:traverseUpwards(node2dOverlaps, node2dBelongsToLayer, layer, worldX, worldY)
+				if result then
+					toSelect = result
+					break
+				end
 			end
 		end
 
