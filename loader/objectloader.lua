@@ -13,10 +13,20 @@ local ClassDB = require "common.classdb"
 local ObjectLoader = AssetCollection:extend()
 ObjectLoader.TYPE = "ObjectLoader"
 
----Takes a filepath of a Lua file (like "/assets/fognoise.lua") and creates an Object from it
+---Takes a filepath of a Lua file (like "assets/fognoise.lua") and creates an Object from it
 ---@param filepath string
-local function requireFromFilePath(filepath, requestedClassName)
+local function loadFromLua(filepath, requestedClassName)
 	local obj, err = ObjectSaver.loadFromFilePath(filepath, "lua", requestedClassName, true)
+	if err then
+		error(("Failed to load Object from '%s': \n'%s'"):format(filepath, err))
+	end
+	return obj
+end
+
+---Takes a filepath of a JSON file (like "assets/scene.json") and creates an Object from it
+---@param filepath string
+local function loadFromJSON(filepath, requestedClassName)
+	local obj, err = ObjectSaver.loadFromFilePath(filepath, "json", requestedClassName, true)
 	if err then
 		error(("Failed to load Object from '%s': \n'%s'"):format(filepath, err))
 	end
@@ -25,10 +35,10 @@ end
 
 ---@type {[string]: fun(path: string): table}
 local specialHandlers = {
-	-- The following is usually require'd with the basic require
-	lua = requireFromFilePath,
-	luau = requireFromFilePath,
-	moon = requireFromFilePath,
+	-- Load from Lua
+	lua = loadFromLua,
+	-- Load from JSON
+	json = loadFromJSON,
 
 	-- Adore Generic File; will always be interpreted as binary
 	---@diagnostic disable-next-line: assign-type-mismatch
