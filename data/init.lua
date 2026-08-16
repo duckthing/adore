@@ -48,12 +48,12 @@ local resourcePaths = {
 		["DrawRequest.PopupMenu"] = "data.drawrequest.drawpopupmenu",
 		---@type DrawRequest.WindowPopup
 		["DrawRequest.WindowPopup"] = "data.drawrequest.drawwindowpopup",
-	---@type PackedScene
-	PackedScene = "data.packedscene",
-	---@type TableScene
-	TableScene = "data.tablescene",
 	---@type SceneFactory
 	SceneFactory = "data.scenefactory",
+		---@type PackedScene
+		PackedScene = "data.packedscene",
+		---@type TableScene
+		TableScene = "data.tablescene",
 	---@type Context
 	Context = "data.context",
 		---@type ShortcutContext

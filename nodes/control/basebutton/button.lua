@@ -15,7 +15,7 @@ Button._textAlign = "center"
 ---@type AutoWrap.Mode # The autowrap mode of the text
 Button._autowrap = "none"
 ---@type love.AlignMode # Where the icon lies horizontally. If centered, the text will draw on top of the icon.
-Button._iconAlign = "left"
+Button._iconAlign = "center"
 ---@type Label.JustifyMode # Where the icon lies vertically
 Button._iconJustify = "center"
 ---@type boolean # Resizes the icon while keeping the aspect ratio
@@ -30,12 +30,11 @@ Button._font = DEFAULT_FONT
 ---@type integer?
 Button._fontSize = 0
 
-local created = 1
 ---@param text string?
 ---@param icon TextureSource?
 function Button:new(text, icon)
 	Button.super.new(self)
-	text = text or tostring(created)
+	text = text or ""
 
 	---@type string # The text part of the Button
 	self._text = text
@@ -50,8 +49,6 @@ function Button:new(text, icon)
 	self._iconX, self._iconY = 0, 0
 	---@type integer, integer # [Internal] The texture scale
 	self._iconScale = 1
-
-	created = created + 1
 
 	if icon then
 		self:setIcon(icon)

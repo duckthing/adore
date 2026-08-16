@@ -8,7 +8,6 @@ local min, max = math.min, math.max
 ---@overload fun(): VBox
 local VBox = Control:extend()
 VBox.CLASS_NAME = "VBox"
-VBox.clipChildren = true
 VBox.inputMode = "pass"
 VBox.mouseInputMode = "pass"
 

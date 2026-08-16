@@ -8,7 +8,6 @@ local min, max = math.min, math.max
 ---@overload fun(): HBox
 local HBox = Control:extend()
 HBox.CLASS_NAME = "HBox"
-HBox.clipChildren = true
 HBox.inputMode = "pass"
 HBox.mouseInputMode = "pass"
 
