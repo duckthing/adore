@@ -60,6 +60,11 @@ local actions = {
 		mainWindow:closeScene()
 		return true
 	end,
+	togglePause = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		mainWindow:togglePause()
+		return true
+	end,
 
 	deleteSelectedNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
@@ -77,6 +82,7 @@ local pressedKeybinds = {
 	normal = {
 		["`"] = "toggleFullView",
 		delete = "deleteSelectedNode",
+		f5 = "togglePause",
 	},
 	ctrl = {
 		a = "addNode",

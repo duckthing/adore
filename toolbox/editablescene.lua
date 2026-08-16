@@ -128,6 +128,7 @@ end
 
 ---Creates a subroot
 function EScene:createSubroot()
+	local rootViewport = assert(self._subViewport)
 	self:pushSubroot()
 	local subroot = RootNode({
 		hideSceneWarning = true,
@@ -136,13 +137,14 @@ function EScene:createSubroot()
 		ownsPhysicsWorld = true,
 	}, Adore.Resources("DefaultTheme")())
 	local subrootViewport = subroot._viewport
+	subrootViewport._adorePersist = false
 	subrootViewport._adoreSelectable = false
 	subrootViewport.getSafeArea = function()
 		-- Use the overridden dimensions when using free-cam
 		if self.cameraActive then
 			return 0, 0, self.overrideW, self.overrideH
 		else
-			return self:getRoot()._viewport:getSafeArea()
+			return rootViewport:getSafeArea()
 		end
 	end
 	self.subroot = subroot
