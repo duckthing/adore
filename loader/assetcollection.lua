@@ -78,6 +78,16 @@ end
 ---@param toDestroy (table | userdata)
 ---@param newAsset (table | userdata)
 function AssetCollection:destructor(toDestroy, newAsset)
+	local toDestroyPath, toDestroyId = self:getAssetPath(toDestroy)
+	if toDestroyPath then
+		-- Replace with the new asset (or nil)
+		self.assets[toDestroyId] = newAsset
+		if not newAsset then
+			-- Remove it
+			self.pathToId[toDestroyPath] = nil
+			self.idToPath[toDestroyId] = nil
+		end
+	end
 end
 
 ---@type {[string]: true} # A map of filepaths to `true`, used for checking if a file is in `modifiedTimes` but not `files`.
