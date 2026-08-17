@@ -291,12 +291,11 @@ local function drawForegroundGizmos(self)
 
 	if selected then
 		local zoom = self.camera._zoom.x
-		local thickness = 3 * zoom
 		local pixelScale = selected:getViewport()._pixelScale
 		local scaleFactor = 1 / pixelScale
+		local baseThickness = zoom * scaleFactor
 
 		love.graphics.push("transform")
-		love.graphics.setLineWidth(thickness * scaleFactor)
 		love.graphics.scale(pixelScale)
 
 		if selected:is(Node2d) then
@@ -305,13 +304,30 @@ local function drawForegroundGizmos(self)
 			local transform = selected._globalTransform
 
 			-- Draw local bounding box
-			love.graphics.setColor(0.5, 0.5, 0.5, 0.8)
-			love.graphics.push("transform")
-			love.graphics.applyTransform(transform)
-			love.graphics.rectangle("line", selected._localContentRect:unpack())
-			love.graphics.pop()
+			do
+				local ox, oy, oRight, oBottom = selected._localContentRect:getBounds()
+				love.graphics.setLineWidth(1 * baseThickness)
+				love.graphics.setColor(0.5, 0.5, 0.8, 1)
+				-- Top left
+				local ax, ay = transform:transformPoint(ox, oy)
+				-- Top right
+				local bx, by = transform:transformPoint(oRight, oy)
+				-- Bottom left
+				local cx, cy = transform:transformPoint(ox, oBottom)
+				-- Bottom right
+				local dx, dy = transform:transformPoint(oRight, oBottom)
+
+				love.graphics.line(
+					ax, ay,
+					bx, by,
+					dx, dy,
+					cx, cy,
+					ax, ay
+				)
+			end
 
 			-- Draw global bounding box
+			love.graphics.setLineWidth(3 * baseThickness)
 			love.graphics.setColor(0.8, 0.5, 0.5)
 			love.graphics.rectangle("line", gcr:unpack())
 
@@ -329,13 +345,30 @@ local function drawForegroundGizmos(self)
 			tempRect2:iCopyRect(lcr):iTransformBox(transform)
 
 			-- Draw local bounding box
-			love.graphics.push("transform")
-			love.graphics.applyTransform(transform)
-			love.graphics.setColor(0.5, 0.5, 0.5, 0.7)
-			love.graphics.rectangle("line", lcr:unpack())
-			love.graphics.pop()
+			do
+				local ox, oy, oRight, oBottom = selected._localContentRect:getBounds()
+				love.graphics.setLineWidth(1 * baseThickness)
+				love.graphics.setColor(0.5, 0.5, 0.8, 1)
+				-- Top left
+				local ax, ay = transform:transformPoint(ox, oy)
+				-- Top right
+				local bx, by = transform:transformPoint(oRight, oy)
+				-- Bottom left
+				local cx, cy = transform:transformPoint(ox, oBottom)
+				-- Bottom right
+				local dx, dy = transform:transformPoint(oRight, oBottom)
+
+				love.graphics.line(
+					ax, ay,
+					bx, by,
+					dx, dy,
+					cx, cy,
+					ax, ay
+				)
+			end
 
 			-- Draw global bounding box
+			love.graphics.setLineWidth(3 * baseThickness)
 			love.graphics.setColor(0.8, 0.5, 0.5)
 			love.graphics.rectangle("line", tempRect2:unpack())
 		end
