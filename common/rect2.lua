@@ -74,7 +74,7 @@ function Rect2:getCenter()
 	return x + w * 0.5, y + h * 0.5
 end
 
----Applies a transform to this Rect2. Useful for getting the bounding box of a rotated and scaled object.
+---Returns the transformed points of this Rect2. Useful for getting the bounding box of a rotated and scaled object.
 ---@param globalTransform love.Transform
 ---@return number x
 ---@return number y
