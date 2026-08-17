@@ -876,11 +876,17 @@ function MainWindow:instanceScene()
 			---@cast scene SceneFactory
 			-- Add it
 			srContainer:pushSubroot()
+
 			local instanced = scene:instantiate(selectedNode)
-			instanced._owner = sceneRoot
+			if instanced then
+				instanced._owner = sceneRoot
+			end
+
 			srContainer:popSubroot()
 			self.sceneTree:updateNodes()
-			self.sceneTree:selectNode(instanced)
+			if instanced then
+				self.sceneTree:selectNode(instanced)
+			end
 			window:close()
 		else
 			print(err)
