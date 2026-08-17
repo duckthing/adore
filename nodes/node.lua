@@ -15,7 +15,6 @@ local tinsert = table.insert
 
 ---@class Node: Object
 ---@field super Node
----@field _adoreSource string? # If this `Node` was instantiated from as a scene, this contains the filepath it came from
 ---@overload fun(): Node
 local Node = Object:extend()
 Node.IS_NODE = true
@@ -31,6 +30,14 @@ Node._activeViewport = nil
 Node._pauseMode = "inherit"
 ---@type number # If the pause mode isn't `inherit`, when should this Node be processed. Lower is earlier.
 Node._processPriority = 0
+
+---@type string? # The filepath this **scene root** was loaded from.
+---Usually set by Table/PackedScene while instancing; do not set this unless you know what you're doing!
+Node._sceneFilePath = nil
+---@type Node? # The scene root this Node belongs to, and will get packed with.
+---* Must always be an ancestor; the scene root cannot point to itself.
+---* Usually set by Table/PackedScene while instancing; do not set this unless you know what you're doing!
+Node._owner = nil
 
 function Node:new()
 	Node.super.new(self)
@@ -612,6 +619,58 @@ function Node:set(property, value)
 	return self
 end
 
+do
+---@param obj Node
+---@param property Property
+---@param propertyName string
+---@param clone Node
+local function duplicateFEMV(obj, property, propertyName, value, clone)
+	property:duplicateInto(obj, propertyName, clone, property, propertyName)
+end
+
+---Duplicates a Node
+---@generic T: Node
+---@param self T | Node
+---@param ... unknown
+---@return T clone
+function Node:duplicate(...)
+	--[[ do
+		local argCount = select("#", ...)
+		if argCount > 0 then
+			-- Make everything false by default
+			for i = 1, argCount do
+			end
+		end
+	end --]]
+
+	---@type Node
+	local clone
+	local selfOwner = self._owner
+
+	if self._sceneFilePath then
+		-- Probably came from a filepath
+	else
+		-- Do a basic duplication
+		clone = getmetatable(self)()
+		local entry = self:getClassDBEntry()
+		entry:forEachModifiedValue(self, true, duplicateFEMV, clone)
+
+		-- Clone all children, too
+		local children = self.children
+		for i = 1, #children do
+			local child = children[i]
+			if child._owner == selfOwner then
+				-- Only clone what we own
+				local clonedChild = child:duplicate(...)
+				clone:addChild(clonedChild)
+			end
+		end
+	end
+
+	return clone
+end
+end
+
 ---Destroys this Node immediately.
 ---
 ---DANGEROUS! Use :queueDestroy() instead if you want to destroy a node during :draw(), :update(), or any :emit() event.
@@ -985,6 +1044,8 @@ end
 
 function Node._addDefinition(entry)
 	entry:newString("name")
+	entry:newString("_sceneFilePath")
+		:moveToHeader()
 	entry:newBoolean("_visible", true, "setVisible")
 end
 

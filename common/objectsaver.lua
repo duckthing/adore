@@ -8,6 +8,7 @@ local ClassDB = Adore.Common("ClassDB")
 local Serpent = Adore.Libraries("Serpent")
 local JSON = Adore.Libraries("JSON")
 local Properties = require "data.properties"
+local SceneFactory = Adore.Resources("SceneFactory")
 
 ---@class ObjectSaver
 local ObjectSaver = {}
@@ -444,11 +445,12 @@ end
 ---@param body table # The serialized body of the Object
 ---@param requestedClassName `T` # The optional class (name) to expect; should be a string
 ---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
+---@param canInstance boolean? # [Default: `false`] Can we instance a scene from this?
 ---@return string? err
 ---@return T? object
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; keep this for later
 ---@overload fun(header: table, body: table): string?, Object?
-function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName, canInherit)
+function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName, canInherit, canInstance)
 	local RequestedClass
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
@@ -496,7 +498,29 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 	end
 
 	---@type Object # The object where all the properties will get set
-	local obj = TargetClass()
+	local obj
+
+	if canInstance and header._sceneFilePath and ClassDB.doesClassInherit("Node", RequestedClass) then
+		-- This Object is a scene and we are allowed to instance it
+		local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+		local path = header._sceneFilePath
+		local success, result = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
+
+		if not success then
+			return ("Getting scene at '%s' errored: %s"):format(path, result)
+		end
+
+		---@cast result SceneFactory
+		obj = result:instantiate()
+
+		if not obj:is(RequestedClass) then
+			return ("Scene at '%s' does not match requested class (%s ~= %s)")
+				:format(path, obj.CLASS_NAME, requestedClassName)
+		end
+	else
+		-- Create this like normal
+		obj  = TargetClass()
+	end
 
 	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
 	local deferredData = nil
@@ -918,6 +942,16 @@ function ObjectSaver.loadFromFilePath(path, format, requestedClassName, canInher
 	---@diagnostic disable-next-line: cast-local-type
 	obj, err = ObjectSaver.loadFromFile(file, format, requestedClassName, canInherit)
 	file:release()
+
+	-- If it's a SceneFactory, mark the source
+	if obj then
+		---@cast obj Object
+		if obj:is(SceneFactory) then
+			---@cast obj SceneFactory
+			obj.source = path
+		end
+	end
+
 	return obj, err
 end
 

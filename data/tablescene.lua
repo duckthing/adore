@@ -15,6 +15,8 @@ function TableScene:new()
 	TableScene.super.new(self)
 	---@type table[]
 	self.table = {}
+	---@type boolean # If this TableScene's buffer was consumed
+	self._consumed = false
 end
 
 local STRING_TO_CONTROL = {
@@ -27,8 +29,18 @@ local STRING_TO_CONTROL = {
 ---@param array table[]
 ---@param node Node
 ---@param resources any[]
-local function packInto(array, node, resources)
+---@param owner Node? # What we're allowed to save with; if not inside of recursion, leave this `nil`
+local function packInto(array, node, resources, owner)
 	if not node._adorePersist then return end
+
+	if owner then
+		if node._owner ~= owner then
+			return
+		end
+	else
+		-- This Node is the owner
+		owner = node
+	end
 
 	enqueue(array, STRING_TO_CONTROL.BEGIN_NODE)
 	ObjectSaver.serializeObjectToArray(node, array, resources)
@@ -43,7 +55,7 @@ local function packInto(array, node, resources)
 				end
 
 				index = index + 1
-				packInto(array, child, resources)
+				packInto(array, child, resources, owner)
 			end
 		end
 
@@ -69,17 +81,30 @@ local instantiateTree
 ---@param ontoParent Node?
 ---@param array table[]
 ---@param allDeferredProperties {[Node]: {[string]: any}}?
+---@param owner Node?
 ---@return Node? node
-function instantiateTree(ontoParent, array, allDeferredProperties)
+function instantiateTree(ontoParent, array, allDeferredProperties, owner)
 	local control = tremove(array, 1)
-	if control ~= STRING_TO_CONTROL.BEGIN_NODE then return end
+	if control ~= STRING_TO_CONTROL.BEGIN_NODE then
+		return
+	end
+
 	local header, body = tremove(array, 1), tremove(array, 1)
-	local err, obj, deferredProperties = ObjectSaver.deserializeObjectFromArray(header, body, "Node", true)
+
+	local err, obj, deferredProperties =
+		ObjectSaver.deserializeObjectFromArray(header, body, "Node", true, owner ~= nil)
 	---@cast obj Node?
 
 	if not obj then
+		-- Errored and didn't create the Object
 		print(("[Adore.TableScene...instantiateTree] %s"):format(err))
 		return
+	end
+
+	if not owner then
+		owner = obj
+	else
+		obj._owner = owner
 	end
 
 	if deferredProperties then
@@ -95,7 +120,7 @@ function instantiateTree(ontoParent, array, allDeferredProperties)
 		return obj
 	elseif control == STRING_TO_CONTROL.BEGIN_CHILDREN then
 		-- Repeat this until a Node isn't returned (which means END_CHILDREN was (probably) returned)
-		while instantiateTree(obj, array, allDeferredProperties) ~= nil do end
+		while instantiateTree(obj, array, allDeferredProperties, owner) ~= nil do end
 		assert(tremove(array, 1) == STRING_TO_CONTROL.END_NODE, "Did not get END_NODE control code (after END_CHILDREN was received)")
 		if ontoParent then
 			ontoParent:addChild(obj)
@@ -109,7 +134,7 @@ end
 ---Returns `true` if this TableScene is empty
 ---@return boolean
 function TableScene:isEmpty()
-	return #self.table == 0
+	return self._consumed or #self.table == 0
 end
 
 ---Instantiates this Scene and returns the highest level `Node`
@@ -123,6 +148,8 @@ function TableScene:build(consumeBuffer)
 		local deferredData = {}
 		local array = self.table
 		local resources = array[#array]
+
+		if consumeBuffer == nil then consumeBuffer = false end
 
 		if not consumeBuffer then
 			-- Clone the table
@@ -156,6 +183,11 @@ function TableScene:build(consumeBuffer)
 			for node, deferredProperties in pairs(deferredData) do
 				ObjectSaver.setDeferredProperties(node, deferredProperties, resources)
 			end
+		end
+
+		if consumeBuffer then
+			-- Make it obvious the buffer was consumed
+			self._consumed = true
 		end
 
 		return instanced
