@@ -116,6 +116,16 @@ function Property:areEqual(a, b)
 	return a == b
 end
 
+---Copies from one Property to another, making the value unique
+---@param sourceObject Object
+---@param sourcePropertyName string
+---@param targetObject Object
+---@param targetProperty Property
+---@param targetPropertyName string
+function Property:duplicateInto(sourceObject, sourcePropertyName, targetObject, targetProperty, targetPropertyName)
+	targetProperty:set(targetObject, targetPropertyName, self:get(sourceObject, sourcePropertyName))
+end
+
 ---Returns the index of a match found in the shared resources array along with the match.
 ---If no match it found, it returns `nil` and a table that allows this Property to detect matches.
 ---@param obj Object

@@ -85,6 +85,7 @@ function ClassDB.getClassDBEntry(class)
 end
 
 ---Returns `true` if the `targetClass` inherits from or matches `baseClass`
+---`targetClass:is(baseClass) or baseClass == targetClass`
 ---@param baseClass string | Object
 ---@param targetClass string | Object
 function ClassDB.doesClassInherit(baseClass, targetClass)
