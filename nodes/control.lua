@@ -130,8 +130,10 @@ function Control:new()
 	---@type string # What subclass will be used (from the theme)
 	self._currentSubclass = self.subclassMap.normal
 
-	---@type Rect2 # The calculated Rect2 of this Control
+	---@type Rect2 # The local Rect2 of this Control, which contains the untransformed Control in local space
 	self._localContentRect = Rect2(0, 0, 0, 0)
+	---@type Rect2 # The global Rect2 of this Control, which contains the transformed Control in global space
+	self._globalContentRect = Rect2(0, 0, 0, 0)
 end
 
 ---An override of :extend(), which registers this Control as an extension
@@ -646,6 +648,7 @@ function Control:_setCanonRect(x, y, w, h)
 	if lcr.x ~= x or lcr.y ~= y or lcr.w ~= w or lcr.h ~= h then
 		lcr.x, lcr.y, lcr.w, lcr.h =
 			x, y, w, h
+		self:_updateGlobalBounds()
 		self:deferRefreshSelf()
 	end
 end
@@ -757,6 +760,14 @@ function Control:_simpleRefresh(child, w, h)
 	child:onRefreshed()
 end
 
+---Called whenever the global axis-aligned bounds of the content inside this Control *should* change.
+---Can occur when:
+---* Local bounds change
+---* This Control moves in global space
+function Control:_updateGlobalBounds()
+	self._globalContentRect:iCopyRect(self._localContentRect):iTransformBox(self._globalTransform)
+end
+
 ---Updates the positions of the children below.
 ---If you'd like to refresh *this Control*, use `:forceRefreshSelf()`.
 function Control:forceRefresh()
@@ -837,8 +848,8 @@ function Control:_beforeDraw()
 	end
 
 	if self.clipChildren then
-		local lcr = self._localContentRect
-		love.graphics.intersectScissor(lcr.x, lcr.y, lcr.w, lcr.h)
+		local gcr = self._globalContentRect
+		love.graphics.intersectScissor(gcr.x, gcr.y, gcr.w, gcr.h)
 	end
 end
 
@@ -1107,6 +1118,7 @@ function Control:onRefreshed()
 		:apply(TEMP_TRANSFORM)
 		:translate(-lcrX - pivotX, -lcrY - pivotY)
 
+	self:_updateGlobalBounds()
 	self:_updateShash()
 	self:getAppliedDrawable():themeUpdate(self)
 	self:forceRefresh()

@@ -45,9 +45,9 @@ function Node2d:new(x, y)
 	---@type number # The sum of the parent's rotation and its ancestor rotation
 	self._ancestorRotation = 0
 
-	---@type Rect2
+	---@type Rect2 # The local Rect2 of this Node2d, which contains the untransformed Node2d in local space
 	self._localContentRect = Rect2(0, 0, 0, 0)
-	---@type Rect2
+	---@type Rect2 # The global Rect2 of this Node2d, which contains the transformed Node2d in global space
 	self._globalContentRect = Rect2(0, 0, 0, 0)
 
 	self._blendMode = self._blendMode
