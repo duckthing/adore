@@ -54,8 +54,8 @@ function Light2d:onViewportAdded(newViewport)
 	newViewport._lightShash:add(self, rect.x, rect.y, rect.w, rect.h)
 end
 
-function Light2d:_onGlobalBoundsChanged()
-	Light2d.super._onGlobalBoundsChanged(self)
+function Light2d:_updateGlobalBounds()
+	Light2d.super._updateGlobalBounds(self)
 	local viewport = self._parentViewport
 	if viewport then
 		local rect = self._globalContentRect

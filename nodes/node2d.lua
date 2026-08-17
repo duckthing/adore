@@ -110,15 +110,14 @@ end
 ---Can occur when:
 ---* Local bounds change
 ---* This Node2d moves in global space
-function Node2d:_onGlobalBoundsChanged()
-	-- TODO: Rename, is not called when changed, is called when *currently* changing
+function Node2d:_updateGlobalBounds()
 	self._globalContentRect:iCopyRect(self._localContentRect):iTransformBox(self._globalTransform)
 end
 
 ---Called whenever this Node2d's global transform changes/moves AT ALL. (Not from an emit)
 ---Remember to do super._onGlobalTransformChanged() if you're overriding it to pass the transform downwards.
 function Node2d:_onGlobalTransformChanged()
-	self:_onGlobalBoundsChanged()
+	self:_updateGlobalBounds()
 	self:shallowEmit("_eParentGlobalTransformUpdated", self._globalTransform)
 end
 

@@ -69,7 +69,7 @@ function Shadow2d:calculateBounds()
 			end
 		end
 	end
-	self:_onGlobalBoundsChanged()
+	self:_updateGlobalBounds()
 
 	return self
 end
@@ -91,8 +91,8 @@ function Shadow2d:onViewportAdded(newViewport)
 	newViewport._shadowShash:add(self, rect.x, rect.y, rect.w, rect.h)
 end
 
-function Shadow2d:_onGlobalBoundsChanged()
-	Shadow2d.super._onGlobalBoundsChanged(self)
+function Shadow2d:_updateGlobalBounds()
+	Shadow2d.super._updateGlobalBounds(self)
 	local viewport = self._parentViewport
 
 	if viewport then

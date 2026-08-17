@@ -70,13 +70,13 @@ function CollisionShape:_addFixture()
 			if shape then
 				self._fixture = parent:_addShape(shape, self._density)
 				self._fixture:setUserData(self)
-				self:_onGlobalBoundsChanged()
+				self:_updateGlobalBounds()
 			end
 		end
 	end
 end
 
-function CollisionShape:_onGlobalBoundsChanged()
+function CollisionShape:_updateGlobalBounds()
 	local fixture = self._fixture
 	if fixture then
 		self._globalContentRect:iSetFromPoints(fixture:getBoundingBox())

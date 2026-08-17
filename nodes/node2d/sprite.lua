@@ -61,7 +61,7 @@ function Sprite:_updateQuad()
 		self._actualFrame = 0
 		self._quad:setViewport(ox, oy, ow, oh, tSource.texture:getDimensions())
 		self._localContentRect:iSetComponents(self._offsetX, self._offsetY, ow, oh)
-		self:_onGlobalBoundsChanged()
+		self:_updateGlobalBounds()
 	else
 		-- Check if the quad should be changed
 		local newActualFrame = max(1, min(self._frame, frameCount))
@@ -77,7 +77,7 @@ function Sprite:_updateQuad()
 			self._frameH
 		self._quad:setViewport(xIndex * frameW + tx, yIndex * frameH + ty, frameW, frameH, tSource.texture:getDimensions())
 		self._localContentRect:iSetComponents(self._offsetX, self._offsetY, frameW, frameH)
-		self:_onGlobalBoundsChanged()
+		self:_updateGlobalBounds()
 	end
 end
 

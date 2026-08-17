@@ -49,7 +49,7 @@ function Camera:_updateCanvasTransform(w, h)
 		self._canvasTransform = cTrans:scale(zoomX, zoomY):inverse()
 		self._localContentRect:iSetComponents(0, 0, w * zoomX, h * zoomY)
 	end
-	self:_onGlobalBoundsChanged()
+	self:_updateGlobalBounds()
 end
 
 ---(Recalculates and) returns the canvas transform
@@ -70,17 +70,17 @@ function Camera:_onGlobalTransformChanged()
 	self._shouldUpdateTransform = true
 end
 
-function Camera:_onGlobalBoundsChanged()
+function Camera:_updateGlobalBounds()
 	local notIncludingRotation = not self._inheritRotation
 	if notIncludingRotation then
 		local old = self._globalTransform
 		local x, y = old:transformPoint(0, 0)
 		cTrans:setTransformation(x, y, self._rotation)
 		self._globalTransform = cTrans
-		Camera.super._onGlobalBoundsChanged(self)
+		Camera.super._updateGlobalBounds(self)
 		self._globalTransform = old
 	else
-		Camera.super._onGlobalBoundsChanged(self)
+		Camera.super._updateGlobalBounds(self)
 	end
 end
 

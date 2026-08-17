@@ -32,7 +32,7 @@ end
 function DRect:_onDimensionsSet()
 	local width, height = self.width, self.height
 	self._localContentRect:iSetComponents(width * -0.5, height * -0.5, width, height)
-	self:_onGlobalBoundsChanged()
+	self:_updateGlobalBounds()
 end
 
 function DRect:draw()
