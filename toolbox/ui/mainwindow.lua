@@ -114,7 +114,7 @@ function MainWindow:new(toolbox, subroot)
 			260, 36, -260, -240
 	)
 	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
-		self.sceneTree.iterateMode = (tabInfo.node:is(GameScene) and "full") or "owned"
+		self.sceneTree.iterateMode = (tabInfo and tabInfo.node:is(GameScene) and "full") or "owned"
 		self.sceneTree:setStartNode((tabInfo and tabInfo.node) or nil)
 		self.inspector:onNodeSelectionChanged(nil)
 		self:updateButtonTexture()

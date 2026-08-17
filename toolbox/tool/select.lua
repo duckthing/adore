@@ -28,8 +28,8 @@ end
 ---@param control Control
 ---@param desiredLayer CanvasLayer | RootNode
 ---@return boolean
-local function controlBelongsToLayer(control, desiredLayer)
-	return control:hasAncestor(desiredLayer) and control:isVisibleInTree()
+local function controlBelongsToLayer(control, desiredLayer, gx, gy)
+	return control:hasAncestor(desiredLayer) and control:isVisibleInTree() and control:doesPointOverlapClipped(gx, gy)
 end
 
 ---Returns `true` if this Node2d overlaps the point and has drawn contents
@@ -72,7 +72,7 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 			local worldX, worldY = toolboxTransform:inverseTransformPoint(usedX, usedY)
 
 			-- Get the highest Control...
-			local highestControl = viewport:getControlAtPoint(worldX, worldY, controlBelongsToLayer, layer)
+			local highestControl = viewport:getControlAtPoint(worldX, worldY, controlBelongsToLayer, layer, worldX, worldY)
 			if highestControl then
 				toSelect = highestControl
 				break
