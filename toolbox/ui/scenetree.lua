@@ -39,6 +39,9 @@ function SceneTreeViewer:new(toolbox, container)
 	---@type Node? # Where the tree begins searching
 	self.startNode = container.subroot
 
+	---@type "full" | "owned" # How to build the tree
+	self.iterateMode = "full"
+
 	self.tree = tnew(32, 1)
 	self.tree.length = 0
 
@@ -107,7 +110,20 @@ end
 ---@param node Node
 ---@param depth integer
 ---@param tree table
-local function forEachNode(node, depth, tree)
+---@param owner Node?
+local function forEachNodeOwned(node, depth, tree, owner)
+	if node._owner == owner or node == owner then
+		local newIndex = #tree + 1
+		tree[newIndex], tree[newIndex + 1], tree[newIndex + 2] =
+			node, depth, node.name
+		tree.length = tree.length + 1
+	end
+end
+
+---@param node Node
+---@param depth integer
+---@param tree table
+local function forEachNodeFull(node, depth, tree)
 	local newIndex = #tree + 1
 	tree[newIndex], tree[newIndex + 1], tree[newIndex + 2] =
 		node, depth, node.name
@@ -123,7 +139,9 @@ function SceneTreeViewer:updateNodes()
 	if not start then return end
 
 	local pressedNode = self.pressedNode
-	cheapIterateAll(start, forEachNode, tree)
+	local forEach = self.iterateMode == "owned" and forEachNodeOwned or forEachNodeFull
+
+	cheapIterateAll(start, forEach, tree, start.children[1])
 	-- Delay tree updates based off the amount of nodes there are
 	self.interval = max(1, min(tree.length * 0.04, 5))
 	self.maxScroll = self:getMaxScroll()

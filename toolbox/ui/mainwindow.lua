@@ -32,6 +32,8 @@ local Templates = require(ADORE_PATH..".toolbox.scripttemplates")
 ---@type Toolbox.Tool
 local Tool = require(ADORE_PATH..".toolbox.tool")
 
+local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
 local MainWindow = Control:extend()
@@ -112,6 +114,7 @@ function MainWindow:new(toolbox, subroot)
 			260, 36, -260, -240
 	)
 	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
+		self.sceneTree.iterateMode = (tabInfo.node:is(GameScene) and "full") or "owned"
 		self.sceneTree:setStartNode((tabInfo and tabInfo.node) or nil)
 		self.inspector:onNodeSelectionChanged(nil)
 		self:updateButtonTexture()
@@ -404,8 +407,8 @@ end
 function MainWindow:saveScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return false end
-	local child = srContainer.subroot.children[1]
-	if not child then return false end
+	local sceneRoot = srContainer:getSceneRoot()
+	if not sceneRoot then return false end
 	local savePath = srContainer._lastFilepath
 	local format = srContainer._lastFormat
 	if not savePath or not format then return self:saveSceneAs() or false end
@@ -429,12 +432,16 @@ function MainWindow:saveScene()
 		local TableScene = Adore.Resources("TableScene")
 		scene = TableScene()
 	end
-	scene:pack(child)
+	scene:pack(sceneRoot)
 
 	-- Write to the file
 	local success, err = ObjectSaver.saveToFile(file, scene, format)
 	if success then
 		print("Written to path:", savePath)
+		-- Remove it from ObjectLoader so that it gets reloaded
+		if ObjectLoader:has(savePath) then
+			ObjectLoader:destructor((ObjectLoader:get(savePath)))
+		end
 	else
 		-- Errored
 		print(err)
@@ -446,8 +453,8 @@ end
 function MainWindow:saveSceneAs()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local child = srContainer.subroot.children[1]
-	if not child then return end
+	local sceneRoot = srContainer:getSceneRoot()
+	if not sceneRoot then return end
 
 	-- Create the popup
 	local window = WindowPopup()
@@ -463,7 +470,7 @@ function MainWindow:saveSceneAs()
 		{type = "body", text = "File Path"},
 		{id = "path", type = "textfield",
 				value = srContainer._lastFilepath
-			or ("scenes/%s.json"):format(tostring(child):lower())},
+			or ("scenes/%s.json"):format(tostring(sceneRoot):lower())},
 		{type = "body", text = "File Path"},
 		{id = "format", type = "dropdown", items = FORMAT_OPTIONS,
 				value = srContainer and srContainer._lastFormat == "binary" and 2 or 1},
@@ -579,7 +586,8 @@ end
 function MainWindow:addNode()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local instanceUnder = self.sceneTree:getSelectedNode() or srContainer.subroot._instancedScene
+	local sceneRoot = srContainer:getSceneRoot()
+	local instanceUnder = self.sceneTree:getSelectedNode() or sceneRoot
 	if not (instanceUnder and instanceUnder._valid) then
 		instanceUnder = srContainer.subroot
 	end
@@ -628,8 +636,10 @@ function MainWindow:addNode()
 				-- Create the scene and add the tab
 				srContainer:pushSubroot()
 
+				---@type Node
 				local newNode = ClassOrErr()
 				instanceUnder:addChild(newNode)
+				newNode._owner = sceneRoot
 
 				srContainer:popSubroot()
 				self.sceneTree:updateNodes()
@@ -768,12 +778,119 @@ function MainWindow:deleteSelectedNode()
 	if not (selectedNode and selectedNode:is(Node)) then return end
 
 	srContainer:pushSubroot()
-	selectedNode.parent:removeChild(selectedNode)
+	selectedNode:unparent()
 	srContainer:popSubroot()
 
 	local sceneTree = self.sceneTree
 	sceneTree:selectNode(nil)
 	sceneTree:updateNodes()
+end
+
+do
+---@param node Node
+---@param owner Node
+local setOwner = function(node, owner) node._owner = owner end
+---@param node Node
+local ignoreSubScenes = function(node, owner)
+	if node._sceneFilePath ~= nil then
+		node._owner = owner
+		return false
+	end
+	return true
+end
+
+function MainWindow:duplicateSelectedNode()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local selectedNode = self.sceneTree:getSelectedNode()
+	if not (selectedNode and selectedNode:is(Node)) then return end
+	local sceneRoot = srContainer:getSceneRoot()
+	if not (sceneRoot and sceneRoot ~= selectedNode) then return end
+
+	local parent = selectedNode.parent
+	if parent then
+		srContainer:pushSubroot()
+		local index = parent:getIndexOfChild(selectedNode)
+		local clone = selectedNode:duplicate()
+
+		clone._owner = sceneRoot
+		clone:traverseDownSelf(setOwner, ignoreSubScenes, sceneRoot)
+
+		parent:insertChild(clone, index + 1)
+		srContainer:popSubroot()
+
+		local sceneTree = self.sceneTree
+		sceneTree:updateNodes()
+		sceneTree:selectNode(clone)
+	end
+end
+end
+
+---Instances a scene
+function MainWindow:instanceScene()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local selectedNode = self.sceneTree:getSelectedNode()
+	if not selectedNode then return end
+	local sceneRoot = srContainer:getSceneRoot()
+	if not sceneRoot then return end
+
+	-- Create the popup
+	local window = WindowPopup()
+	window:setAnchorsAndOffsets(
+		0.5, 0.5, 0.5, 0.5,
+		-90, -56, 90, 56
+	)
+
+	window:getTitleLabel():setText("Instance scene...")
+
+	---@type Form
+	local form = {
+		{type = "body", text = "File Path"},
+		{id = "path", type = "textfield",
+				value = "scenes/myscene.json"},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
+	vbox:setOffsets(10, 10, -10, 0)
+		:setResizeToContent(true)
+		:setMargin(4)
+
+	local pathField = sheet:getElement("path")
+	---@cast pathField LineEdit
+	pathField
+		:setUnfocusedPosition("right")
+		:setSubmitOnFocusLost(false)
+		.textSubmitted:connect(window, "submit", false, false)
+	window:addChild(vbox)
+
+	-- Connect events
+	window:addAction("Cancel", "close")
+	window:addAction("Load", "submit")
+	window.submit = function(...)
+		local path = pathField._submittedText
+
+		local scene, err = ObjectLoader:getFresh(path, "SceneFactory")
+		if scene then
+			---@cast scene SceneFactory
+			-- Add it
+			srContainer:pushSubroot()
+			local instanced = scene:instantiate(selectedNode)
+			instanced._owner = sceneRoot
+			srContainer:popSubroot()
+			self.sceneTree:updateNodes()
+			self.sceneTree:selectNode(instanced)
+			window:close()
+		else
+			print(err)
+		end
+	end
+
+	-- Show the popup
+	self:addChild(window)
+	window:popup()
+	sheet:getElement("path"):grabFocus(false)
 end
 
 function MainWindow:populateToolbar()

@@ -105,6 +105,11 @@ function EScene:selectTool(name)
 	end
 end
 
+---Gets the scene root
+function EScene:getSceneRoot()
+	return self.subroot.children[1]
+end
+
 ---Handles resizing on the subroot
 function EScene:resizeSubroot(w, h)
 	self:handleOnSubroot("resize", w, h)

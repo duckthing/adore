@@ -25,11 +25,6 @@ end
 
 ---@type ShortcutContext.ActionMap
 local actions = {
-	addNode = function(context, isRepeat)
-		if isGamePrioritized() then return false end
-		mainWindow:addNode()
-		return true
-	end,
 	newScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
 		mainWindow:newScene()
@@ -66,9 +61,24 @@ local actions = {
 		return true
 	end,
 
+	addNode = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		mainWindow:addNode()
+		return true
+	end,
 	deleteSelectedNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
 		mainWindow:deleteSelectedNode()
+		return true
+	end,
+	duplicateSelectedNode = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		mainWindow:duplicateSelectedNode()
+		return true
+	end,
+	instanceScene = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		mainWindow:instanceScene()
 		return true
 	end,
 
@@ -87,6 +97,8 @@ local pressedKeybinds = {
 	ctrl = {
 		a = "addNode",
 		s = "saveScene",
+		d = "duplicateSelectedNode",
+		i = "instanceScene",
 		o = "loadScene",
 		n = "newScene",
 		r = "reloadScene",
