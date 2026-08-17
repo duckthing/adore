@@ -1146,12 +1146,48 @@ function Control:toGlobal(lx, ly)
 	return gx, gy
 end
 
----Checks if a point overlaps with this Control, but NOT if the point is clipped by a parent
+---Checks if a point overlaps with this Control, but NOT if the point is clipped by an ancestor
 ---@param gx integer
 ---@param gy integer
+---@return boolean overlapping
 function Control:doesPointOverlap(gx, gy)
 	local lx, ly = self._globalTransform:inverseTransformPoint(gx, gy)
 	return self._localContentRect:containsPoint(lx, ly)
+end
+
+---Checks if a point overlaps with this Control and if unclipped by an ancestor
+---@param gx integer
+---@param gy integer
+---@return boolean overlapping
+function Control:doesPointOverlapClipped(gx, gy)
+	if not self:doesPointOverlap(gx, gy) then return false end
+
+	-- Go through all parent Controls and see if this point is inside them + visible
+	local currNode = self.parent
+	local topLevelNode = self._topLevelNode
+	while currNode and currNode:is(Control) do
+		---@cast currNode Control
+		if -- This Control cannot receive input if...
+			--...it is clipping the input
+			(
+				currNode.clipChildren
+				-- TODO: Use :doesPointOverlap?
+				-- clipChildren uses the global content rect,
+				-- while :canReceiveInput uses :doesPointOverlap.
+				-- This means we're correct visually here
+				and not currNode._globalContentRect:containsPoint(gx, gy)
+			)
+		then
+			return false
+		end
+
+		if currNode == topLevelNode or currNode._pushedAsModal then
+			-- Reached the top (or a modal, which ignores what is above)
+			break
+		end
+		currNode = currNode.parent
+	end
+	return true
 end
 
 ---Pushes self onto the modal stack. This Control will receive all input events first.
