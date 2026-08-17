@@ -513,13 +513,17 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 		---@cast result SceneFactory
 		obj = result:instantiate()
 
+		if not obj then
+			return ("Failed to instance scene at '%s'"):format(path)
+		end
+
 		if not obj:is(RequestedClass) then
 			return ("Scene at '%s' does not match requested class (%s ~= %s)")
 				:format(path, obj.CLASS_NAME, requestedClassName)
 		end
 	else
 		-- Create this like normal
-		obj  = TargetClass()
+		obj = TargetClass()
 	end
 
 	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary

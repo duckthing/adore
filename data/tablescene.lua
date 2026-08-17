@@ -96,9 +96,33 @@ function instantiateTree(ontoParent, array, allDeferredProperties, owner)
 	---@cast obj Node?
 
 	if not obj then
-		-- Errored and didn't create the Object
+		-- Errored and didn't create the Object;
+		-- Try to recover from this error by skipping what would be the tree
+		-- below the problematic Node
 		print(("[Adore.TableScene...instantiateTree] %s"):format(err))
-		return
+		local depth = 1
+		while depth > 0 do
+			local nextControl = tremove(array, 1)
+			if nextControl == STRING_TO_CONTROL.BEGIN_CHILDREN then
+				-- Go deeper in the tree
+				depth = depth + 1
+			elseif nextControl == STRING_TO_CONTROL.BEGIN_NODE then
+				-- Skip useless data
+				tremove(array, 1)
+				tremove(array, 1)
+			elseif nextControl == STRING_TO_CONTROL.END_CHILDREN then
+				-- Go higher in the tree
+				depth = depth - 1
+				if depth == 1 and array[1] == STRING_TO_CONTROL.END_NODE then
+					-- The end of this Node's tree
+					return
+				end
+			elseif nextControl == nil then
+				-- No more controls
+				break
+			end
+		end
+		error("Badly formatted scene; could not recover")
 	end
 
 	if not owner then

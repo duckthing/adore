@@ -8,9 +8,11 @@ local Node = Adore.Nodes("Node")
 ---@overload fun(func: SceneFunction?, source: string?): SceneFactory
 local SceneFactory = Object:extend()
 SceneFactory.CLASS_NAME = "SceneFactory"
+---@type {[string]: true} # A map of sources to `true`; used to prevent infinite scene loops
+SceneFactory._currentSources = {}
 
 ---@alias SceneFunction
----| fun(parent: Node?, ...): Node
+---| fun(parent: Node?, ...): Node?
 
 ---@param func SceneFunction?
 ---@param source string? # What path should the output be tagged as?
@@ -40,7 +42,7 @@ end
 
 ---This function should be overloaded to define a factory's output
 ---@param ... unknown
----@return Node node
+---@return Node? node
 function SceneFactory:build(...)
 	local node = Node()
 	node.name = "SceneFactory Output"
@@ -63,11 +65,30 @@ end
 ---Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
 ---@param parent Node?
 ---@param ... unknown # Parameters that will be passed to the :create() function
----@return Node instanced
+---@return Node? instanced
 function SceneFactory:instantiate(parent, ...)
 	-- Overload :create() instead
+	local source = self.source
+	if source then
+		if SceneFactory._currentSources[self.source] then
+			-- Prevent the infinite loop
+			print(("[Adore.SceneFactory] Prevented infinite loop from loading '%s'"):format(source))
+			return
+		end
+
+		-- Mark that we're here right now
+		SceneFactory._currentSources[source] = true
+	end
+
 	local node = self:build(...)
-	node._sceneFilePath = self.source
+
+	if source then
+		-- Done, unmark
+		SceneFactory._currentSources[source] = nil
+		node._sceneFilePath = source
+	end
+
+	if not node then return end
 
 	if rawget(self, "build") then
 		-- This is a SceneFactory with a custom build function
