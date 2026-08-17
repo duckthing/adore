@@ -21,6 +21,8 @@ local Tool = require(ADORE_PATH..".toolbox.tool")
 local SelectTool = require(ADORE_PATH..".toolbox.tool.select")
 
 local lgReplaceTransform = love.graphics.replaceTransform
+local lgSetScissor = love.graphics.setScissor
+local lgIntersectScissor = love.graphics.intersectScissor
 
 ---Not a class, to not pollute with useless suggestions
 ---@class Toolbox.EditableScene: ViewportContainer
@@ -370,7 +372,7 @@ local function drawForegroundGizmos(self)
 			-- Draw global bounding box
 			love.graphics.setLineWidth(3 * baseThickness)
 			love.graphics.setColor(0.8, 0.5, 0.5)
-			love.graphics.rectangle("line", tempRect2:unpack())
+			love.graphics.rectangle("line", selected._globalContentRect:unpack())
 		end
 
 		love.graphics.pop()
@@ -379,11 +381,21 @@ end
 
 
 local tempTransform = love.math.newTransform()
+local tempScissorRect = Rect2()
+---@type love.Transform
 local alwaysApplyTransform = nil
 local replaceTransformOverride = function(newTransform)
 	lgReplaceTransform(alwaysApplyTransform)
 	if newTransform ~= alwaysApplyTransform then
 		love.graphics.applyTransform(newTransform)
+	end
+end
+
+local intersectScissorOverride = function(x, y, w, h)
+	if x == nil then
+		lgIntersectScissor()
+	else
+		lgIntersectScissor(tempScissorRect:iSetComponents(x, y, w, h):transformBox(alwaysApplyTransform))
 	end
 end
 
@@ -402,8 +414,10 @@ function drawDirectSubroot(self, subroot)
 	local camera = self.camera
 	local oldX, oldY = camera._position:unpack()
 
-	-- Change the origin for replaceTransform (for Controls)
+	-- Change the origins for some graphics functions (mainly for Controls)
+	-- setScissor isn't needed
 	love.graphics.replaceTransform = replaceTransformOverride
+	love.graphics.intersectScissor = intersectScissorOverride
 
 	love.graphics.push("all")
 	love.graphics.origin()
@@ -447,6 +461,7 @@ function drawDirectSubroot(self, subroot)
 	-- Reset back to normal
 	camera:setPosition(oldX, oldY)
 	love.graphics.replaceTransform = lgReplaceTransform
+	love.graphics.intersectScissor = lgIntersectScissor
 	love.graphics.pop()
 
 	drawForegroundGizmos(self)
