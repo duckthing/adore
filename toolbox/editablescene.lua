@@ -307,7 +307,7 @@ local function drawForegroundGizmos(self)
 			do
 				local ox, oy, oRight, oBottom = selected._localContentRect:getBounds()
 				love.graphics.setLineWidth(1 * baseThickness)
-				love.graphics.setColor(0.5, 0.5, 0.8, 1)
+				love.graphics.setColor(0.5, 0.5, 0.8)
 				-- Top left
 				local ax, ay = transform:transformPoint(ox, oy)
 				-- Top right
@@ -348,7 +348,7 @@ local function drawForegroundGizmos(self)
 			do
 				local ox, oy, oRight, oBottom = selected._localContentRect:getBounds()
 				love.graphics.setLineWidth(1 * baseThickness)
-				love.graphics.setColor(0.5, 0.5, 0.8, 1)
+				love.graphics.setColor(0.5, 0.5, 0.8)
 				-- Top left
 				local ax, ay = transform:transformPoint(ox, oy)
 				-- Top right

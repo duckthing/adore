@@ -86,8 +86,25 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 			end
 		end
 
-		Tool.mainWindow.sceneTree:selectNode(toSelect)
-		Tool.mainWindow.inspector:onNodeSelectionChanged(toSelect)
+		local mainWindow = Tool.mainWindow
+		if toSelect and mainWindow.sceneTree.iterateMode == "owned" then
+			-- If it's an instanced scene, the _owner property won't be equal to the scene root
+			local sceneRoot = srContainer:getSceneRoot()
+			---@cast toSelect Node
+			if sceneRoot then
+				-- Find the highest Node that is owned by the scene root
+				while toSelect do
+					if toSelect._owner == sceneRoot then
+						break
+					end
+
+					toSelect = toSelect.parent
+				end
+			end
+		end
+
+		mainWindow.sceneTree:selectNode(toSelect)
+		mainWindow.inspector:onNodeSelectionChanged(toSelect)
 		return true
 	end
 	return false
