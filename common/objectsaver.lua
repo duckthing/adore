@@ -306,7 +306,7 @@ end
 
 ---Deserializes the resource list from the end of a `string.buffer`
 ---* It should get called **after** deserializing a block of serialized Object(s).
----* It returns `nil` as the second return value and the error as the third value if there was an issue decoding.
+---* It returns `nil` as the second return value and the error as the first value if there was an issue decoding.
 ---@param buffer string.buffer
 ---@return string? err
 ---@return any[]? resources

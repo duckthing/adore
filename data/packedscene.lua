@@ -14,6 +14,8 @@ function PackedScene:new()
 	PackedScene.super.new(self)
 	---@type string.buffer
 	self.buffer = StringBuffer.new()
+	---@type boolean # If this PackedScene's buffer was consumed
+	self._consumed = false
 end
 
 local STRING_TO_CONTROL = {
@@ -26,8 +28,19 @@ local STRING_TO_CONTROL = {
 ---@param buffer string.buffer
 ---@param node Node
 ---@param resources any[]
-local function packInto(buffer, node, resources)
+---@param owner Node? # What we're allowed to save with; if not inside of recursion, leave this `nil`
+local function packInto(buffer, node, resources, owner)
 	if not node._adorePersist then return end
+
+	if owner then
+		if node._owner ~= owner then
+			-- Don't save anything not owned by this scene root
+			return
+		end
+	else
+		-- This Node is the owner
+		owner = node
+	end
 
 	buffer:encode(STRING_TO_CONTROL.BEGIN_NODE)
 	ObjectSaver.serializeObjectToBuffer(node, buffer, resources)
@@ -42,11 +55,11 @@ local function packInto(buffer, node, resources)
 				end
 
 				index = index + 1
-				packInto(buffer, child, resources)
+				packInto(buffer, child, resources, owner)
 			end
 		end
 
-		-- If there is at least 1 child that has 'adoreCanSave', we end the list
+		-- If there is at least 1 child that has '_adorePersist', we end the list
 		if index > 1 then
 			buffer:encode(STRING_TO_CONTROL.END_CHILDREN)
 		end
@@ -58,6 +71,7 @@ end
 ---@param node Node
 function PackedScene:pack(node)
 	self.buffer:reset()
+	self._consumed = false
 	local resources = {}
 	packInto(self.buffer, node, resources)
 	ObjectSaver.serializeResourcesToBuffer(self.buffer, resources)
@@ -68,19 +82,59 @@ local instantiateTree
 ---@param ontoParent Node?
 ---@param buffer string.buffer
 ---@param allDeferredProperties {[Node]: {[string]: any}}?
+---@param owner Node?
 ---@return Node? node
-function instantiateTree(ontoParent, buffer, allDeferredProperties)
+function instantiateTree(ontoParent, buffer, allDeferredProperties, owner)
 	local control = buffer:decode()
 	if control ~= STRING_TO_CONTROL.BEGIN_NODE then return end
 	local err, obj, deferredProperties = ObjectSaver.deserializeFromBuffer(buffer, "Node", true)
 	---@cast obj Node?
 
 	if not obj then
+		-- Errored and didn't create the Object;
+		-- Try to recover from this error by skipping what would be the tree
+		-- below the problematic Node
 		print(("[Adore.PackedScene...instantiateTree] %s"):format(err))
+		local depth = 1
+		while depth > 0 do
+			local success, nextControl = pcall(buffer.decode, buffer)
+			if not success then
+				-- Errored while decoding
+				print(("[Adore.PackedScene...instantiateTree] Error while decoding buffer: %s"):format(nextControl))
+			end
+			if nextControl == STRING_TO_CONTROL.BEGIN_CHILDREN then
+				-- Go deeper in the tree
+				depth = depth + 1
+			elseif nextControl == STRING_TO_CONTROL.BEGIN_NODE then
+				-- Skip useless data
+				buffer:decode()
+				buffer:decode()
+			elseif nextControl == STRING_TO_CONTROL.END_CHILDREN then
+				-- Go higher in the tree
+				depth = depth - 1
+				if depth == 1 then
+					-- The end of this Node's tree
+					return
+				end
+			elseif nextControl == nil then
+				-- No more controls
+				break
+			end
+		end
+		print("[Adore.PackedScene...instantiateTree] Badly formatted scene; could not recover")
 		return
 	end
 
+	if not owner then
+		-- This Node is the scene root and owns the tree
+		owner = obj
+	else
+		-- This Node is owned by the scene root
+		obj._owner = owner
+	end
+
 	if deferredProperties then
+		-- This Node has deferred properties
 		allDeferredProperties[obj] = deferredProperties
 	end
 
@@ -93,7 +147,7 @@ function instantiateTree(ontoParent, buffer, allDeferredProperties)
 		return obj
 	elseif control == STRING_TO_CONTROL.BEGIN_CHILDREN then
 		-- Repeat this until a Node isn't returned (which means END_CHILDREN was (probably) returned)
-		while instantiateTree(obj, buffer, allDeferredProperties) ~= nil do end
+		while instantiateTree(obj, buffer, allDeferredProperties, owner) ~= nil do end
 		assert(buffer:decode() == STRING_TO_CONTROL.END_NODE, "Did not get END_NODE control code (after END_CHILDREN was received)")
 		if ontoParent then
 			ontoParent:addChild(obj)
@@ -107,7 +161,7 @@ end
 ---Returns `true` if this PackedScene is empty
 ---@return boolean
 function PackedScene:isEmpty()
-	return #self.buffer == 0
+	return self._consumed or #self.buffer == 0
 end
 
 ---Instantiates this Scene and returns the highest level `Node`
@@ -120,12 +174,19 @@ function PackedScene:build(consumeBuffer)
 		---@type {[Node]: {[string]: any}}
 		local deferredData = {}
 		local buffer = self.buffer
+
 		if not consumeBuffer then
+			-- Clone the buffer
 			buffer = StringBuffer.new()
-			buffer:put(self.buffer:tostring())
+			buffer:put(self.buffer)
 		end
 
-		local instanced = instantiateTree(nil, buffer, deferredData)
+		local success, instanced = pcall(instantiateTree, nil, buffer, deferredData)
+		if not success then
+			print(("[Adore.PackedScene:build] Error while instantiating tree: %s"):format(instanced))
+			return
+		end
+
 		local err, resources = ObjectSaver.deserializeResourcesFromBuffer(buffer)
 
 		if err then
@@ -137,6 +198,11 @@ function PackedScene:build(consumeBuffer)
 			for node, deferredProperties in pairs(deferredData) do
 				ObjectSaver.setDeferredProperties(node, deferredProperties, resources)
 			end
+		end
+
+		if consumeBuffer then
+			-- Make it obvious the buffer was consumed
+			self._consumed = true
 		end
 
 		return instanced

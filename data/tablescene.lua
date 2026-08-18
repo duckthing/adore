@@ -35,6 +35,7 @@ local function packInto(array, node, resources, owner)
 
 	if owner then
 		if node._owner ~= owner then
+			-- Don't save anything not owned by this scene root
 			return
 		end
 	else
@@ -59,7 +60,7 @@ local function packInto(array, node, resources, owner)
 			end
 		end
 
-		-- If there is at least 1 child that has 'adoreCanSave', we end the list
+		-- If there is at least 1 child that has '_adorePersist', we end the list
 		if index > 1 then
 			enqueue(array, STRING_TO_CONTROL.END_CHILDREN)
 		end
@@ -71,6 +72,7 @@ end
 ---@param node Node
 function TableScene:pack(node)
 	self.table = {}
+	self._consumed = false
 	local resources = {}
 	packInto(self.table, node, resources)
 	self.table[#self.table+1] = resources
@@ -85,9 +87,7 @@ local instantiateTree
 ---@return Node? node
 function instantiateTree(ontoParent, array, allDeferredProperties, owner)
 	local control = tremove(array, 1)
-	if control ~= STRING_TO_CONTROL.BEGIN_NODE then
-		return
-	end
+	if control ~= STRING_TO_CONTROL.BEGIN_NODE then return end
 
 	local header, body = tremove(array, 1), tremove(array, 1)
 
@@ -113,7 +113,7 @@ function instantiateTree(ontoParent, array, allDeferredProperties, owner)
 			elseif nextControl == STRING_TO_CONTROL.END_CHILDREN then
 				-- Go higher in the tree
 				depth = depth - 1
-				if depth == 1 and array[1] == STRING_TO_CONTROL.END_NODE then
+				if depth == 1 then
 					-- The end of this Node's tree
 					return
 				end
@@ -122,16 +122,20 @@ function instantiateTree(ontoParent, array, allDeferredProperties, owner)
 				break
 			end
 		end
-		error("Badly formatted scene; could not recover")
+		print("[Adore.TableScene] Badly formatted scene; could not recover")
+		return
 	end
 
 	if not owner then
+		-- This Node is the scene root and owns the tree
 		owner = obj
 	else
+		-- This Node is owned by the scene root
 		obj._owner = owner
 	end
 
 	if deferredProperties then
+		-- This Node has deferred properties
 		allDeferredProperties[obj] = deferredProperties
 	end
 
@@ -172,8 +176,6 @@ function TableScene:build(consumeBuffer)
 		local deferredData = {}
 		local array = self.table
 		local resources = array[#array]
-
-		if consumeBuffer == nil then consumeBuffer = false end
 
 		if not consumeBuffer then
 			-- Clone the table
