@@ -188,7 +188,7 @@ function PackedScene:build(consumeBuffer)
 			return
 		end
 
-		local err, resources = ObjectSaver.deserializeResourcesFromBuffer(buffer)
+		local resources, err = ObjectSaver.deserializeResourcesFromBuffer(buffer)
 
 		if err then
 			print(("[Adore.PackedScene:build] Error while deserializing resources: %s"):format(err))

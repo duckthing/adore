@@ -332,11 +332,10 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 end
 
 ---Deserializes the resource list from the end of a `string.buffer`
----* It should get called **after** deserializing a block of serialized Object(s).
----* It returns `nil` as the second return value and the error as the first value if there was an issue decoding.
+---* It should get called **after** deserializing a block of serialized Object(s)
 ---@param buffer string.buffer
----@return string? err
 ---@return any[]? resources
+---@return string? err
 function ObjectSaver.deserializeResourcesFromBuffer(buffer)
 	-- Decode the resource list
 	local ok, resources = safeDecode(buffer)
@@ -344,7 +343,7 @@ function ObjectSaver.deserializeResourcesFromBuffer(buffer)
 	if not ok then
 		-- Return the error (resources will be an error string)
 		---@cast resources string
-		return resources, nil
+		return nil, resources
 	end
 
 	-- Read the binary data from the end of the buffer
@@ -361,15 +360,15 @@ function ObjectSaver.deserializeResourcesFromBuffer(buffer)
 			end
 
 			-- Return the buffer and resource list
-			return nil, resources
+			return resources, nil
 		else
 			-- Return the error
-			return ("Decoded resource list was of incorrect type '%s'"):format(resType)
+			return nil, ("Decoded resource list was of incorrect type '%s'"):format(resType)
 		end
 	end
 
 	-- Resource list doesn't exist; return nothing for it
-	return "Resource list does not exist", nil
+	return nil, "Resource list does not exist"
 end
 
 ---Creates an Object from a string.buffer. There is an optional `requestedClassName` parameter that only returns an
@@ -852,7 +851,7 @@ local loadFormatHandler = {
 
 		-- No error, now deserialize its resources
 		local resources
-		err, resources = ObjectSaver.deserializeResourcesFromBuffer(tbuffer)
+		resources, err = ObjectSaver.deserializeResourcesFromBuffer(tbuffer)
 		tbuffer:reset()
 
 		if err then
