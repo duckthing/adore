@@ -84,16 +84,16 @@ function ClassDB.getClassDBEntry(class)
 	return classIdToEntry[class.CLASS_ID]
 end
 
----Returns `true` if the `targetClass` inherits from or matches `baseClass`
----`targetClass:is(baseClass) or baseClass == targetClass`
+---Returns `true` if `inheritingClass` inherits from or matches `baseClass`
+---`inheritingClass:is(baseClass) or baseClass == inheritingClass`
 ---@param baseClass string | Object
----@param targetClass string | Object
-function ClassDB.doesClassInherit(baseClass, targetClass)
+---@param inheritingClass string | Object
+function ClassDB.doesClassInherit(baseClass, inheritingClass)
 	-- Converts from class object to class name
 	if type(baseClass) == "string" then baseClass = Adore.Any(baseClass) end
-	if type(targetClass) == "string" then targetClass = Adore.Any(targetClass) end
+	if type(inheritingClass) == "string" then inheritingClass = Adore.Any(inheritingClass) end
 
-	return baseClass == targetClass or targetClass:is(baseClass)
+	return baseClass == inheritingClass or inheritingClass:is(baseClass)
 end
 
 return ClassDB

@@ -442,6 +442,18 @@ function Control:setVariant(name)
 	return self
 end
 
+---Sets whether children will be clipped by this Control's bounding box
+---@generic T: Control
+---@param self T | Control
+---@param clip boolean
+---@return T
+function Control:setClipChildren(clip)
+	if self.clipChildren ~= clip then
+		self.clipChildren = clip
+	end
+	return self
+end
+
 ---Sets the input filter for this Control
 ---@param mode Control.InputFilter
 ---@return self
@@ -1372,7 +1384,7 @@ function Control._addDefinition(entry)
 	entry:newString("_currentOriginalSubclass", "normal", nil, nil, "setSubclass")
 	entry:newString("_variantName", "", nil, nil, "setVariant")
 	entry:newColor("albedo")
-	entry:newBoolean("clipChildren", false)
+	entry:newBoolean("clipChildren", false, "setClipChildren")
 	entry:newBoolean("_modalDrawOnTop", false)
 	entry:newBoolean("_modalDrawPreviousModals", true)
 end
