@@ -4,6 +4,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Resources = Adore.Resources
+local Common = Adore.Common
 local min, max = math.min, math.max
 
 local Node = Nodes("Node")
@@ -13,7 +14,8 @@ local ViewportContainer = Nodes("ViewportContainer")
 local RootNode = Nodes("RootNode")
 local Viewport = Resources("Viewport")
 local Camera = Nodes("Camera")
-local Rect2 = Adore.Common("Rect2")
+local Vec2 = Common("Vec2")
+local Rect2 = Common("Rect2")
 
 ---@type Toolbox.Tool
 local Tool = require(ADORE_PATH..".toolbox.tool")
@@ -21,7 +23,6 @@ local Tool = require(ADORE_PATH..".toolbox.tool")
 local SelectTool = require(ADORE_PATH..".toolbox.tool.select")
 
 local lgReplaceTransform = love.graphics.replaceTransform
-local lgSetScissor = love.graphics.setScissor
 local lgIntersectScissor = love.graphics.intersectScissor
 
 ---Not a class, to not pollute with useless suggestions
@@ -285,6 +286,7 @@ local function drawBackgroundGizmos(self)
 end
 
 local tempRect2 = Rect2()
+local tempVec2 = Vec2()
 
 ---@param self Toolbox.EditableScene
 local function drawForegroundGizmos(self)
@@ -329,16 +331,29 @@ local function drawForegroundGizmos(self)
 			end
 
 			-- Draw global bounding box
-			love.graphics.setLineWidth(3 * baseThickness)
+			love.graphics.setLineWidth(2 * baseThickness)
 			love.graphics.setColor(0.8, 0.5, 0.5)
 			love.graphics.rectangle("line", gcr:unpack())
 
 			-- Draw axes
 			local globalX, globalY = selected:getPosition(true)
+			local axisLength = 25 * baseThickness
+			-- +X
 			love.graphics.setColor(1, 0, 0, 0.8)
-			love.graphics.line(globalX, globalY, selected:toGlobal(zoom * 10, 0))
+			love.graphics.line(
+				globalX, globalY,
+				tempVec2:iSetComponents(1, 0)
+					:iRotate(selected:getRotation(true)):iMult(axisLength)
+					:iAddComponents(globalX, globalY):unpack()
+			)
+			-- +Y
 			love.graphics.setColor(0, 1, 0, 0.8)
-			love.graphics.line(globalX, globalY, selected:toGlobal(0, zoom * 10))
+			love.graphics.line(
+				globalX, globalY,
+				tempVec2:iSetComponents(0, 1)
+					:iRotate(selected:getRotation(true)):iMult(axisLength)
+					:iAddComponents(globalX, globalY):unpack()
+			)
 
 		elseif selected:is(Control) then
 			---@cast selected Control
@@ -380,7 +395,6 @@ local function drawForegroundGizmos(self)
 end
 
 
-local tempTransform = love.math.newTransform()
 local tempScissorRect = Rect2()
 ---@type love.Transform
 local alwaysApplyTransform = nil
@@ -405,11 +419,6 @@ function drawDirectSubroot(self, subroot)
 	drawBackgroundGizmos(self)
 
 	local layers = subroot._canvasLayers
-	local ownViewport = assert(self._subViewport)
-	---@type love.Transform # The Transform to reset back to
-	local ownTransform = ownViewport._viewportTransform
-	---@type love.Transform # The Transform used while drawing, which may be modified slightly from `ownTransform`
-	local usedTransform = tempTransform:setMatrix(ownTransform:getMatrix())
 
 	local camera = self.camera
 	local oldX, oldY = camera._position:unpack()
@@ -492,7 +501,7 @@ function EScene:drawEditableRootIntoViewport()
 		love.graphics.replaceTransform = lgReplaceTransform
 
 		-- Pop the stack until we're back at the original state
-		for i = love.graphics.getStackDepth(), formerDepth + 1, -1 do
+		for _ = love.graphics.getStackDepth(), formerDepth + 1, -1 do
 			love.graphics.pop()
 		end
 	end
