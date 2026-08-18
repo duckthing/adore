@@ -1100,6 +1100,11 @@ function Root:popControlModal(control)
 			table.remove(stack, found)
 		end
 
+		-- Release the current focus (which belongs to this modal)
+		if self._focusedControl then
+			self._focusedControl:releaseFocus()
+		end
+
 		-- Focus the last element before this modal was pushed
 		if control._previousFocused then
 			control._previousFocused:grabFocus(false)
