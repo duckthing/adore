@@ -209,11 +209,12 @@ end
 ---@param body table # The serialized body of the Object
 ---@param requestedClassName `T` # The optional class (name) to expect; should be a string
 ---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
+---@param canInstance boolean? # [Default: `false`] Can we instance a scene from this?
 ---@return string? err
 ---@return T? object
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; keep this for later
 ---@overload fun(binaryBuffer: string.buffer, header: table, body: table): string?, Object?
-function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, requestedClassName, canInherit)
+function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, requestedClassName, canInherit, canInstance)
 	local RequestedClass
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
@@ -261,7 +262,33 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 	end
 
 	---@type Object # The object where all the properties will get set
-	local obj = TargetClass()
+	local obj
+
+	if canInstance and header._sceneFilePath and ClassDB.doesClassInherit("Node", RequestedClass) then
+		-- This Object is a scene and we are allowed to instance it
+		local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+		local path = header._sceneFilePath
+		local success, result = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
+
+		if not success then
+			return ("Getting scene at '%s' errored: %s"):format(path, result)
+		end
+
+		---@cast result SceneFactory
+		obj = result:instantiate()
+
+		if not obj then
+			return ("Failed to instance scene at '%s'"):format(path)
+		end
+
+		if not obj:is(RequestedClass) then
+			return ("Scene at '%s' does not match requested class (%s ~= %s)")
+				:format(path, obj.CLASS_NAME, requestedClassName)
+		end
+	else
+		-- Create this like normal
+		obj = TargetClass()
+	end
 
 	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
 	local deferredData = nil
@@ -353,11 +380,12 @@ end
 ---@param buffer string.buffer
 ---@param requestedClassName `T` # The optional class (name) to expect; should be a string
 ---@param canInherit boolean? # [Default: `false` if requesting a class] Whether the deserialized object can inherit from the requested class
+---@param canInstance boolean? # [Default: `false`] Can we instance a scene from this?
 ---@return string? err
 ---@return T? object
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; keep this for later
 ---@overload fun(buffer: string.buffer): string?, Object?
-function ObjectSaver.deserializeFromBuffer(buffer, requestedClassName, canInherit)
+function ObjectSaver.deserializeFromBuffer(buffer, requestedClassName, canInherit, canInstance)
 	---@type table # The header of the Object
 	local headerTable
 	do
@@ -400,7 +428,7 @@ function ObjectSaver.deserializeFromBuffer(buffer, requestedClassName, canInheri
 		bodyTable = bodyOrErr
 	end
 
-	return ObjectSaver.deserializeObjectFromBuffer(buffer, headerTable, bodyTable, requestedClassName, canInherit)
+	return ObjectSaver.deserializeObjectFromBuffer(buffer, headerTable, bodyTable, requestedClassName, canInherit, canInstance)
 end
 
 ---Serializes an Object at the end of an array, which can be deserialized later to load the Object again.

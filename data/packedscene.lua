@@ -87,7 +87,8 @@ local instantiateTree
 function instantiateTree(ontoParent, buffer, allDeferredProperties, owner)
 	local control = buffer:decode()
 	if control ~= STRING_TO_CONTROL.BEGIN_NODE then return end
-	local err, obj, deferredProperties = ObjectSaver.deserializeFromBuffer(buffer, "Node", true)
+	local err, obj, deferredProperties =
+		ObjectSaver.deserializeFromBuffer(buffer, "Node", true, owner ~= nil)
 	---@cast obj Node?
 
 	if not obj then
