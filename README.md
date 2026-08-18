@@ -88,36 +88,45 @@ When ran for one second, this should print to the console that you are missing a
 
 Scenes are functions. Write your own in here.
 ```lua
+--- scenes/level1.lua
 local Adore = require "adore"
 local Nodes = Adore.Nodes
 local Node2d = Nodes("Node2d")
 local Sprite = Nodes("Sprite")
+local SceneFactory = Adore.Resources("SceneFactory")
 
 local TextureLoader = Adore.Loader.getCollection("TextureLoader")
 local playerImage = TextureLoader:get("assets/player.png")
 
 ---@type SceneFunction
-local function myScene(parent)
+local function mySceneFunction()
 	-- Create a scene root
 	local scene = Node2d()
 
-	-- Build your tree here
+	-- Build your tree...
 	local sprite = Sprite()
 	sprite:setTexture(playerImage)
-	scene:addChild(sprite)
-	--...
 
-	-- Once done, add it to the parent if it was passed
-	if parent then
-		parent:addChild(scene)
-	end
+	-- ...while adding your nodes to the scene root
+	scene:addChild(sprite)
 
 	-- Then return the scene root
 	return scene
 end
 
--- Change the scene through the root
-root:changeSceneTo(myScene)
+-- There are two ways to use scenes:
+-- 1. Return the function
+--		* This doesn't tag the source file
+-- return mySceneFunction
+
+-- 2. Return a new SceneFactory
+--		* Protection against infinite loops
+--		* Don't forget the three dots; they tag the source file!
+return SceneFactory(mySceneFunction, ...)
+
+-- Somewhere else...
+local level = require "scenes.level1"
+root:changeSceneTo(level)
 ```
 You may want some way to get input now. Use a new `GameContext`.
 ```lua
