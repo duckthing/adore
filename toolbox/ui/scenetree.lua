@@ -138,7 +138,6 @@ function SceneTreeViewer:updateNodes()
 	tree.length = 0
 	if not start then return end
 
-	local pressedNode = self.pressedNode
 	local forEach = self.iterateMode == "owned" and forEachNodeOwned or forEachNodeFull
 
 	cheapIterateAll(start, forEach, tree, start.children[1])
@@ -147,6 +146,7 @@ function SceneTreeViewer:updateNodes()
 	self.maxScroll = self:getMaxScroll()
 	self.scrollY = min(self.maxScroll, self.scrollY)
 
+	local pressedNode = self.pressedNode
 	if pressedNode then
 		if not pressedNode._inTree then
 			-- Pressed node was removed from the scene tree

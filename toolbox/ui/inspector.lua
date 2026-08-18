@@ -53,7 +53,8 @@ function Inspector:new(toolbox, sceneTree)
 		0, 0, 1, 1,
 		0, 36, 0, 0
 	)
-	:setMargin(4)
+		:setMargin(4)
+		:setClipChildren(true)
 
 	self:addChild(nameLabel)
 	self:addChild(vbox)

@@ -830,10 +830,10 @@ end
 function MainWindow:instanceScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local selectedNode = self.sceneTree:getSelectedNode()
-	if not selectedNode then return end
 	local sceneRoot = srContainer:getSceneRoot()
 	if not sceneRoot then return end
+	local instanceUnder = self.sceneTree:getSelectedNode() or sceneRoot
+	if not instanceUnder then return end
 
 	-- Create the popup
 	local window = WindowPopup()
@@ -877,7 +877,7 @@ function MainWindow:instanceScene()
 			-- Add it
 			srContainer:pushSubroot()
 
-			local instanced = scene:instantiate(selectedNode)
+			local instanced = scene:instantiate(instanceUnder)
 			if instanced then
 				instanced._owner = sceneRoot
 			end
