@@ -99,6 +99,7 @@ do
 	---@param fromClass Object
 	---@param header table
 	---@param body table
+	---@param resources any[]
 	local function femvInsertWithoutBinaryCallback(obj, property, propertyName, fromClass, header, body, resources)
 		local value = property:get(obj, propertyName)
 		if not property.IS_BINARY then
@@ -245,7 +246,7 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 
 	if canInherit then
 		-- Check if the requested class is inheriting from the target class
-		if not (TargetClass == RequestedClass or TargetClass:is(RequestedClass)) then
+		if not ClassDB.doesClassInherit(RequestedClass, TargetClass) then
 			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
 		end
 	else
@@ -508,7 +509,7 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 
 	if canInherit then
 		-- Check if the requested class is inheriting from the target class
-		if not TargetClass:is(RequestedClass) then
+		if not ClassDB.doesClassInherit(RequestedClass, TargetClass) then
 			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
 		end
 	else
