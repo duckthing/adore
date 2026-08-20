@@ -631,31 +631,22 @@ end
 ---Duplicates a Node
 ---@generic T: Node
 ---@param self T | Node
----@param ... unknown
 ---@return T clone
 function Node:duplicate(...)
-	--[[ do
-		local argCount = select("#", ...)
-		if argCount > 0 then
-			-- Make everything false by default
-			for i = 1, argCount do
-			end
-		end
-	end --]]
-
 	---@type Node
 	local clone
 	local selfOwner = self._owner
 
 	if self._sceneFilePath then
 		-- Probably came from a filepath
+		local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+		local factory = ObjectLoader:get(self._sceneFilePath, "SceneFactory")
+		clone = factory:instantiate()
 	else
 		-- Do a basic duplication
 		clone = getmetatable(self)()
-		local entry = self:getClassDBEntry()
-		entry:forEachModifiedValue(self, true, duplicateFEMV, clone)
 
-		-- Clone all children, too
+		-- Clone all children that we own, too
 		local children = self.children
 		for i = 1, #children do
 			local child = children[i]
@@ -666,6 +657,10 @@ function Node:duplicate(...)
 			end
 		end
 	end
+
+	-- Copy properties
+	local entry = self:getClassDBEntry()
+	entry:forEachModifiedValue(self, true, duplicateFEMV, clone)
 
 	return clone
 end
