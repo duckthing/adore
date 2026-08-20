@@ -554,7 +554,6 @@ function MainWindow:loadScene()
 	window:addAction("Load", "submit")
 	window.submit = function(...)
 		local path = pathField._submittedText
-		local format = sheet:getValue("format").label
 
 		local success, scene = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
 		if success then
@@ -564,6 +563,12 @@ function MainWindow:loadScene()
 			eScene:createSubroot()
 			eScene:changeSceneTo(scene)
 			eScene._lastFilepath = path
+
+			local extension = path:match("^.*%.(.*)")
+			local format = extension
+			if not (extension == "json" or extension == "lua") then
+				format = "binary"
+			end
 			eScene._lastFormat = format
 
 			local fileName = path:match(".*[/\\](.*)$")
