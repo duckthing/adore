@@ -442,6 +442,8 @@ function MainWindow:saveScene()
 		if ObjectLoader:has(savePath) then
 			ObjectLoader:destructor((ObjectLoader:get(savePath)))
 		end
+		ObjectLoader:register(scene, savePath)
+		ObjectLoader:updateModifiedSceneProperties(sceneRoot, savePath)
 	else
 		-- Errored
 		print(err)
@@ -521,7 +523,7 @@ function MainWindow:loadScene()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -76, 90, 76
+		-90, -36, 90, 76
 	)
 
 	window:getTitleLabel():setText("Load scene...")
@@ -531,9 +533,6 @@ function MainWindow:loadScene()
 		{type = "body", text = "File Path"},
 		{id = "path", type = "textfield",
 				value = srContainer and srContainer._lastFilepath or "scenes/myscene.json"},
-		{type = "body", text = "File Path"},
-		{id = "format", type = "dropdown", items = FORMAT_OPTIONS,
-				value = srContainer and srContainer._lastFormat == "binary" and 2 or 1},
 	}
 
 	local vbox, sheet = FormBuilder.build(form)
@@ -557,9 +556,10 @@ function MainWindow:loadScene()
 		local path = pathField._submittedText
 		local format = sheet:getValue("format").label
 
-		local scene, err = ObjectSaver.loadFromFilePath(path, format, "SceneFactory", true)
-		if scene then
+		local success, scene = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
+		if success then
 			-- Create the scene and add the tab
+			---@cast scene SceneFactory
 			local eScene = EditableScene()
 			eScene:createSubroot()
 			eScene:changeSceneTo(scene)
@@ -573,7 +573,7 @@ function MainWindow:loadScene()
 			self.tabContainer:selectTab(eScene)
 			window:close()
 		else
-			print(err)
+			print(scene)
 		end
 	end
 
