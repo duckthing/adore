@@ -73,7 +73,7 @@ local function onRequire()
 			---@return DrawRequest.Button
 			local function wm(dr)
 				-- Applies the margin
-			dr:setContentMargin(8, 8)
+				dr:setContentMargin(8, 8)
 				return dr
 			end
 			default:setDrawable(Button, "", wm(DrawButton(buttonColors.normal, 4, nil, buttonColors.normalText)))
@@ -89,10 +89,10 @@ local function onRequire()
 				pressed = "flatpressed",
 				disabled = "flatdisabled",
 			})
-			default:setDrawable(Button, "flatnormal", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText)))
-			default:setDrawable(Button, "flathovered", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.hoveredText)))
-			default:setDrawable(Button, "flatpressed", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText)))
-			default:setDrawable(Button, "flatdisabled", wm(DrawButton(buttonColors.transparent, 4, nil, buttonColors.disabledText)))
+			default:setDrawable(Button, "flatnormal", DrawButton(buttonColors.transparent, 4, nil, buttonColors.normalText))
+			default:setDrawable(Button, "flathovered", DrawButton(buttonColors.transparent, 4, nil, buttonColors.hoveredText))
+			default:setDrawable(Button, "flatpressed", DrawButton(buttonColors.transparent, 4, nil, buttonColors.pressedText))
+			default:setDrawable(Button, "flatdisabled", DrawButton(buttonColors.transparent, 4, nil, buttonColors.disabledText))
 		end
 
 		-- TextureButton
