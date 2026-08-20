@@ -199,6 +199,12 @@ function TableScene:build(consumeBuffer)
 		end
 
 		local instanced = instantiateTree(nil, array, deferredData)
+		if self._shouldUpdateDependencies and instanced then
+			-- Update dependencies
+			self._shouldUpdateDependencies = false
+			self:updateDependencies(instanced)
+		end
+
 		local err
 
 		if err then

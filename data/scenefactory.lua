@@ -2,6 +2,7 @@
 local Adore = require ""
 local Object = Adore.Resources("Object")
 local Node = Adore.Nodes("Node")
+local tclear = Adore.Common("Structures").tableClear
 
 ---A convenient wrapper for building scenes with scripts
 ---@class SceneFactory: Object
@@ -26,6 +27,12 @@ function SceneFactory:new(func, source)
 
 	---@type string? # What path should the output be tagged as? Assigned in `:instantiate()`
 	self.source = nil
+
+	---@type {[string]: true} # Filepaths this SceneFactory relies on
+	self._dependencyMap = {}
+
+	---@type boolean # If this SceneFactory should update its dependency list
+	self._shouldUpdateDependencies = true
 
 	if source then
 		-- Try to get the extension
@@ -54,12 +61,62 @@ do
 ---@param owner Node
 local setOwner = function(node, owner) node._owner = owner end
 ---@param node Node
+---@param owner Node
 local ignoreSubScenes = function(node, owner)
 	if node._sceneFilePath ~= nil then
 		node._owner = owner
 		return false
 	end
 	return true
+end
+
+local function noop() end
+---@param node Node
+---@param owner Node
+---@param dependencies {[string]: true}
+local ignoreSubScenesAndSetDependencies = function(node, owner, dependencies)
+	if node._sceneFilePath ~= nil then
+		node._owner = owner
+		dependencies[node._sceneFilePath] = true
+		return false
+	end
+	return true
+end
+
+do
+local otherDeps = {}
+---Updates the dependencies list in this SceneFactory using an instanced scene
+---@param instancedScene Node
+function SceneFactory:updateDependencies(instancedScene)
+	local dependencies = self._dependencyMap
+	tclear(dependencies)
+	instancedScene:traverseDownExcludeSelf(noop, ignoreSubScenesAndSetDependencies, instancedScene, dependencies)
+
+	local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+	local source = self.source
+	if source and not ObjectLoader:has(source) then
+		-- Also registers this SceneFactory (which is required for the following to work)
+		ObjectLoader:register(self, source)
+	end
+
+	-- Get the dependencies from other loaded scenes
+	for path, _ in pairs(dependencies) do
+		local dep = ObjectLoader:has(path)
+		if dep then
+			---@cast dep SceneFactory
+			for otherPath, _ in pairs(dep._dependencyMap) do
+				otherDeps[otherPath] = true
+			end
+		end
+	end
+
+	-- Copy the paths from them
+	for otherPath, _ in pairs(otherDeps) do
+		dependencies[otherPath] = true
+	end
+
+	tclear(otherDeps)
+end
 end
 
 ---Instantiates this Scene underneath `parent`. Returns the starting `Node` that was instantiated.
@@ -103,6 +160,12 @@ function SceneFactory:instantiate(parent, ...)
 		-- This is a SceneFactory with a custom build function
 		-- Set "_owner" on all Nodes
 		node:traverseDownExcludeSelf(setOwner, ignoreSubScenes, node)
+	end
+
+	if self._shouldUpdateDependencies then
+		-- Update dependencies
+		self._shouldUpdateDependencies = true
+		self:updateDependencies(node)
 	end
 
 	if parent then

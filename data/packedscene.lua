@@ -189,6 +189,12 @@ function PackedScene:build(consumeBuffer)
 			return
 		end
 
+		if self._shouldUpdateDependencies and instanced then
+			-- Update dependencies
+			self._shouldUpdateDependencies = false
+			self:updateDependencies(instanced)
+		end
+
 		local resources, err = ObjectSaver.deserializeResourcesFromBuffer(buffer)
 
 		if err then
