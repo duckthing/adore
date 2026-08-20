@@ -143,8 +143,8 @@ function MainWindow:new(toolbox, subroot)
 			0, 0, 0, 0,
 			4, 4, 4, 32
 		)
-		:setMargin(4)
-		:setPadding(4)
+		:setMargin(8)
+		:setPadding(8)
 		:setVariant("topbar")
 		:setResizeToContent(true)
 
@@ -169,7 +169,7 @@ function MainWindow:new(toolbox, subroot)
 			0.5, 0, 0.5, 0,
 			0, 4, 0, 32
 		)
-		:setMargin(0)
+		:setMargin(8)
 		:setPadding(8)
 		:setResizeToContent(true)
 		:setVariant("topbar")
@@ -440,10 +440,12 @@ function MainWindow:saveScene()
 		print("Written to path:", savePath)
 		-- Remove it from ObjectLoader so that it gets reloaded
 		if ObjectLoader:has(savePath) then
-			ObjectLoader:destructor((ObjectLoader:get(savePath)))
+			ObjectLoader:destructor((ObjectLoader:get(savePath)), scene)
 		end
 		ObjectLoader:register(scene, savePath)
+		self:prepareReloadDependency(savePath)
 		ObjectLoader:updateModifiedSceneProperties(sceneRoot, savePath)
+		self:performReloadDependency(savePath)
 	else
 		-- Errored
 		print(err)
@@ -923,6 +925,38 @@ function MainWindow:populateToolbar()
 
 		toolbar:addChild(button)
 	end
+end
+
+do
+---@param dependencyPath string
+function MainWindow:prepareReloadDependency(dependencyPath)
+end
+
+---@param dependencyPath string
+function MainWindow:performReloadDependency(dependencyPath)
+	local tabbar = self.tabContainer._internalTabBar
+	local tabs = tabbar._tabs
+	for i = #tabs, 1, -1 do
+		local tab = tabs[i]
+		---@type Toolbox.EditableScene
+		local eScene = tab.node
+		if eScene.CLASS_NAME == "EditableScene" then
+			local path = eScene._lastFilepath
+			---@type SceneFactory
+			local asset = ObjectLoader:has(path)
+			if asset then
+				if asset._dependencyMap[dependencyPath] then
+					-- Reload this
+					-- TODO: Copy modified properties
+					local subroot = eScene.subroot
+					eScene:pushSubroot()
+					subroot:changeSceneTo(asset)
+					eScene:popSubroot()
+				end
+			end
+		end
+	end
+end
 end
 
 return MainWindow
