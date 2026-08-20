@@ -68,12 +68,13 @@ local function packInto(array, node, resources, owner)
 	enqueue(array, STRING_TO_CONTROL.END_NODE)
 end
 
----Packs the node and any children.
+---Packs the node and any children
 ---@param node Node
 function TableScene:pack(node)
 	self.table = {}
 	self._consumed = false
 	local resources = {}
+	node._sceneFilePath = nil
 	packInto(self.table, node, resources)
 	self.table[#self.table+1] = resources
 end

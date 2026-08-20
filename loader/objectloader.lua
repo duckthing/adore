@@ -45,6 +45,13 @@ local specialHandlers = {
 	agf = false,
 }
 
+function ObjectLoader:new(...)
+	ObjectLoader.super.new(self, ...)
+
+	---@type {[string]: {[string]: any}} # A map of scene asset paths to their default values
+	self.pathToDefaultValues = {}
+end
+
 ---(Loads if needed, and) returns the asset and asset ID at the path
 ---@generic T: Object
 ---@param path string
@@ -62,12 +69,59 @@ function ObjectLoader:get(path, requestedClassName)
 	else
 		-- Returns the existing ID while checking if it inherits from the requested class
 		local existingAsset = self.assets[id]
-		if requestedClassName and ClassDB.doesClassInherit(existingAsset.CLASS_NAME, requestedClassName) then
+		if requestedClassName and not ClassDB.doesClassInherit(requestedClassName, existingAsset.CLASS_NAME) then
 			error(("Asset at '%s' ('%s') does not inherit from '%s'"):format(path, existingAsset.CLASS_NAME, requestedClassName))
 		end
 
 		return existingAsset, id
 	end
+end
+
+---Returns the modified properties for the scene
+---@param path string
+---@return {[string]: any}?
+function ObjectLoader:getModifiedSceneProperties(path)
+	return self.pathToDefaultValues[path]
+end
+
+---Removes the modified properties for the scene; usually called after saving a scene
+---@param path string
+function ObjectLoader:removeModifiedSceneProperties(path)
+	self.pathToDefaultValues[path] = nil
+end
+
+do
+---@param node Node
+---@param property Property
+---@param propertyName string
+---@param fromClass string
+---@param modified {[string]: any}
+local function insertModifiedValues(node, property, propertyName, fromClass, modified)
+	if not property.IS_BINARY and not property.isConstant then
+		local value = property:get(node, propertyName)
+		if not property:isDefault(value) then
+			-- It's modified
+			modified[propertyName] = value
+		end
+	end
+end
+
+---Returns the modified properties for the scene
+---@param node Node
+---@param path string
+function ObjectLoader:updateModifiedSceneProperties(node, path)
+	-- Get the old modified values, or use a new empty table
+	local modified = self.pathToDefaultValues[path]
+	if not modified then
+		modified = {}
+		self.pathToDefaultValues[path] = modified
+	else
+		-- Clear the modified table
+		for k, _ in pairs(modified) do modified[k] = nil end
+	end
+	-- Insert the modified properties
+	node:getClassDBEntry():forEachProperty(node, true, insertModifiedValues, modified)
+end
 end
 
 ---@generic T: Object

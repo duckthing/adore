@@ -79,16 +79,29 @@ do
 	---@param fromClass Object
 	---@param header table
 	---@param body table
-	local function femvInsertWithBinaryCallback(obj, property, propertyName, fromClass, header, body, resources)
+	---@param resources any[]
+	---@param customDefaultValues {[string]: any}?
+	local function femvInsertWithBinaryCallback(obj, property, propertyName, fromClass, header, body, resources, customDefaultValues)
 		local value = property:get(obj, propertyName)
 		if property.isHeader then
 			-- Any header property goes into the header, even if it's not modified
 			local serialized = property:serialize(obj, propertyName, value, resources)
 			header[propertyName] = serialized
-		elseif not property:isDefault(value) then
-			-- All modified values go into the body
-			local serialized = property:serialize(obj, propertyName, value, resources)
-			body[propertyName] = serialized
+		else
+			-- "Custom defaults" come from Nodes that are scene roots
+			-- There are no other sources as of writing
+			local customDefault = customDefaultValues and customDefaultValues[propertyName] or nil
+			if
+				-- No custom default, use the property
+				(customDefault == nil and not property:isDefault(value))
+				or
+				-- Has a custom default, use :areEqual
+				(customDefault ~= nil and not property:areEqual(customDefault, value))
+			then
+				-- All modified values go into the body
+				local serialized = property:serialize(obj, propertyName, value, resources)
+				body[propertyName] = serialized
+			end
 		end
 	end
 
@@ -100,18 +113,30 @@ do
 	---@param header table
 	---@param body table
 	---@param resources any[]
-	local function femvInsertWithoutBinaryCallback(obj, property, propertyName, fromClass, header, body, resources)
-		local value = property:get(obj, propertyName)
+	---@param customDefaultValues {[string]: any}?
+	local function femvInsertWithoutBinaryCallback(obj, property, propertyName, fromClass, header, body, resources, customDefaultValues)
 		if not property.IS_BINARY then
 			-- Exclude binary properties
+			local value = property:get(obj, propertyName)
 			if property.isHeader then
 				-- Any header property goes into the header, even if it's not modified
 				local serialized = property:serialize(obj, propertyName, value, resources)
 				header[propertyName] = serialized
-			elseif not property:isDefault(value) then
-				-- All modified values go into the body
-				local serialized = property:serialize(obj, propertyName, value, resources)
-				body[propertyName] = serialized
+			else
+				-- "Custom defaults" come from Nodes that are scene roots
+				-- There are no other sources as of writing
+				local customDefault = customDefaultValues and customDefaultValues[propertyName] or nil
+				if
+					-- No custom default, use the property
+					(customDefault == nil and not property:isDefault(value))
+					or
+					-- Has a custom default, use :areEqual
+					(customDefault ~= nil and not property:areEqual(customDefault, value))
+				then
+					-- All modified values go into the body
+					local serialized = property:serialize(obj, propertyName, value, resources)
+					body[propertyName] = serialized
+				end
 			end
 		end
 	end
@@ -129,9 +154,18 @@ do
 		local header = {}
 		local body = {}
 		local cb = (includeBinary and femvInsertWithBinaryCallback) or femvInsertWithoutBinaryCallback
+
+		local customDefaultValues
+		if object._sceneFilePath and ClassDB.doesClassInherit("Node", object) then
+			-- Use custom values if this Object is a Node that is a scene root
+			-- This allows comparing the Node to the scene it came from
+			---@cast object Node
+			customDefaultValues = Adore.Loader.getCollection("ObjectLoader"):getModifiedSceneProperties(object._sceneFilePath)
+		end
+
 		-- We don't use `:forEachModifiedProperty()` because we want to insert all values into the header,
 		-- even if they are unmodified.
-		object:getClassDBEntry():forEachProperty(object, true, cb, header, body, resources)
+		object:getClassDBEntry():forEachProperty(object, true, cb, header, body, resources, customDefaultValues)
 		return header, body, resources
 	end
 end
@@ -282,10 +316,11 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 			return ("Failed to instance scene at '%s'"):format(path)
 		end
 
-		if not obj:is(RequestedClass) then
+		-- TODO: Remove? This doesn't work well if an instanced scene changes type
+		--[[ if not obj:is(RequestedClass) then
 			return ("Scene at '%s' does not match requested class (%s ~= %s)")
 				:format(path, obj.CLASS_NAME, requestedClassName)
-		end
+		end --]]
 	else
 		-- Create this like normal
 		obj = TargetClass()
@@ -446,7 +481,7 @@ function ObjectSaver.serializeObjectToArray(object, array, resources)
 		return resources
 	end
 
-	local header, body = ObjectSaver.getPropertyPairs(object, resources, true)
+	local header, body = ObjectSaver.getPropertyPairs(object, resources, false)
 
 	-- Insert the header and body
 	array[#array+1] = header
@@ -545,10 +580,11 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 			return ("Failed to instance scene at '%s'"):format(path)
 		end
 
-		if not obj:is(RequestedClass) then
+		-- TODO: Remove? This doesn't work well if an instanced scene changes type
+		--[[ if not obj:is(RequestedClass) then
 			return ("Scene at '%s' does not match requested class (%s ~= %s)")
 				:format(path, obj.CLASS_NAME, requestedClassName)
-		end
+		end --]]
 	else
 		-- Create this like normal
 		obj = TargetClass()

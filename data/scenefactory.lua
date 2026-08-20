@@ -67,10 +67,10 @@ end
 ---@param ... unknown # Parameters that will be passed to the :create() function
 ---@return Node? instanced
 function SceneFactory:instantiate(parent, ...)
-	-- Overload :create() instead
+	-- Overload :build() instead
 	local source = self.source
 	if source then
-		if SceneFactory._currentSources[self.source] then
+		if SceneFactory._currentSources[source] then
 			-- Prevent the infinite loop
 			print(("[Adore.SceneFactory] Prevented infinite loop from loading '%s'"):format(source))
 			return
@@ -85,7 +85,16 @@ function SceneFactory:instantiate(parent, ...)
 	if source then
 		-- Done, unmark
 		SceneFactory._currentSources[source] = nil
-		node._sceneFilePath = source
+
+		if node then
+			local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+			if not ObjectLoader:getModifiedSceneProperties(source) then
+				-- Update what is considered a "default" property to whatever came from this scene
+				ObjectLoader:updateModifiedSceneProperties(node, source)
+			end
+			-- Set the source file path on the Node as our source
+			node._sceneFilePath = source
+		end
 	end
 
 	if not node then return end

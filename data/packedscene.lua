@@ -67,12 +67,13 @@ local function packInto(buffer, node, resources, owner)
 	buffer:encode(STRING_TO_CONTROL.END_NODE)
 end
 
----Packs the node and any children.
+---Packs the node and any children
 ---@param node Node
 function PackedScene:pack(node)
 	self.buffer:reset()
 	self._consumed = false
 	local resources = {}
+	node._sceneFilePath = nil
 	packInto(self.buffer, node, resources)
 	ObjectSaver.serializeResourcesToBuffer(self.buffer, resources)
 end
