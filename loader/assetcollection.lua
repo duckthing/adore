@@ -81,7 +81,8 @@ function AssetCollection:destructor(toDestroy, newAsset)
 	local toDestroyPath, toDestroyId = self:getAssetPath(toDestroy)
 	if toDestroyPath then
 		-- Replace with the new asset (or nil)
-		self.assets[toDestroyId] = newAsset
+		---@cast toDestroyId integer
+		self.assets[toDestroyId] = newAsset or false
 		if not newAsset then
 			-- Remove it
 			self.pathToId[toDestroyPath] = nil
@@ -260,6 +261,7 @@ end
 ---@param path string?
 ---@return AssetID id
 function AssetCollection:register(asset, path)
+	assert(asset ~= nil, "Asset must not be nil")
 	local id = self.nextId
 	self.nextId = id + 1
 	self.assets[id] = asset

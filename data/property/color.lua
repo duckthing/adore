@@ -110,10 +110,6 @@ function Color:lerp(from, to, percent)
 	return tempColor2
 end
 
-function Color:isDefault(v)
-	return self:areEqual(self.defaultValue, v)
-end
-
 function Color:areEqual(a, b)
 	return
 		a[1] == b[1] and
