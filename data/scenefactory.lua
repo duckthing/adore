@@ -28,7 +28,7 @@ function SceneFactory:new(func, source)
 	---@type string? # What path should the output be tagged as? Assigned in `:instantiate()`
 	self.source = nil
 
-	---@type {[string]: true} # Filepaths this SceneFactory relies on
+	---@type {[string]: true} # A map of file paths to `true`, which this SceneFactory relies on
 	self._dependencyMap = {}
 
 	---@type boolean # If this SceneFactory should update its dependency list
@@ -85,18 +85,23 @@ end
 
 do
 local otherDeps = {}
----Updates the dependencies list in this SceneFactory using an instanced scene
----@param instancedScene Node
+---Updates the dependencies list in this SceneFactory using an instanced scene.
+---If an instanced scene isn't passed, it keeps the original list while adding related dependencies.
+---@param instancedScene Node?
 function SceneFactory:updateDependencies(instancedScene)
 	local dependencies = self._dependencyMap
-	tclear(dependencies)
-	instancedScene:traverseDownExcludeSelf(noop, ignoreSubScenesAndSetDependencies, instancedScene, dependencies)
-
 	local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
-	local source = self.source
-	if source and not ObjectLoader:has(source) then
-		-- Also registers this SceneFactory (which is required for the following to work)
-		ObjectLoader:register(self, source)
+
+	if instancedScene then
+		-- Only clear the list when a scene is passed
+		tclear(dependencies)
+		instancedScene:traverseDownExcludeSelf(noop, ignoreSubScenesAndSetDependencies, instancedScene, dependencies)
+
+		local source = self.source
+		if source and not ObjectLoader:has(source) then
+			-- Also registers this SceneFactory (which is required for the following to work)
+			ObjectLoader:register(self, source)
+		end
 	end
 
 	-- Get the dependencies from other loaded scenes
@@ -182,6 +187,11 @@ function SceneFactory:asSceneFunction()
 	return function(...)
 		return func(self, ...)
 	end
+end
+
+function SceneFactory._addDefinition(entry)
+	entry:newTable("_dependencyMap")
+	entry:newBoolean("_shouldUpdateDependencies", true)
 end
 
 return SceneFactory

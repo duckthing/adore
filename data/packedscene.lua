@@ -4,6 +4,7 @@ local Adore = require ""
 local StringBuffer = require "_G.string.buffer"
 local SceneFactory = Adore.Resources("SceneFactory")
 local ObjectSaver = Adore.Common("ObjectSaver")
+local tclear = Adore.Common("Structures").tableClear
 
 ---@class PackedScene: SceneFactory
 ---@overload fun(): PackedScene
@@ -29,7 +30,8 @@ local STRING_TO_CONTROL = {
 ---@param node Node
 ---@param resources any[]
 ---@param owner Node? # What we're allowed to save with; if not inside of recursion, leave this `nil`
-local function packInto(buffer, node, resources, owner)
+---@param dependencyMap {[string]: true} # A map of filepaths to `true`
+local function packInto(buffer, node, resources, owner, dependencyMap)
 	if not node._adorePersist then return end
 
 	if owner then
@@ -40,6 +42,11 @@ local function packInto(buffer, node, resources, owner)
 	else
 		-- This Node is the owner
 		owner = node
+	end
+
+	if node._sceneFilePath then
+		-- This Node came from a scene; mark that scene as a dependency
+		dependencyMap[node._sceneFilePath] = true
 	end
 
 	buffer:encode(STRING_TO_CONTROL.BEGIN_NODE)
@@ -55,7 +62,7 @@ local function packInto(buffer, node, resources, owner)
 				end
 
 				index = index + 1
-				packInto(buffer, child, resources, owner)
+				packInto(buffer, child, resources, owner, dependencyMap)
 			end
 		end
 
@@ -74,8 +81,18 @@ function PackedScene:pack(node)
 	self._consumed = false
 	local resources = {}
 	node._sceneFilePath = nil
-	packInto(self.buffer, node, resources)
+
+	-- Clear dependency map
+	local dependencyMap = self._dependencyMap
+	tclear(dependencyMap)
+
+	-- Pack the scene tree and the resources
+	packInto(self.buffer, node, resources, nil, dependencyMap)
 	ObjectSaver.serializeResourcesToBuffer(self.buffer, resources)
+
+	-- Update dependency map with what we just found while packing
+	self:updateDependencies()
+	self._shouldUpdateDependencies = false
 end
 
 local instantiateTree
@@ -190,7 +207,7 @@ function PackedScene:build(consumeBuffer)
 		end
 
 		if self._shouldUpdateDependencies and instanced then
-			-- Update dependencies
+			-- Update dependencies (if it was missed while packing)
 			self._shouldUpdateDependencies = false
 			self:updateDependencies(instanced)
 		end
