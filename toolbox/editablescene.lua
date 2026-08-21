@@ -460,12 +460,6 @@ function drawDirectSubroot(self, subroot)
 			-- Unscaled also makes 100% zoom always pixel perfect.
 
 			love.graphics.push("all")
-			if layer == subroot then
-				-- Bounding box is manually calculated for the subroot
-				viewport._boundingBox
-					:iSetComponents(0, 0, viewport:getDimensions())
-					:iInverseTransformBox(altTransform)
-			end
 			layer:drawLayer()
 			love.graphics.pop()
 

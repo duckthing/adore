@@ -281,6 +281,11 @@ end
 
 ---This is where the Root actually draws the scene
 function Root:drawLayer()
+	-- Calculate the bounding box here
+	local viewport = self._viewport
+	viewport._boundingBox
+		:iSetComponents(0, 0, viewport:getDimensions())
+		:iInverseTransformBox(viewport._viewportTransform)
 	self:_beforeDraw()
 	self:_drawChildren()
 	self:_afterDraw()
