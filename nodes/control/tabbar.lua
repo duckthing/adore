@@ -47,10 +47,21 @@ end
 ---Call this if the tab info changed
 ---@return self
 function TabBar:onTabInfoUpdated()
-	local oldTabIndex = self._currentTab
-	if oldTabIndex > 0 then
+	local selectedTab = self._currentTab
+	local tabs = self._tabs
+	if selectedTab == 0 and #tabs ~= 0 then
+		-- Select a default tab when there isn't one
+		self:selectTab(1)
+	elseif #tabs == 0 then
+		-- No tabs to select
+		self:selectTab(0)
+	elseif #tabs < selectedTab then
+		-- Selected tab is greater than the existing tab count
+		self:selectTab(#tabs)
+	else
+		-- Fire the selection event
 		self._currentTab = 0
-		self:selectTab(oldTabIndex)
+		self:selectTab(selectedTab)
 	end
 	self:deferRefreshSelf()
 	return self

@@ -72,13 +72,7 @@ function TabContainer:updateTabs()
 		end
 	end
 
-	if selectedTab == 0 and #tabs ~= 0 then
-		-- Select a default tab
-		tabBar:onTabInfoUpdated()
-		self._internalTabBar:selectTab(1)
-	elseif #tabs == 0 then
-		self._internalTabBar:selectTab(0)
-	end
+	tabBar:onTabInfoUpdated()
 end
 
 function TabContainer:addChild(child)
@@ -171,7 +165,6 @@ function TabContainer:_onTabSelected(_, index)
 	self._currentTab = index
 	local tabInfo = self._internalTabBar._tabs[index]
 	self.tabSelected:fire(self, index, tabInfo)
-
 	if tabInfo then
 		local selectedChild = tabInfo.node
 
@@ -182,9 +175,7 @@ function TabContainer:_onTabSelected(_, index)
 		end
 		self._internalTabBar:setVisible(self._showTabBar)
 	end
-
 	self:deferRefreshSelf()
-
 	return self
 end
 
