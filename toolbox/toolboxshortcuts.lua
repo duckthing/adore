@@ -76,9 +76,14 @@ local actions = {
 		mainWindow:duplicateSelectedNode()
 		return true
 	end,
-	instanceScene = function(context, isRepeat)
+	extendNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:instanceScene()
+		mainWindow:extendNode()
+		return true
+	end,
+	linkScene = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		mainWindow:linkScene()
 		return true
 	end,
 
@@ -98,7 +103,8 @@ local pressedKeybinds = {
 		a = "addNode",
 		s = "saveScene",
 		d = "duplicateSelectedNode",
-		i = "instanceScene",
+		e = "extendNode",
+		i = "linkScene",
 		o = "loadScene",
 		n = "newScene",
 		r = "reloadScene",

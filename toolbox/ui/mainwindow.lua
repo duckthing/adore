@@ -239,7 +239,7 @@ function MainWindow:new(toolbox, subroot)
 			-- Create the buttons for the scene tree
 			local treeActions = {
 				"Add", "addNode",
-				"Link", "instanceScene",
+				"Link", "linkScene",
 				"Extend", "extendNode",
 			}
 			for i = 1, 5, 2 do
@@ -834,8 +834,8 @@ function MainWindow:duplicateSelectedNode()
 end
 end
 
----Instances a scene
-function MainWindow:instanceScene()
+---Instances a scene link
+function MainWindow:linkScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
 	local sceneRoot = srContainer:getSceneRoot()
@@ -850,7 +850,7 @@ function MainWindow:instanceScene()
 		-90, -56, 90, 56
 	)
 
-	window:getTitleLabel():setText("Instance scene...")
+	window:getTitleLabel():setText("Link scene...")
 
 	---@type Form
 	local form = {
@@ -875,7 +875,7 @@ function MainWindow:instanceScene()
 
 	-- Connect events
 	window:addAction("Cancel", "close")
-	window:addAction("Load", "submit")
+	window:addAction("Link", "submit")
 	window.submit = function(...)
 		local path = pathField._submittedText
 
@@ -1070,7 +1070,9 @@ local tabToLinkReferences = {}
 ---Called before scene properties are updated.
 ---@param dependencyPath string
 function MainWindow:prepareReloadDependency(dependencyPath)
+	-- TODO: Swap scenes by clearing the Nodes and then re-instancing them?
 	tclear(tabToLinkProperties)
+	tclear(tabToLinkReferences)
 	local tabbar = self.tabContainer._internalTabBar
 	local tabs = tabbar._tabs
 
