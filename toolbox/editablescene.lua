@@ -8,13 +8,10 @@ local Common = Adore.Common
 local min, max = math.min, math.max
 
 local Node = Nodes("Node")
-local Node2d = Nodes("Node2d")
-local Control = Nodes("Control")
 local ViewportContainer = Nodes("ViewportContainer")
 local RootNode = Nodes("RootNode")
 local Viewport = Resources("Viewport")
 local Camera = Nodes("Camera")
-local Vec2 = Common("Vec2")
 local Rect2 = Common("Rect2")
 
 ---@type Toolbox.Tool
@@ -123,7 +120,7 @@ function EScene:_setCanonRect(x, y, w, h)
 	if self._viewportFits then
 		self:resizeViewport(w, h)
 		self:resizeSubroot(self._subViewport:getDimensions())
-		self:drawGameRootIntoViewport()
+		self:drawGameMode()
 	end
 	ViewportContainer.super._setCanonRect(self, x, y, w, h)
 end
@@ -242,7 +239,7 @@ function EScene:isRunning()
 end
 
 ---Updates the Viewport with the drawn contents of the subroot
-function EScene:drawGameRootIntoViewport()
+function EScene:drawGameMode()
 	local sx, sy, sw, sh = love.graphics.getScissor()
 	love.graphics.push("all")
 	love.graphics.origin()
@@ -255,11 +252,11 @@ function EScene:drawGameRootIntoViewport()
 	love.graphics.pop()
 	love.graphics.setScissor(sx, sy, sw, sh)
 	if not success then
-		self:drawErrorIntoViewport()
+		self:drawError()
 	end
 end
 
-local drawDirectSubroot
+local drawEditableSubroot
 do
 ---@param self Toolbox.EditableScene
 local function drawBackgroundGizmos(self)
@@ -285,115 +282,10 @@ local function drawBackgroundGizmos(self)
 	love.graphics.pop()
 end
 
-local tempRect2 = Rect2()
-local tempVec2 = Vec2()
-
 ---@param self Toolbox.EditableScene
 local function drawForegroundGizmos(self)
-	local mainWindow = Tool.mainWindow
-	local selected = mainWindow.sceneTree:getSelectedNode()
-
-	if selected then
-		local zoom = self.camera._zoom.x
-		local pixelScale = selected:getViewport()._pixelScale
-		local scaleFactor = 1 / pixelScale
-		local baseThickness = zoom * scaleFactor
-
-		love.graphics.push("transform")
-		love.graphics.scale(pixelScale)
-
-		if selected:is(Node2d) then
-			---@cast selected Node2d
-			local gcr = selected._globalContentRect
-			local transform = selected._globalTransform
-
-			-- Draw local bounding box
-			do
-				local ox, oy, oRight, oBottom = selected._localContentRect:getBounds()
-				love.graphics.setLineWidth(1 * baseThickness)
-				love.graphics.setColor(0.5, 0.5, 0.8)
-				-- Top left
-				local ax, ay = transform:transformPoint(ox, oy)
-				-- Top right
-				local bx, by = transform:transformPoint(oRight, oy)
-				-- Bottom left
-				local cx, cy = transform:transformPoint(ox, oBottom)
-				-- Bottom right
-				local dx, dy = transform:transformPoint(oRight, oBottom)
-
-				love.graphics.line(
-					ax, ay,
-					bx, by,
-					dx, dy,
-					cx, cy,
-					ax, ay
-				)
-			end
-
-			-- Draw global bounding box
-			love.graphics.setLineWidth(2 * baseThickness)
-			love.graphics.setColor(0.8, 0.5, 0.5)
-			love.graphics.rectangle("line", gcr:unpack())
-
-			-- Draw axes
-			local globalX, globalY = selected:getPosition(true)
-			local axisLength = 25 * baseThickness
-			-- +X
-			love.graphics.setColor(1, 0, 0, 0.8)
-			love.graphics.line(
-				globalX, globalY,
-				tempVec2:iSetComponents(1, 0)
-					:iRotate(selected:getRotation(true)):iMult(axisLength)
-					:iAddComponents(globalX, globalY):unpack()
-			)
-			-- +Y
-			love.graphics.setColor(0, 1, 0, 0.8)
-			love.graphics.line(
-				globalX, globalY,
-				tempVec2:iSetComponents(0, 1)
-					:iRotate(selected:getRotation(true)):iMult(axisLength)
-					:iAddComponents(globalX, globalY):unpack()
-			)
-
-		elseif selected:is(Control) then
-			---@cast selected Control
-			local lcr = selected._localContentRect
-			local transform = selected._globalTransform
-			tempRect2:iCopyRect(lcr):iTransformBox(transform)
-
-			-- Draw local bounding box
-			do
-				local ox, oy, oRight, oBottom = selected._localContentRect:getBounds()
-				love.graphics.setLineWidth(1 * baseThickness)
-				love.graphics.setColor(0.5, 0.5, 0.8)
-				-- Top left
-				local ax, ay = transform:transformPoint(ox, oy)
-				-- Top right
-				local bx, by = transform:transformPoint(oRight, oy)
-				-- Bottom left
-				local cx, cy = transform:transformPoint(ox, oBottom)
-				-- Bottom right
-				local dx, dy = transform:transformPoint(oRight, oBottom)
-
-				love.graphics.line(
-					ax, ay,
-					bx, by,
-					dx, dy,
-					cx, cy,
-					ax, ay
-				)
-			end
-
-			-- Draw global bounding box
-			love.graphics.setLineWidth(3 * baseThickness)
-			love.graphics.setColor(0.8, 0.5, 0.5)
-			love.graphics.rectangle("line", selected._globalContentRect:unpack())
-		end
-
-		love.graphics.pop()
-	end
+	self.tool:drawForeground(self)
 end
-
 
 local tempScissorRect = Rect2()
 ---@type love.Transform
@@ -415,7 +307,7 @@ end
 
 ---@param self Toolbox.EditableScene
 ---@param subroot RootNode
-function drawDirectSubroot(self, subroot)
+function drawEditableSubroot(self, subroot)
 	drawBackgroundGizmos(self)
 
 	local layers = subroot._canvasLayers
@@ -478,7 +370,7 @@ end
 end
 
 ---Updates the Viewport with the drawn contents of the subroot, but skips its own layers
-function EScene:drawEditableRootIntoViewport()
+function EScene:drawEditMode()
 	local sx, sy, sw, sh = love.graphics.getScissor()
 	love.graphics.push("all")
 	love.graphics.origin()
@@ -492,7 +384,7 @@ function EScene:drawEditableRootIntoViewport()
 	local oldRoot = Node._root
 	Node._root = subroot
 
-	local success, err = xpcall(drawDirectSubroot, handleDirectDrawError, self, subroot)
+	local success, err = xpcall(drawEditableSubroot, handleDirectDrawError, self, subroot)
 	if not success then
 		print("Errored while drawing subroot directly:")
 		print(err)
@@ -512,12 +404,12 @@ function EScene:drawEditableRootIntoViewport()
 	love.graphics.pop()
 	love.graphics.setScissor(sx, sy, sw, sh)
 	if not success then
-		self:drawErrorIntoViewport()
+		self:drawError()
 	end
 end
 
 ---Draws the error message into the Viewport
-function EScene:drawErrorIntoViewport()
+function EScene:drawError()
 	local sx, sy, sw, sh = love.graphics.getScissor()
 	love.graphics.push("all")
 	love.graphics.origin()
@@ -537,12 +429,12 @@ end
 function EScene:_intDraw()
 	if not self._errorMessage then
 		if self.directDraw then
-			self:drawEditableRootIntoViewport()
+			self:drawEditMode()
 		else
-			self:drawGameRootIntoViewport()
+			self:drawGameMode()
 		end
 	else
-		self:drawErrorIntoViewport()
+		self:drawError()
 	end
 
 	self._subViewport:drawFittedContents(self._localContentRect.x, self._localContentRect.y)

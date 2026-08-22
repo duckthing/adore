@@ -395,9 +395,9 @@ function MainWindow:closeScene()
 	local index = self.tabContainer:getIndexOfChild(srContainer)
 	if index then
 		self.tabContainer:removeChildAtIndex(index)
-		if index > 1 then
-			self.tabContainer:selectTab(index - 1)
-		end
+		-- if index > 1 then
+		-- 	self.tabContainer:selectTab(index - 1)
+		-- end
 	end
 end
 
