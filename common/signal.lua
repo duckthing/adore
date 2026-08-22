@@ -8,10 +8,25 @@
 ---
 ---NOTE 2: Signals call *methods* on *objects*; they are essentially `obj.desiredMethod(obj, ...)`
 local Signal = {}
-local SignalMT = {__index = Signal}
+Signal.CLASS_NAME = "Signal"
+local SignalMT = {__index = Signal,
+	---@param self Signal
+	__tostring = function(self)
+		-- As a Class
+		if rawget(self, "CLASS_NAME") then return "Signal" end
+
+		-- As a class instance
+		return ("Signal [from %s, with %d connections]")
+			:format(
+			tostring(self._source),
+			(self.connections and #self.connections) or 0
+		)
+	end
+}
 
 ---@class Signal.Connection
 local Connection = {}
+Connection.CLASS_NAME = "Connection"
 local ConnectionMT = {__index = Connection}
 
 ---@class Signal.SimpleConnection: Signal.Connection

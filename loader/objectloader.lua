@@ -101,7 +101,8 @@ local function insertModifiedValues(node, property, propertyName, fromClass, mod
 		local value = property:get(node, propertyName)
 		if not property:isDefault(value) then
 			-- It's modified
-			modified[propertyName] = value
+			-- (Use :rawSet to clone the value)
+			property:rawSet(modified, propertyName, value)
 		end
 	end
 end
