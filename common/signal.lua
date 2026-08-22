@@ -55,8 +55,8 @@ end
 ---This will manage validation better with a `Node`.
 ---@param connectingFrom Object
 ---@param method string
----@param oneShot boolean? # oneShot makes the signal disconnect after firing
----@param persist boolean? # Allow saving this Connection
+---@param oneShot boolean? # [Default: `false`] oneShot makes the signal disconnect after firing
+---@param persist boolean? # [Default: `false`] Allow saving this Connection
 ---@return Signal.Connection connection
 function Signal:connect(connectingFrom, method, oneShot, persist)
 	local connections = self.connections

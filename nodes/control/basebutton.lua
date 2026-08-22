@@ -157,6 +157,9 @@ end
 
 function BaseButton._addDefinition(entry)
 	entry:newBoolean("_disabled", false, "setDisabled")
+	entry:newSignal("clicked")
+	entry:newSignal("pressed")
+	entry:newSignal("released")
 end
 
 return BaseButton
