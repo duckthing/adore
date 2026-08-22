@@ -281,18 +281,6 @@ function Node2d:toGlobal(lx, ly)
 	return self._globalTransform:transformPoint(lx, ly)
 end
 
----Sets the local rotation of this Node2d, in radians
----@param x number
----@param y number
----@param angle number
----@return self self
-function Node2d:setPositionAndRotation(x, y, angle)
-	self._position.x, self._position.y, self._rotation =
-		x, y, angle
-	self:_onLocalTransformUpdated()
-	return self
-end
-
 ---Sets whether this Node2d will transform relative to the parent
 ---@param relative boolean
 ---@return self
