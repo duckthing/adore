@@ -940,36 +940,82 @@ local function setModifiedProperties(node, property, propertyName, value, defaul
 	modified[propertyName] = value
 end
 
-local ignoredProperties = {
+local IGNORED_PROPERTIES = {
 	parent = true,
 }
+
+---Returns `true` if this Node belongs to a scene link that is getting swapped
+---@param node Node
+---@param sceneRoot Node
+---@param dependencyPath string
+---@return boolean isSwapping
+local function belongsToSceneLink(node, sceneRoot, dependencyPath)
+	local owner = node._owner
+	return
+		-- Detect a descendant of a scene link
+		(owner ~= sceneRoot and owner and owner._sceneFilePath == dependencyPath)
+		-- Detect the scene link root
+		or node._sceneFilePath == dependencyPath
+end
 
 ---Finds any reference to a scene root that will get swapped, and get its relative path so we can get the new node
 ---@param node Node
 ---@param dependencyPath string
 ---@param sceneRoot Node
 ---@param linkProperties {[Node]: {[string]: any}}
----@param linkReferences {[Node]: {[string]: string}}
+---@param linkReferences {[Node]: {[string]: string | {[integer]: string}}}
 local setLinkReference = function(node, dependencyPath, sceneRoot, linkProperties, linkReferences)
+	---@type {[string]: string | {[integer]: string}}
 	local ownProperties
 	for propertyName, value in pairs(node) do
-		if not ignoredProperties[propertyName] and type(value) == "table" and node.IS_NODE then
-			---@cast value Node
-			local owner = value._owner
-			if
-				-- Detect a descendant of the link
-				(owner ~= sceneRoot and owner and owner._sceneFilePath == dependencyPath)
-				-- Detect the link scene root
-				or value._sceneFilePath == dependencyPath
-			then
-				-- Found a reference to a removing link; get its relative path
-				if not ownProperties then ownProperties = {} end
-				ownProperties[propertyName] = node:getRelativePathToOther(value)
+		if not IGNORED_PROPERTIES[propertyName] then
+			-- It's not an ignored value
+			if type(value) == "table" then
+				if value.IS_NODE then
+					-- It's a Node, check if it references a scene link
+					---@cast value Node
+					if belongsToSceneLink(node, sceneRoot, dependencyPath) then
+						-- Found a reference to a removing link; get its relative path
+						if not ownProperties then ownProperties = {} end
+						ownProperties[propertyName] = node:getRelativePathToOther(value)
+					end
+				elseif value.CLASS_NAME == "Signal" then
+					-- It's a Signal, check if any of its sources map to a scene link
+					---@cast value Signal
+					local connections = value.connections
+
+					---@type {[integer]: string} # Maps signal connections to their new source
+					local connectionMap
+					for i = 1, (connections and #connections) or 0 do
+						-- For each connection...
+						local connection = value.connections[i]._source
+						local source = connection._source
+
+						if
+							-- The source is a Node
+							source and type(source) == "table" and source.IS_NODE
+						then
+							---@cast source Node
+							if belongsToSceneLink(source, sceneRoot, dependencyPath) then
+								-- Found a reference to a removing link; get its relative path
+								if not connectionMap then connectionMap = {} end
+								connectionMap[i] = node:getRelativePathToOther(source)
+							end
+						end
+					end
+
+					-- Set it
+					if connectionMap then
+						-- Found a reference to a removing link; get its relative path
+						if not ownProperties then
+							ownProperties = {}
+						end
+						ownProperties[propertyName] = connectionMap
+					end
+				end
 			end
 		end
 	end
-
-	-- TODO: Detect references in signals
 
 	if ownProperties then
 		linkReferences[node] = ownProperties
@@ -981,7 +1027,7 @@ end
 ---@param dependencyPath string
 ---@param sceneRoot Node
 ---@param linkProperties {[Node]: {[string]: any}}
----@param linkReferences {[Node]: {[string]: string}}
+---@param linkReferences {[Node]: {[string]: string | {[integer]: string}}}
 local setLinkPropertiesAndSkip = function(node, dependencyPath, sceneRoot, linkProperties, linkReferences)
 	if node._sceneFilePath == dependencyPath then
 		local customDefaultValues = ObjectLoader:getModifiedSceneProperties(node._sceneFilePath)
@@ -999,11 +1045,14 @@ end
 ---@param sceneRoot Node
 ---@param dependencyPath string
 ---@return {[Node]: {[string]: any}} links # Scene links with modified properties
----@return {[Node]: {[string]: string}} relativePaths # Owned properties that reference a removing link
+---Owned properties that reference a removing link.
+---* If it's a string, it's a Node reference that is used for :getNodeFromPath()
+---* If it's a table, it's for a Signal connection that maps a connection index to a relative node path
+---@return {[Node]: {[string]: string | {[integer]: string}}} relativePaths
 local function getLinks(sceneRoot, dependencyPath)
 	---@type {[Node]: {[string]: any}}
 	local linkProperties = {}
-	---@type {[Node]: {[string]: string}}
+	---@type {[Node]: {[string]: string | {[integer]: string}}}
 	local linkReferences = {}
 	sceneRoot:traverseDownSelf(setLinkReference, setLinkPropertiesAndSkip, dependencyPath, sceneRoot, linkProperties, linkReferences)
 	return linkProperties, linkReferences
@@ -1011,7 +1060,10 @@ end
 
 ---@type {[Toolbox.EditableScene]: {[Node]: {[string]: any}}} # EditableScenes to a reference of a link with its modified properties
 local tabToLinkProperties = {}
----@type {[Toolbox.EditableScene]: {[Node]: {[string]: string}}} # EditableScenes to Nodes that reference a link('s descendant)
+---EditableScenes to Node properties that reference a link('s descendant).
+---* If it's a string, it's a Node reference that is used for :getNodeFromPath()
+---* If it's a table, it's for a Signal connection that maps a connection index to a relative node path
+---@type {[Toolbox.EditableScene]: {[Node]: {[string]: string | {[integer]: string}}}}
 local tabToLinkReferences = {}
 
 ---Gets all Node references that need to be reloaded.
@@ -1085,17 +1137,46 @@ function MainWindow:performReloadDependency(dependencyPath)
 				local entry = node:getClassDBEntry()
 
 				for propertyName, relativePath in pairs(propertyMap) do
-					-- Get the new Node under that link
-					local newNode, _ = node:getNodeFromPath(relativePath, true, false)
+					if type(relativePath) == "string" then
+						-- It's a basic reference to a Node under a link
 
-					-- Then set it
-					local propertyObj = entry:getProperty(propertyName, true)
-					if propertyObj then
-						-- Set through the Property
-						propertyObj:set(node, propertyName, newNode)
-					else
-						-- Set directly
-						node[propertyName] = newNode
+						-- Get the new Node under that link
+						local newNode, _ = node:getNodeFromPath(relativePath, true, false)
+
+						-- Then set it
+						local propertyObj = entry:getProperty(propertyName, true)
+						if propertyObj then
+							-- Set through the Property
+							propertyObj:set(node, propertyName, newNode)
+						else
+							-- Set directly
+							node[propertyName] = newNode
+						end
+					elseif type(relativePath) == "table" then
+						-- It's a Signal with references to a Node under a link
+
+						---@cast relativePath {[integer]: string}
+						local connectionsToUpdate = relativePath
+						---@type Signal
+						local signal = node[propertyName]
+						local connections = assert(signal.connections)
+
+						-- Update the sources with the new Node reference, and remove it from the table
+						-- (it's removed for a later step that removes invalid connections)
+						for index, referencePath in pairs(connectionsToUpdate) do
+							local newNode = node:getNodeFromPath(referencePath, true, true)
+							if newNode then
+								connections[index]._source = newNode
+								connectionsToUpdate[index] = nil
+							end
+						end
+
+						-- Disconnect anything referencing a Node that wasn't found
+						for i = #connections, 1, -1 do
+							if connectionsToUpdate[i] then
+								connections[i]:disconnect()
+							end
+						end
 					end
 				end
 			end
