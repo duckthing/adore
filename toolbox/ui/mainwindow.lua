@@ -4,6 +4,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local ObjectSaver = Adore.Common("ObjectSaver")
+local tclear = Adore.Common("Structures").tableClear
 
 local Node = Nodes("Node")
 local Control = Nodes("Control")
@@ -232,25 +233,23 @@ function MainWindow:new(toolbox, subroot)
 				(label:getMinimumSize()), 0, 0, 30
 			)
 			:setSortMode("end")
+			:setMargin(8)
 
-		local addNodeButton = Button("Add")
-			:setAnchorsAndOffsets(
-				0, 0, 0, 1,
-				0, 0, 50, 0
-			)
-			:setVariant("flat")
-		addNodeButton.clicked:connect(self, "addNode")
-
-		local extendNodeButton = Button("Extend")
-		extendNodeButton:setAnchorsAndOffsets(
-				0, 0, 0, 1,
-				0, 0, 50, 0
-			)
-			:setVariant("flat")
-		extendNodeButton.clicked:connect(self, "extendNode")
-
-		treeActionBar:addChild(addNodeButton)
-		treeActionBar:addChild(extendNodeButton)
+		do
+			-- Create the buttons for the scene tree
+			local treeActions = {
+				"Add", "addNode",
+				"Link", "instanceScene",
+				"Extend", "extendNode",
+			}
+			for i = 1, 5, 2 do
+				local button = Button(treeActions[i])
+					:setAnchors(0, 0, 0, 1)
+					:setVariant("flat")
+				button.clicked:connect(self, treeActions[i + 1])
+				treeActionBar:addChild(button)
+			end
+		end
 
 		sceneTreeContainer:addChild(sceneTree)
 		sceneTreeContainer:addChild(label)
@@ -691,6 +690,7 @@ function MainWindow:extendNode()
 		{id = "newClass", type = "textfield", value = defaultNewClassName},
 		{type = "body", text = "Template"},
 		{id = "template", type = "dropdown", items = SCRIPT_OPTIONS},
+		{type = "body", text = "File Path"},
 		{id = "newClassPath", type = "textfield", value =
 			("src/nodes/%s.lua"):format(defaultNewClassName:lower())},
 	}
@@ -798,6 +798,7 @@ do
 ---@param owner Node
 local setOwner = function(node, owner) node._owner = owner end
 ---@param node Node
+---@param owner Node
 local ignoreSubScenes = function(node, owner)
 	if node._sceneFilePath ~= nil then
 		node._owner = owner
@@ -928,33 +929,104 @@ function MainWindow:populateToolbar()
 end
 
 do
----@param dependencyPath string
-function MainWindow:prepareReloadDependency(dependencyPath)
+-- Sets the modified properties of this Node (which is referencing a scene we're swapping)
+---@param node Node
+---@param property Property
+---@param propertyName string
+---@param value any
+---@param defaultValues {[string]: any}
+---@param modified {[string]: any}
+local function setModifiedProperties(node, property, propertyName, value, defaultValues, modified)
+	modified[propertyName] = value
 end
 
+local noop = function() end
+
+---Detects a Node which came from the scene we're swapping, gets its modified properties, and skips the tree below it
+---@param node Node
 ---@param dependencyPath string
-function MainWindow:performReloadDependency(dependencyPath)
+---@param references {[Node]: {[string]: any}}
+local setReferenceAndSkip = function(node, dependencyPath, references)
+	if node._sceneFilePath == dependencyPath then
+		local customDefaultValues = ObjectLoader:getModifiedSceneProperties(node._sceneFilePath)
+
+		local modified = {}
+		references[node] = modified
+		if customDefaultValues then
+			node:getClassDBEntry():forEachModifiedValueWithCustom(node, true, customDefaultValues, setModifiedProperties, modified)
+		end
+		return false
+	end
+	return true
+end
+
+---@param sceneRoot Node
+---@param dependencyPath string
+---@return {[Node]: {[string]: any}}
+local function getReferences(sceneRoot, dependencyPath)
+	---@type {[Node]: {[string]: any}}
+	local references = {}
+	sceneRoot:traverseDownSelf(noop, setReferenceAndSkip, dependencyPath, references)
+	return references
+end
+
+---@type {[Toolbox.EditableScene]: {[Node]: {[string]: any}}} # EditableScenes to a reference of a scene with its modified properties
+local tabToReferences = {}
+
+---Gets all Node references that need to be reloaded.
+---Called before scene properties are updated.
+---@param dependencyPath string
+function MainWindow:prepareReloadDependency(dependencyPath)
+	tclear(tabToReferences)
 	local tabbar = self.tabContainer._internalTabBar
 	local tabs = tabbar._tabs
 	for i = #tabs, 1, -1 do
 		local tab = tabs[i]
 		---@type Toolbox.EditableScene
 		local eScene = tab.node
-		if eScene.CLASS_NAME == "EditableScene" then
+		if eScene.CLASS_NAME == "EditableScene" and eScene:getSceneRoot() then
+			-- Only look at EditableScenes with something underneath them
 			local path = eScene._lastFilepath
 			---@type SceneFactory
 			local asset = ObjectLoader:has(path)
 			if asset then
 				if asset._dependencyMap[dependencyPath] then
-					-- Reload this
-					-- TODO: Copy modified properties
-					local subroot = eScene.subroot
-					eScene:pushSubroot()
-					subroot:changeSceneTo(asset)
-					eScene:popSubroot()
+					-- Probably has a reference, check it
+					local references = getReferences(eScene:getSceneRoot(), dependencyPath)
+					if next(references) then
+						-- List is not empty, keep it
+						tabToReferences[eScene] = references
+					end
 				end
 			end
 		end
+	end
+end
+
+---Updates scene properties.
+---Called after scene properties are updated.
+---@param dependencyPath string
+function MainWindow:performReloadDependency(dependencyPath)
+	local factory = ObjectLoader:get(dependencyPath, "SceneFactory")
+	for eScene, reference in pairs(tabToReferences) do
+		eScene:pushSubroot()
+		for node, modifiedProperties in pairs(reference) do
+			local parent = assert(node.parent)
+			local index = assert(parent:getIndexOfChild(node))
+			local newScene = assert(factory:instantiate())
+
+			-- Adds the scene in the same index
+			newScene._owner = node._owner
+			node:forceDestroy(true)
+			parent:insertChild(newScene, index)
+
+			-- Set each modified property
+			local entry = newScene:getClassDBEntry()
+			for propertyName, value in pairs(modifiedProperties) do
+				entry:getProperty(propertyName, true):set(newScene, propertyName, value)
+			end
+		end
+		eScene:popSubroot()
 	end
 end
 end

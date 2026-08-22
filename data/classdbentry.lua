@@ -545,6 +545,26 @@ function ClassDBEntry:forEachModifiedValue(object, recursive, forEach, ...)
 	self:forEachPropertyCheck(object, recursive, checkIsNotDefault, forEach, ...)
 end
 
+local function checkIsNotDefaultOrCustom(obj, property, propertyName, value, customDefaultValues)
+	local customDefault = customDefaultValues[propertyName]
+	return
+		-- No custom default, use the property
+		(customDefault == nil and not property:isDefault(value))
+		or
+		-- Has a custom default, use :areEqual
+		(customDefault ~= nil and not property:areEqual(customDefault, value))
+end
+
+---Runs a function for each modified value in an object, with custom default values
+---@param object Object
+---@param recursive boolean?
+---@param customDefaultValues {[string]: any}
+---@param forEach fun(obj: Object, property: Property, propertyName: string, value: any, customValues: {[string]: any}, ...: unknown)
+---@param ... unknown
+function ClassDBEntry:forEachModifiedValueWithCustom(object, recursive, customDefaultValues, forEach, ...)
+	self:forEachPropertyCheck(object, recursive, checkIsNotDefaultOrCustom, forEach, customDefaultValues, ...)
+end
+
 ---Runs a function for each potentially modified Property in an instanced Object.
 ---Will not run for each Property, only for the ones found to be inside the Object's table
 ---@param object Object
