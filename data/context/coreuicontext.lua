@@ -34,6 +34,22 @@ CoreUIContext.HANDLERS = {
 	postUpdate = true,
 }
 
+---Returns the currently focused Control if it's visible in the tree.
+---If not, it gets unfocused, and returns nil.
+---@param root RootNode
+---@return Control? focused
+local function ensureValidFocused(root)
+	local focused = root._focusedControl
+	if focused and focused:isVisibleInTree() then
+		if focused:isVisibleInTree() then
+			return focused
+		else
+			focused:releaseFocus()
+		end
+	end
+	return nil
+end
+
 ---@alias CoreUIContext.Action fun(context: CoreUIContext, isRepeat: boolean?): boolean?
 ---@alias CoreUIContext.ActionMap {[ShortcutContext.ActionName]: CoreUIContext.Action}
 
@@ -52,7 +68,7 @@ local actions = {
 	uiSelectNext = function(context)
 		local root = context.root
 		local focusMode = context.allowTabFocus
-		if (root._focusedControl and root._focusedControl:isVisibleInTree()) -- It exists and isn't destroyed
+		if ensureValidFocused(root) -- Something is already focused
 			or focusMode == "always" -- Can select something from nothing
 			or (focusMode == "withModal" and #root._modalStack > 0) -- Can select when there's a modal
 		then
@@ -63,7 +79,7 @@ local actions = {
 	uiSelectPrevious = function(context)
 		local root = context.root
 		local focusMode = context.allowTabFocus
-		if (root._focusedControl and root._focusedControl:isVisibleInTree()) -- It exists and isn't destroyed
+		if ensureValidFocused(root) -- Something is already focused
 			or focusMode == "always" -- Can select something from nothing
 			or (focusMode == "withModal" and #root._modalStack > 0) -- Can select when there's a modal
 		then
@@ -431,7 +447,7 @@ end
 ---@return boolean
 function CoreUIContext:_miscInput(event, ...)
 	local root = self.root
-	local focused = root._focusedControl
+	local focused = ensureValidFocused(root)
 	if focused then
 		local fMethod = focused[event]
 		if fMethod and fMethod(focused, ...) then
