@@ -929,7 +929,7 @@ function MainWindow:populateToolbar()
 end
 
 do
--- Sets the modified properties of this Node (which is referencing a scene we're swapping)
+-- Sets the modified properties of this linked scene root (which is referencing a scene we're swapping)
 ---@param node Node
 ---@param property Property
 ---@param propertyName string
@@ -940,20 +940,56 @@ local function setModifiedProperties(node, property, propertyName, value, defaul
 	modified[propertyName] = value
 end
 
-local noop = function() end
+local ignoredProperties = {
+	parent = true,
+}
+
+---Finds any reference to a scene root that will get swapped, and get its relative path so we can get the new node
+---@param node Node
+---@param dependencyPath string
+---@param sceneRoot Node
+---@param linkProperties {[Node]: {[string]: any}}
+---@param linkReferences {[Node]: {[string]: string}}
+local setLinkReference = function(node, dependencyPath, sceneRoot, linkProperties, linkReferences)
+	local ownProperties
+	for propertyName, value in pairs(node) do
+		if not ignoredProperties[propertyName] and type(value) == "table" and node.IS_NODE then
+			---@cast value Node
+			local owner = value._owner
+			if
+				-- Detect a descendant of the link
+				(owner ~= sceneRoot and owner and owner._sceneFilePath == dependencyPath)
+				-- Detect the link scene root
+				or value._sceneFilePath == dependencyPath
+			then
+				-- Found a reference to a removing link; get its relative path
+				if not ownProperties then ownProperties = {} end
+				ownProperties[propertyName] = node:getRelativePathToOther(value)
+			end
+		end
+	end
+
+	-- TODO: Detect references in signals
+
+	if ownProperties then
+		linkReferences[node] = ownProperties
+	end
+end
 
 ---Detects a Node which came from the scene we're swapping, gets its modified properties, and skips the tree below it
 ---@param node Node
 ---@param dependencyPath string
----@param references {[Node]: {[string]: any}}
-local setReferenceAndSkip = function(node, dependencyPath, references)
+---@param sceneRoot Node
+---@param linkProperties {[Node]: {[string]: any}}
+---@param linkReferences {[Node]: {[string]: string}}
+local setLinkPropertiesAndSkip = function(node, dependencyPath, sceneRoot, linkProperties, linkReferences)
 	if node._sceneFilePath == dependencyPath then
 		local customDefaultValues = ObjectLoader:getModifiedSceneProperties(node._sceneFilePath)
 
-		local modified = {}
-		references[node] = modified
+		local modifiedProperties = {}
+		linkProperties[node] = modifiedProperties
 		if customDefaultValues then
-			node:getClassDBEntry():forEachModifiedValueWithCustom(node, true, customDefaultValues, setModifiedProperties, modified)
+			node:getClassDBEntry():forEachModifiedValueWithCustom(node, true, customDefaultValues, setModifiedProperties, modifiedProperties)
 		end
 		return false
 	end
@@ -962,29 +998,35 @@ end
 
 ---@param sceneRoot Node
 ---@param dependencyPath string
----@return {[Node]: {[string]: any}}
-local function getReferences(sceneRoot, dependencyPath)
+---@return {[Node]: {[string]: any}} links # Scene links with modified properties
+---@return {[Node]: {[string]: string}} relativePaths # Owned properties that reference a removing link
+local function getLinks(sceneRoot, dependencyPath)
 	---@type {[Node]: {[string]: any}}
-	local references = {}
-	sceneRoot:traverseDownSelf(noop, setReferenceAndSkip, dependencyPath, references)
-	return references
+	local linkProperties = {}
+	---@type {[Node]: {[string]: string}}
+	local linkReferences = {}
+	sceneRoot:traverseDownSelf(setLinkReference, setLinkPropertiesAndSkip, dependencyPath, sceneRoot, linkProperties, linkReferences)
+	return linkProperties, linkReferences
 end
 
----@type {[Toolbox.EditableScene]: {[Node]: {[string]: any}}} # EditableScenes to a reference of a scene with its modified properties
-local tabToReferences = {}
+---@type {[Toolbox.EditableScene]: {[Node]: {[string]: any}}} # EditableScenes to a reference of a link with its modified properties
+local tabToLinkProperties = {}
+---@type {[Toolbox.EditableScene]: {[Node]: {[string]: string}}} # EditableScenes to Nodes that reference a link('s descendant)
+local tabToLinkReferences = {}
 
 ---Gets all Node references that need to be reloaded.
 ---Called before scene properties are updated.
 ---@param dependencyPath string
 function MainWindow:prepareReloadDependency(dependencyPath)
-	tclear(tabToReferences)
+	tclear(tabToLinkProperties)
 	local tabbar = self.tabContainer._internalTabBar
 	local tabs = tabbar._tabs
+
 	for i = #tabs, 1, -1 do
 		local tab = tabs[i]
 		---@type Toolbox.EditableScene
 		local eScene = tab.node
-		if eScene.CLASS_NAME == "EditableScene" and eScene:getSceneRoot() then
+		if eScene.CLASS_NAME == "EditableScene" and eScene:getSceneRoot() and eScene._lastFilepath then
 			-- Only look at EditableScenes with something underneath them
 			local path = eScene._lastFilepath
 			---@type SceneFactory
@@ -992,10 +1034,15 @@ function MainWindow:prepareReloadDependency(dependencyPath)
 			if asset then
 				if asset._dependencyMap[dependencyPath] then
 					-- Probably has a reference, check it
-					local references = getReferences(eScene:getSceneRoot(), dependencyPath)
-					if next(references) then
-						-- List is not empty, keep it
-						tabToReferences[eScene] = references
+					local links, references = getLinks(eScene:getSceneRoot(), dependencyPath)
+					if next(links) then
+						-- Links found, keep it
+						tabToLinkProperties[eScene] = links
+
+						if next(references) then
+							-- References to links found, keep it
+							tabToLinkReferences[eScene] = references
+						end
 					end
 				end
 			end
@@ -1008,9 +1055,12 @@ end
 ---@param dependencyPath string
 function MainWindow:performReloadDependency(dependencyPath)
 	local factory = ObjectLoader:get(dependencyPath, "SceneFactory")
-	for eScene, reference in pairs(tabToReferences) do
+	for eScene, links in pairs(tabToLinkProperties) do
 		eScene:pushSubroot()
-		for node, modifiedProperties in pairs(reference) do
+
+		print("reloading", eScene)
+		-- Recreate each scene link
+		for node, modifiedProperties in pairs(links) do
 			local parent = assert(node.parent)
 			local index = assert(parent:getIndexOfChild(node))
 			local newScene = assert(factory:instantiate())
@@ -1026,6 +1076,31 @@ function MainWindow:performReloadDependency(dependencyPath)
 				entry:getProperty(propertyName, true):set(newScene, propertyName, value)
 			end
 		end
+
+		-- Update our own references to point towards the new links
+		local referenceMap = tabToLinkReferences[eScene]
+		if referenceMap then
+			for node, propertyMap in pairs(referenceMap) do
+				-- For each Node with a reference to a Node in an old scene link...
+				local entry = node:getClassDBEntry()
+
+				for propertyName, relativePath in pairs(propertyMap) do
+					-- Get the new Node under that link
+					local newNode, _ = node:getNodeFromPath(relativePath, true, false)
+
+					-- Then set it
+					local propertyObj = entry:getProperty(propertyName, true)
+					if propertyObj then
+						-- Set through the Property
+						propertyObj:set(node, propertyName, newNode)
+					else
+						-- Set directly
+						node[propertyName] = newNode
+					end
+				end
+			end
+		end
+
 		eScene:popSubroot()
 	end
 end
