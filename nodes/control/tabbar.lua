@@ -97,7 +97,16 @@ end
 function TabBar:focusOnTabIndex(index)
 	local tab = self._tabs[index]
 	if tab and tab.lowerBoundX then
-		self._offsetX = max(min(self._offsetX, tab.lowerBoundX), tab.upperBoundX - self._localContentRect.w)
+		local width = self._localContentRect.w
+		self._offsetX = max(
+			-- min(to show the left side of the tab)
+			-- min(the scroll position, the left edge of the tab, and to prevent scrolling past the edge)
+			min(self._offsetX, tab.lowerBoundX, self._calculatedWidth - width),
+			-- The right edge of the tab
+			tab.upperBoundX - width,
+			-- The lowest scroll
+			0
+		)
 	end
 end
 
