@@ -75,8 +75,11 @@ function LineEdit:new(text)
 	---@type love.Text # The drawn placeholder text batch
 	self._placeholderTextBatch = love.graphics.newText(self._font[self._fontSize], self._placeholderText)
 
+	---@type Signal # Fires on text submission, with (LineEdit, submittedText, formerSubmission)
 	self.textSubmitted = self:newSignal()
+	---@type Signal # Fires on text change, with (LineEdit, text)
 	self.textChanged = self:newSignal()
+	---@type Signal # Fires on text input cancellation, with (LineEdit, cancelledText, revertedToText)
 	self.textCancelled = self:newSignal()
 end
 
@@ -94,20 +97,22 @@ function LineEdit:submit(fireEvent)
 		-- If the entered text is empty, and we want to use to placeholder, swap it.
 		usedText = self._placeholderText
 	end
+	local formerSubmission = self._submittedText
 	self._submittedText = usedText
 	self._inputField:releaseMouse()
 	if fireEvent then
-		self.textSubmitted:fire(usedText)
+		self.textSubmitted:fire(self, usedText, formerSubmission)
 	end
 	self:deferRefreshSelf()
 end
 
 function LineEdit:cancel()
 	local oldText = self._submittedText
+	local cancelledText = self._text
 	self._text = oldText
 	self._inputField:setText(oldText)
-	self.textCancelled:fire(oldText)
-	self.textChanged:fire(oldText)
+	self.textCancelled:fire(self, cancelledText, oldText)
+	self.textChanged:fire(self, oldText)
 	self:deferRefreshSelf()
 end
 
@@ -126,7 +131,7 @@ function LineEdit:setText(text)
 		self._submittedText = text
 		self._inputField:setText(text)
 		self._inputField:clearHistory()
-		self.textChanged:fire(text)
+		self.textChanged:fire(self, text)
 		self._textBatch:set(text)
 		self:deferRefreshSelf()
 	end
@@ -332,6 +337,7 @@ function LineEdit:keypressed(key, scancode, isRepeat)
 			-- The rest are in :textinput
 			local newText = self._inputField:getText()
 			self._text = newText
+			self.textChanged:fire(self, newText)
 			self:deferRefreshSelf()
 		end
 
@@ -347,7 +353,7 @@ function LineEdit:textinput(text)
 		local newText = self._inputField:getText()
 		self._text = newText
 		self:deferRefreshSelf()
-		self.textChanged:fire(newText)
+		self.textChanged:fire(self, newText)
 	end
 	return handled
 end
