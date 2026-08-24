@@ -231,6 +231,7 @@ These projects are used within Adore (inside `./lib`). You are also required to 
 * InputField (by *Marcus 'ReFreezed' Thunström*, MIT)
 * Runtime-TextureAtlas (by *EngineerSmith*, MIT)
 * Serpent (by *Paul Kulchenko*, MIT)
+* fzy (by *Seth Warn*, MIT)
 
 ## License
 Unless otherwise noted, all files outside of `./lib` are licensed under the terms of the [zlib license](./LICENSE).

@@ -26,6 +26,8 @@ local libraryPaths = {
 	Expression = "lib.expression",
 	---@type JSON
 	JSON = "lib.json",
+	---@type fzy
+	fzy = "lib.fzy",
 }
 Libraries = LazyRequire(libraryPaths, true)
 end
