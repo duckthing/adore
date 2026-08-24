@@ -614,7 +614,7 @@ function MainWindow:addNode()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -56, 90, 56
+		-90, -71, 90, 56
 	)
 
 	window:getTitleLabel():setText("Add node...")
@@ -624,6 +624,7 @@ function MainWindow:addNode()
 		{type = "body", text = "Class Name"},
 		{id = "class", type = "textfield",
 				value = (instanceUnder ~= srContainer.subroot and instanceUnder.CLASS_NAME) or "Node"},
+		{id = "searchMatch", type = "body", text = "Search result..."},
 	}
 
 	local vbox, sheet = FormBuilder.build(form)
@@ -645,10 +646,31 @@ function MainWindow:addNode()
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Add", "submit")
-	window.submit = function(...)
-		local className = classField._submittedText
 
-		local success, ClassOrErr = pcall(Adore.Any, className)
+	-- Search result label
+	---@type Label
+	local matchLabel = sheet:getElement("searchMatch")
+	classField.textChanged:connectCallable(function(_, text)
+		local fzy = Adore.Libraries("fzy")
+		local match = fzy.get_best_match(text, Adore.getClassNames())
+		if match then
+			matchLabel:setText(match)
+		else
+			matchLabel:setText("(no match)")
+		end
+	end)
+
+	window.submit = function(...)
+		local classNameInput = classField._submittedText
+
+		local fzy = Adore.Libraries("fzy")
+		local match = fzy.get_best_match(classNameInput, Adore.getClassNames())
+		if not match then
+			return
+		end
+
+		print("Found", match)
+		local success, ClassOrErr = pcall(Adore.Any, match)
 		if success then
 			if ClassOrErr:is(Node) or ClassOrErr == Node then
 				-- Create the scene and add the tab
@@ -664,7 +686,7 @@ function MainWindow:addNode()
 				self.sceneTree:selectNode(newNode)
 				window:close()
 			else
-				print(("Class '%s' is not a Node"):format(className))
+				print(("Class '%s' is not a Node"):format(classNameInput))
 			end
 		else
 			print(ClassOrErr)
