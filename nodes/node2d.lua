@@ -313,8 +313,8 @@ if ADORE_NODE2D_CULL then
 			-- appleCakeArgs.class = self.CLASS_NAME
 			-- appleCakeProfileNode2dDraw = AppleCake.profile("Node2d:draw", appleCakeArgs, appleCakeProfileNode2dDraw)
 			self:draw()
+			-- appleCakeProfileNode2dDraw:stop()
 		end
-		-- appleCakeProfileNode2dDraw:stop()
 		self:_drawChildren()
 		self:_afterDraw()
 	end
