@@ -157,6 +157,20 @@ Adore.Any = function(name)
 	return fallbackToOthers(name)
 end
 
+---Searches for any class name matches in non-user paths
+---@param className string
+---@return boolean exists
+---@return string? categoryName
+local function hasClassName(className)
+	for categoryName, lazyRequire in pairs(allLazyLoaders) do
+		---@diagnostic disable-next-line: cast-type-mismatch
+		---@cast lazyRequire LazyRequire
+		local namesToPaths = lazyRequire._paths
+		if namesToPaths[className] then return true, categoryName end
+	end
+	return false
+end
+
 ---Adds user-specified paths so that internal Adore operations can find them.
 ---
 ---For example, loading a custom `Player` class from a PackedScene requires
@@ -171,6 +185,10 @@ function Adore.addUserPaths(paths)
 			User[className] = nil
 		else
 			-- Add it
+			local exists, inCategory = hasClassName(className)
+			if exists and inCategory ~= "User" then
+				error(("Can't add user path for class name '%s'; already exists in category '%s'"):format(className, inCategory))
+			end
 			userPaths[className] = path
 		end
 	end
