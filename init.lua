@@ -17,7 +17,7 @@ end
 
 local Libraries = require(PKG_NAME..".lib")
 
-local allLazyLoaders = {
+local allLazyRequires = {
 	Nodes = false,
 	Resources = false,
 	Common = false,
@@ -26,12 +26,20 @@ local allLazyLoaders = {
 	Libraries = Libraries
 }
 
+---An array containing every class name in Adore
+---@type string[]
+local allClassNames = {}
+
+---Whether the array of all class names should be updated
+---@type boolean
+local shouldReloadClasses = true
+
 ---Finds a type somewhere in Adore, in case the developer mistyped something
 ---@param type string
 ---@param exclude string?
 ---@return any
 local function fallbackToOthers(type, exclude)
-	for category, loader in pairs(allLazyLoaders) do
+	for category, loader in pairs(allLazyRequires) do
 		if loader and category ~= exclude then
 			local val = loader[type]
 			if val then
@@ -105,7 +113,7 @@ local Common = require(PKG_NAME..".common")
 local Internal = require(PKG_NAME..".data.internal")
 local User = require(PKG_NAME..".data.userspecified")
 
-allLazyLoaders.Nodes, allLazyLoaders.Resources, allLazyLoaders.Common, allLazyLoaders.Internal, allLazyLoaders.User =
+allLazyRequires.Nodes, allLazyRequires.Resources, allLazyRequires.Common, allLazyRequires.Internal, allLazyRequires.User =
 	Nodes, Resources, Common, Internal, User
 
 ---A Node is an instanced object that is used in the scene tree
@@ -162,7 +170,7 @@ end
 ---@return boolean exists
 ---@return string? categoryName
 local function hasClassName(className)
-	for categoryName, lazyRequire in pairs(allLazyLoaders) do
+	for categoryName, lazyRequire in pairs(allLazyRequires) do
 		---@diagnostic disable-next-line: cast-type-mismatch
 		---@cast lazyRequire LazyRequire
 		local namesToPaths = lazyRequire._paths
@@ -177,6 +185,7 @@ end
 ---Adore to know where the class is.
 ---@param paths {[string]: string | false}
 function Adore.addUserPaths(paths)
+	shouldReloadClasses = true
 	local userPaths = User._paths
 	for className, path in pairs(paths) do
 		if path == false then
@@ -192,6 +201,29 @@ function Adore.addUserPaths(paths)
 			userPaths[className] = path
 		end
 	end
+end
+
+---Returns a read-only array containing every class name in Adore
+---@return string[] classNames
+function Adore.getClassNames()
+	if shouldReloadClasses then
+		-- Clear the array
+		for i = #allClassNames, 1, -1 do
+			allClassNames[i] = nil
+		end
+
+		-- Now get every class name
+		local i = 1
+		for _, lazyRequire in pairs(allLazyRequires) do
+			---@diagnostic disable-next-line: cast-type-mismatch
+			---@cast lazyRequire LazyRequire
+			for className, _ in pairs(lazyRequire._paths) do
+				allClassNames[i] = className
+				i = i + 1
+			end
+		end
+	end
+	return allClassNames
 end
 
 ---@type Adore.Loader # The asset loader, which prevents duplicating assets in memory
