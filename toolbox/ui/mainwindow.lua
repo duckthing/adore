@@ -108,19 +108,44 @@ function MainWindow:new(toolbox, subroot)
 	Tool.mainWindow = self
 
 	--======== GAME TABS
-	local tabContainer = TabContainer()
-	tabContainer:setAnchorsAndOffsets(
+	local gameTabContainer = TabContainer()
+	gameTabContainer:setAnchorsAndOffsets(
 			0, 0, 1, 1,
 			260, 36, -260, -240
 	)
-	tabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
+	gameTabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
 		self.sceneTree.iterateMode = (tabInfo and tabInfo.node:is(GameScene) and "full") or "owned"
 		self.sceneTree:setStartNode((tabInfo and tabInfo.node) or nil)
 		self.inspector:onNodeSelectionChanged(nil)
 		self:updateButtonTexture()
 		self:populateToolbar()
 	end)
-	self.tabContainer = tabContainer
+	self.tabContainer = gameTabContainer
+
+	--======== PANELS
+	local leftPanel = TabContainer()
+		:setAnchorsAndOffsets(
+				0, 0, 0, 1,
+				0, 36, 256, 0
+		)
+		:setVariant("panel")
+	self.leftPanel = leftPanel
+
+	local rightPanel = TabContainer()
+		:setAnchorsAndOffsets(
+				1, 0, 1, 1,
+				-256, 36, 0, 0
+		)
+		:setVariant("panel")
+	self.rightPanel = rightPanel
+
+	local bottomPanel = TabContainer()
+		:setAnchorsAndOffsets(
+			0, 1, 1, 1,
+			260, -236, -260, 0
+		)
+		:setVariant("panel")
+	self.bottomPanel = bottomPanel
 
 	--======== ORIGINAL ROOT
 	---@type Toolbox.GameScene # Where the game is rendered to
@@ -202,36 +227,27 @@ function MainWindow:new(toolbox, subroot)
 	self.pauseButton = gameActionBar.children[2]
 
 	--======== SCENE TREE
+	local sceneTreeContainer
 	do
 		---@type Toolbox.SceneTree
 		local sceneTree = SceneTreeViewer(toolbox, subWindow)
 			:setAnchorsAndOffsets(
 				0, 0, 1, 1,
-				0, 36, 0, 0
+				0, 30, 0, 0
 			)
 		self.sceneTree = sceneTree
 
-		local sceneTreeContainer = Control()
-			:setAnchorsAndOffsets(
-				0, 0, 0, 1,
-				0, 40, 252, 0
-			)
-			:setVariant("panel")
+		sceneTreeContainer = Control()
+			:setAnchors(0, 0, 1, 1)
+		sceneTreeContainer.name = "Scene"
 		self.sceneTreeContainer = sceneTreeContainer
-
-		local label = Label("Scene Tree")
-			:setAnchors(0, 0, 1, 0)
-			:setOffsets(5, 0, 0, 30)
-			:setAlign("left")
-			:setJustify("center")
-			:setFontSize(16)
 
 		local treeActionBar = HBox()
 			:setAnchorsAndOffsets(
 				0, 0, 1, 0,
-				(label:getMinimumSize()), 0, 0, 30
+				0, 0, 0, 30
 			)
-			:setSortMode("end")
+			:setSortMode("center")
 			:setMargin(8)
 
 		do
@@ -251,35 +267,32 @@ function MainWindow:new(toolbox, subroot)
 		end
 
 		sceneTreeContainer:addChild(sceneTree)
-		sceneTreeContainer:addChild(label)
 		sceneTreeContainer:addChild(treeActionBar)
 	end
 
 	--======== INSPECTOR
 	---@type Toolbox.Inspector
 	local inspector = Inspector(toolbox, self.sceneTree)
-		:setAnchorsAndOffsets(
-			1, 0, 1, 1,
-			-252, 40, 0, 0
-		)
+		:setAnchors(0, 0, 1, 1)
 	self.inspector = inspector
 
 	--======== FILE BROWSER
 	local fileBrowser = FileBrowser(toolbox)
-		:setAnchorsAndOffsets(
-			0, 1, 1, 1,
-			265, -231, -265, 0
-		)
+		:setAnchors(0, 0, 1, 1)
 	self.fileBrowser = fileBrowser
 
 	--======== SCENE STRUCTURE
-	editor:addChild(self.sceneTreeContainer)
-	editor:addChild(inspector)
-	editor:addChild(fileBrowser)
+	leftPanel:addChild(sceneTreeContainer)
+	rightPanel:addChild(inspector)
+	bottomPanel:addChild(fileBrowser)
+
+	editor:addChild(leftPanel)
+	editor:addChild(rightPanel)
+	editor:addChild(bottomPanel)
 	editor:addChild(gameActionBar)
 	editor:addChild(menuBar)
 	editor:addChild(toolBar)
-	editor:addChild(tabContainer)
+	editor:addChild(gameTabContainer)
 	editor:hide()
 
 	self:addChild(editor)
