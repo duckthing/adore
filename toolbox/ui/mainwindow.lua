@@ -3,23 +3,24 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
-local ObjectSaver = Adore.Common("ObjectSaver")
-local tclear = Adore.Common("Structures").tableClear
+local Common = Adore.Common
+local Resources = Adore.Resources
+
+local ObjectSaver = Common("ObjectSaver")
+local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+local TableScene = Resources("TableScene")
+local tclear = Common("Structures").tableClear
 
 local Node = Nodes("Node")
 local Control = Nodes("Control")
 local TabContainer = Nodes("TabContainer")
-local VBox = Nodes("VBox")
 local HBox = Nodes("HBox")
 local Button = Nodes("Button")
 local TextureButton = Nodes("TextureButton")
 local Label = Nodes("Label")
-local PopupMenu = Nodes("PopupMenu")
 local WindowPopup = Nodes("WindowPopup")
-local LineEdit = Nodes("LineEdit")
 local MenuButton = Nodes("MenuButton")
-local DropdownButton = Nodes("DropdownButton")
-local FormBuilder = Adore.Common("FormBuilder")
+local FormBuilder = Common("FormBuilder")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -32,9 +33,6 @@ local GameScene = require(ADORE_PATH..".toolbox.gamescene")
 local Templates = require(ADORE_PATH..".toolbox.scripttemplates")
 ---@type Toolbox.Tool
 local Tool = require(ADORE_PATH..".toolbox.tool")
-local TableScene = Adore.Resources("TableScene")
-
-local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
@@ -426,10 +424,10 @@ function MainWindow:saveScene()
 	---@type SceneFactory
 	local scene
 	if format == "binary" then
-		local PackedScene = Adore.Resources("PackedScene")
+		local PackedScene = Resources("PackedScene")
 		scene = PackedScene()
 	else
-		local TableScene = Adore.Resources("TableScene")
+		local TableScene = Resources("TableScene")
 		scene = TableScene()
 	end
 	scene:pack(sceneRoot)
