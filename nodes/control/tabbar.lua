@@ -1,7 +1,7 @@
 ---@type AdoreInit
 local Adore = require ""
 local HBox = Adore.Nodes("HBox")
-local min = math.min
+local min, max = math.min, math.max
 
 ---@class TabBar: HBox
 ---@override fun(): TabBar
@@ -78,15 +78,27 @@ function TabBar:selectTab(index)
 			-- Valid tab
 			self._currentTab = newIndex
 			self.tabSelected:fire(self, newIndex, newTab)
+			-- TODO: Why is queue necessary?
+			self:queue(self.focusOnTabIndex, newIndex)
 			self:deferRefreshSelf()
 		else
 			-- Invalid tab
 			self._currentTab = 0
 			self.tabSelected:fire(self, 0, nil)
+			self._offsetX = 0
 			self:deferRefreshSelf()
 		end
 	end
 	return self
+end
+
+---Moves the visible region to show a certain tab index
+---@param index integer
+function TabBar:focusOnTabIndex(index)
+	local tab = self._tabs[index]
+	if tab and tab.lowerBoundX then
+		self._offsetX = max(min(self._offsetX, tab.lowerBoundX), tab.upperBoundX - self._localContentRect.w)
+	end
 end
 
 function TabBar:mousepressed(mx, my, button, isTouch, pressCount)
