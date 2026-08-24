@@ -42,8 +42,8 @@ function Vec2P:newValueLabel(object, property, propertyName, component)
 	return edit
 end
 
-function Vec2P:onXInput(text) self:onInput(text, "x") end
-function Vec2P:onYInput(text) self:onInput(text, "y") end
+function Vec2P:onXInput(_, text) self:onInput(text, "x") end
+function Vec2P:onYInput(_, text) self:onInput(text, "y") end
 
 local symbols = {self = 0}
 local tempVec2 = Vec2(0, 0)

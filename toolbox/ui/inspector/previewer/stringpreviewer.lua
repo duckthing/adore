@@ -22,7 +22,7 @@ function StringP:newValueLabel(object, property, propertyName)
 	return edit
 end
 
-function StringP:onInput(text)
+function StringP:onInput(_, text)
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
 

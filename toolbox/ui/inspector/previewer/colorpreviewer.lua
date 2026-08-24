@@ -62,7 +62,7 @@ function Color2P:onAInput(text) self:onInput(text, 4) end
 local symbols = {self = 0}
 local tempColor = {1, 1, 1, 1}
 
-function Color2P:onInput(text, component)
+function Color2P:onInput(_, text, component)
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
 	local currColor = property:get(object, propertyName)

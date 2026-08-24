@@ -24,7 +24,7 @@ function NumberP:newValueLabel(object, property, propertyName)
 end
 
 local symbols = {self = 0}
-function NumberP:onInput(text)
+function NumberP:onInput(_, text)
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
 	local currNum = property:get(object, propertyName)
