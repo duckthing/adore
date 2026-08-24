@@ -218,7 +218,7 @@ end
 ---@param needle string
 ---@param haystacks string[]
 ---@param case_sensitive boolean? # [Default: `false`]
----@return integer[][] matches # `{{idx, positions, score}, ...}`
+---@return {[1]: integer, [2]: integer[], [3]: integer}[] matches # `{{idx, positions, score}, ...}`
 ---An array with one entry per matching line in `haystacks`, each entry
 ---giving the index of the line in `haystacks` as well as the equivalent
 ---to the return value of `positions` for that line.
@@ -233,6 +233,32 @@ function fzy.filter(needle, haystacks, case_sensitive)
 	end
 
 	return result
+end
+
+---Returns the best match for an array of haystacks.
+---May return `nil` if there isn't a match.
+---@param needle string
+---@param haystacks string[]
+---@param case_sensitive boolean? # [Default: `false`]
+---@return string? haystack
+---@return number? score
+function fzy.get_best_match(needle, haystacks, case_sensitive)
+	local best_score = -math.huge
+	local best_index = -1
+	for i = 1, #haystacks do
+		local line = haystacks[i]
+		if fzy.has_match(needle, line, case_sensitive) then
+			local score = fzy.score(needle, haystacks[i])
+			if score > best_score then
+				best_score = score
+				best_index = i
+			end
+		end
+	end
+
+	if best_index ~= 1 then
+		return haystacks[best_index], best_score
+	end
 end
 
 ---The lowest value returned by `score`.
