@@ -91,6 +91,25 @@ local actions = {
 		mainWindow:toggleFull()
 		return true
 	end,
+
+	selectNextScene = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		local tabbar = mainWindow.tabContainer._internalTabBar
+		local tabCount = #tabbar._tabs
+		if tabCount > 1 then
+			tabbar:selectTab((tabbar._currentTab % tabCount) + 1)
+		end
+		return true
+	end,
+	selectPreviousScene = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		local tabbar = mainWindow.tabContainer._internalTabBar
+		local tabCount = #tabbar._tabs
+		if tabCount > 1 then
+			tabbar:selectTab((tabbar._currentTab - 2) % tabCount + 1)
+		end
+		return true
+	end,
 }
 ---@type ShortcutContext.Keybinds?
 local pressedKeybinds = {
@@ -109,6 +128,10 @@ local pressedKeybinds = {
 		n = "newScene",
 		r = "reloadScene",
 		w = "closeScene",
+		tab = "selectNextScene",
+	},
+	ctrlshift = {
+		tab = "selectPreviousScene",
 	},
 	altctrl = {
 		s = "saveSceneAs",
