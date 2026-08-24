@@ -39,13 +39,9 @@ CoreUIContext.HANDLERS = {
 ---@param root RootNode
 ---@return Control? focused
 local function ensureValidFocused(root)
-	local focused = root._focusedControl
+	local focused = root:getFocusedControl()
 	if focused and focused:isVisibleInTree() then
-		if focused:isVisibleInTree() then
-			return focused
-		else
-			focused:releaseFocus()
-		end
+		return focused
 	end
 	return nil
 end
@@ -112,15 +108,19 @@ local actions = {
 	end,
 
 	uiSelectUp = function(context)
+		ensureValidFocused(context.root)
 		return context.root:uiSelectUp()
 	end,
 	uiSelectDown = function(context)
+		ensureValidFocused(context.root)
 		return context.root:uiSelectDown()
 	end,
 	uiSelectLeft = function(context)
+		ensureValidFocused(context.root)
 		return context.root:uiSelectLeft()
 	end,
 	uiSelectRight = function(context)
+		ensureValidFocused(context.root)
 		return context.root:uiSelectRight()
 	end,
 }

@@ -440,10 +440,24 @@ function Root:focusOnControl(control, isMouse)
 	end
 end
 
+---Returns the focused Control, if it's valid
+---@return Control? focused
+function Root:getFocusedControl()
+	local focused = self._focusedControl
+	if focused then
+		if focused._inTree and focused._valid then
+			return focused
+		else
+			focused:releaseFocus()
+		end
+	end
+	return nil
+end
+
 ---Unfocuses the currently focused control. Like pressing Escape.
 ---@return boolean handled
 function Root:uiUnfocus()
-	local oldFocused = self._focusedControl
+	local oldFocused = self:getFocusedControl()
 	if oldFocused then
 		oldFocused:uiFocusLost()
 		self._focusedControl = nil
@@ -458,7 +472,7 @@ end
 ---@return boolean handled
 function Root:uiActivate()
 	if not self._activatingControl then
-		local focused = self._focusedControl
+		local focused = self:getFocusedControl()
 		if focused then
 			if focused:canReceiveInput(false) then
 				-- This Control can receive input
@@ -499,7 +513,7 @@ end
 function Root:uiSelectNext()
 	if self._activatingControl then return false end
 
-	local oldFocused = self._focusedControl
+	local oldFocused = self:getFocusedControl()
 	if not oldFocused then
 		-- Missing a Control to navigate from, select the first Control found
 		for control, _ in pairs(self._controlTopLevelLayers) do
@@ -551,7 +565,7 @@ end
 function Root:uiSelectPrevious()
 	if self._activatingControl then return false end
 
-	local oldFocused = self._focusedControl
+	local oldFocused = self:getFocusedControl()
 	if not oldFocused then
 		-- Missing a Control to navigate from, select the first Control found
 		for control, _ in pairs(self._controlTopLevelLayers) do
@@ -605,7 +619,7 @@ end
 function Root:uiSelectUp()
 	if self._activatingControl then return false end
 
-	local oldFocused = self._focusedControl
+	local oldFocused = self:getFocusedControl()
 	if not oldFocused then return false end
 	---@type Control?
 	local result = nil
@@ -655,7 +669,7 @@ end
 function Root:uiSelectDown()
 	if self._activatingControl then return false end
 
-	local oldFocused = self._focusedControl
+	local oldFocused = self:getFocusedControl()
 	if not oldFocused then return false end
 	---@type Control?
 	local result = nil
@@ -705,7 +719,7 @@ end
 function Root:uiSelectLeft()
 	if self._activatingControl then return false end
 
-	local oldFocused = self._focusedControl
+	local oldFocused = self:getFocusedControl()
 	if not oldFocused then return false end
 	---@type Control?
 	local result = nil
@@ -755,7 +769,7 @@ end
 function Root:uiSelectRight()
 	if self._activatingControl then return false end
 
-	local oldFocused = self._focusedControl
+	local oldFocused = self:getFocusedControl()
 	if not oldFocused then return false end
 	---@type Control?
 	local result = nil
