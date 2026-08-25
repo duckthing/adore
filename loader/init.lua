@@ -60,7 +60,7 @@ local collectionTypeToModule = {}
 ---(Creates if needed, and) returns a table of resources of `type`, as well as the array where you can look up assets by ID.
 ---@generic T: Adore.AssetCollection
 ---@param name `T` | Adore.ExposedCollections
----@return T
+---@return T | Adore.AssetCollection
 ---@return any[] # The array of assets
 function Loader.getCollection(name)
 	local collection = loadedCollections[name]

@@ -18,7 +18,7 @@ Button._autowrap = "none"
 Button._iconAlign = "center"
 ---@type Label.JustifyMode # Where the icon lies vertically
 Button._iconJustify = "center"
----@type boolean # Resizes the icon while keeping the aspect ratio
+---@type boolean # Grows/shrinks the icon while keeping the aspect ratio
 Button._iconExpand = false
 ---@type string # What is in the Button. Use :setText() instead of setting this.
 Button._text = "Button"
@@ -63,7 +63,7 @@ function Button:getMinimumSize()
 		minW = max(minW, textBatch:getWidth())
 	end
 	local icon = self._icon
-	if icon and self._iconExpand then
+	if icon and not self._iconExpand then
 		local _, _, iconW, iconH = icon.quad:getViewport()
 		return max(minW, iconW), max(minH, textBatch:getHeight(), iconH)
 	else
@@ -160,7 +160,7 @@ function Button:setIconJustify(justify)
 	return self
 end
 
----Sets whether the icon expands to fill the Button
+---Sets whether the icon expands/shrinks to fill the Button
 ---@param expand boolean
 ---@return Button
 function Button:setIconExpand(expand)
