@@ -520,10 +520,14 @@ function MainWindow:saveSceneAs()
 			self.toolbox.addFilePath(path)
 		end
 		srContainer._lastFilepath = path
+		srContainer.name = path:match(".*[/\\](.*)$")
 		local item = sheet:getValue("format")
 		---@cast item PopupMenu.Item
 		srContainer._lastFormat = item.label
-		if self:saveScene() then window:close() end
+		if self:saveScene() then
+			window:close()
+			self.tabContainer:updateTabs()
+		end
 	end
 
 	-- Show the popup
