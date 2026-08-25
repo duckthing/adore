@@ -619,7 +619,7 @@ function MainWindow:loadScene()
 	-- Show the popup
 	self:addChild(window)
 	window:popup()
-	sheet:getElement("path"):grabFocus(false)
+	pathField:grabFocus(false)
 end
 
 function MainWindow:addNode()

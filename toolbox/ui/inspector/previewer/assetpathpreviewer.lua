@@ -4,8 +4,11 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Loader = Adore.Loader
-local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
+local FormBuilder = Adore.Common("FormBuilder")
+local fzy = Adore.Libraries("fzy")
 
+---@type Previewer
+local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
 local VBox = Nodes("VBox")
 local Label = Nodes("Label")
 local LineEdit = Nodes("LineEdit")
@@ -37,11 +40,20 @@ function AssetP:showPopup()
 	window._destroyOnClose = true
 	window:setAnchorsAndOffsets(
 		0, 1, 0, 1,
-		-180, -56, 0, 56
+		-200, -66, 0, 66
 	)
 	window:getTitleLabel():setText(("Set '%s' (%s)"):format(propertyName, collectionName))
 
-	local vbox = VBox()
+	---@type Form
+	local form = {
+		{type = "body", text = "Asset Path"},
+		{id = "path", type = "textfield",
+				value = Collection:getAssetPath(property:get(self.object, propertyName))},
+		{id = "searchMatch", type = "body", text = "Search result..."},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
 	vbox:setAnchorsAndOffsets(
 			0, 0, 1, 1,
 			10, 10, -10, 0
@@ -49,26 +61,35 @@ function AssetP:showPopup()
 		:setResizeToContent(true)
 		:setMargin(4)
 
-	-- Create the fields
-	-- == Path Label
-	vbox:addChild(Label("Asset Path"):setAnchors(0, 0, 1, 0))
+	---@type LineEdit
+	local pathField = sheet:getElement("path")
+	pathField:setUnfocusedPosition("right")
+			:setSubmitOnFocusLost(false)
+			.textSubmitted:connect(window, "submit")
 
-	-- == Asset LineEdit
-	local pathField = LineEdit(Collection:getAssetPath(property:get(self.object, propertyName)))
-		:setAnchorsAndOffsets(
-			0, 0, 1, 0,
-			0, 0, 0, 22
-		)
-		:setUnfocusedPosition("right")
-		:setSubmitOnFocusLost(false)
-	pathField.textSubmitted:connect(window, "submit")
-	vbox:addChild(pathField)
+	-- Search result label
+	---@type Label
+	local matchLabel = sheet:getElement("searchMatch")
+	pathField.textChanged:connectCallable(function(_, text)
+		local match = fzy.get_best_match(text, Previewer.Toolbox.getFilePaths())
+		if match then
+			matchLabel:setText(match)
+		else
+			matchLabel:setText("(no match)")
+		end
+	end)
 
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Set", "submit")
 	window.submit = function(...)
-		local success, newAsset = pcall(Collection.get, Collection, pathField._text)
+		local enteredPath = pathField._submittedText
+		local path = fzy.get_best_match(enteredPath, Previewer.Toolbox.getFilePaths())
+		if not path then
+			return
+		end
+
+		local success, newAsset = pcall(Collection.get, Collection, path)
 		if success then
 			self:attemptSet(newAsset)
 			window:close()
