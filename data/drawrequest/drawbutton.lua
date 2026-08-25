@@ -6,6 +6,8 @@ local AutoWrap = Adore.Common("AutoWrap")
 local mixRGBA = Color.mixRGBA
 local FontLoader = Adore.Loader.getCollection("FontLoader")
 
+local HUGE, min = math.huge, math.min
+
 ---@class DrawRequest.Button: DrawRequest
 ---@overload fun(backgroundColor: number[]?, angle: number?, iconAlbedo: number[]?, textAlbedo: number[]?): DrawRequest.Button
 local DrawButton = DrawRequest:extend()
@@ -34,21 +36,21 @@ function DrawButton:themeUpdate(button)
 	local lcr = button._localContentRect
 	local buttonW, buttonH = lcr.w, lcr.h
 
-	local text = button._text
 	local textBatch = button._textBatch
-	local textAlign = button._textAlign
 	local tbOldWidth, tbOldHeight = textBatch:getDimensions()
 
 	textBatch:setFont((button._font or DEFAULT_FONT)[button._fontSize or DEFAULT_FONT_SIZE])
 
+	-- Do the text first
 	local wrapMode = button._autowrap
-	AutoWrap[wrapMode](textBatch, text, buttonW, textAlign)
+	AutoWrap[wrapMode](textBatch, button._text, buttonW, "left")
 
 	local offsetX, offsetY = 0, 0
 	local availableW, availableH = buttonW, buttonH
 
 	local iconSource = button._icon
 	if iconSource then
+		-- Resize the icon
 		local iconAlign, iconJustify = button._iconAlign, button._iconJustify
 		local iconExpand = button._iconExpand
 		local _, _, textureW, textureH = iconSource.quad:getViewport()
@@ -68,8 +70,10 @@ function DrawButton:themeUpdate(button)
 				scale = iconSpaceH / textureH
 			else
 				-- Constrained by both, but ignore the TextBatch
-				scale = math.min(buttonW / textureW, buttonH / textureH)
+				scale = HUGE
 			end
+			-- Finally, constrain all by max possible scale
+			scale = min(scale, buttonW / textureW, buttonH / textureH)
 		end
 		button._iconScale = scale
 
@@ -84,9 +88,11 @@ function DrawButton:themeUpdate(button)
 			-- Icon on the left
 			button._iconX = 0
 			offsetX = iconW
+			availableW = availableW - iconW
 		else
 			-- Icon on the right
 			button._iconX = availableW - iconW
+			availableW = availableW - iconW
 		end
 
 		if iconJustify == "center" then
@@ -96,25 +102,18 @@ function DrawButton:themeUpdate(button)
 			-- Icon on the top
 			button._iconY = 0
 			offsetY = iconH
+			availableH = availableH - iconH
 		else
 			-- Icon on the bottom
 			button._iconY = buttonH - iconH
-		end
-
-		if iconJustify == "center" and iconAlign == "center" then
-			offsetX, offsetY =
-				0, 0
-			availableW, availableH =
-				buttonW, buttonH
-		else
-			availableW, availableH =
-				buttonW - iconW,
-				buttonH - iconH
+			availableH = availableH - iconH
 		end
 	end
 
+	-- Do any refreshing/resizing if necessary
 	local tbWidth, tbHeight = textBatch:getDimensions()
 	if buttonH < tbHeight then
+		-- TextBatch is wider than the Button
 		button:_setCanonRect(lcr.x, lcr.y, buttonW, tbHeight)
 		availableH = tbHeight
 	elseif tbHeight < tbOldHeight then
@@ -128,6 +127,14 @@ function DrawButton:themeUpdate(button)
 		-- (Which matters more when wrapping is disabled)
 		button:deferRefreshSelf()
 		return
+	end
+
+	-- Align the text manually
+	local textAlign = button._textAlign
+	if textAlign == "right" then
+		offsetX = offsetX + (availableW - tbWidth)
+	elseif textAlign == "center" then
+		offsetX = offsetX + (availableW - tbWidth) * 0.5
 	end
 
 	button._textBatchX, button._textBatchY =
