@@ -15,12 +15,29 @@ local Button = Nodes("Button")
 ---@class Previewer.AssetPath: Previewer
 local AssetP = Previewer:extend()
 
+function AssetP:new(...)
+	AssetP.super.new(self, ...)
+	self:setOffsets(0, 0, 0, 60)
+end
+
 function AssetP:newValueLabel(object, property, propertyName)
-	local val = property:get(object, propertyName)
-	local button = Button(tostring(val))
+	---@cast property Property.AssetPath
+	local collectionName = property.collectionName
+	local Collection = Loader.getCollection(collectionName)
+	local asset = property:get(self.object, propertyName)
+	local assetPath = asset and Collection:getAssetPath(asset) or ""
+	local button = Button(assetPath)
 		:setAnchors(1, 0, 1, 1)
 		:setOffsets(-130, 0, 0, 0)
+		:setIconAlign("center")
+		:setIconJustify("top")
+		:setIconExpand(true)
 	button.clicked:connect(self, "showPopup")
+
+	if collectionName == "TextureLoader" then
+		-- It's a TextureSource
+		button:setIcon(asset)
+	end
 
 	return button
 end
@@ -107,7 +124,20 @@ function AssetP:onInput(item)
 	---@cast property Property.Enum
 
 	property:set(object, propertyName, item)
-	self.value:setText(tostring(item))
+	---@type Button
+	local valueButton = self.value
+
+	---@cast property Property.AssetPath
+	local collectionName = property.collectionName
+	local Collection = Loader.getCollection(collectionName)
+	local asset = property:get(object, propertyName)
+	local assetPath = asset and Collection:getAssetPath(asset) or ""
+	valueButton:setText(assetPath)
+
+	if collectionName == "TextureLoader" then
+		-- It's a TextureSource
+		valueButton:setIcon(asset)
+	end
 end
 
 return AssetP
