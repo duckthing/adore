@@ -41,6 +41,9 @@ function DrawButton:themeUpdate(button)
 
 	textBatch:setFont((button._font or DEFAULT_FONT)[button._fontSize or DEFAULT_FONT_SIZE])
 
+	local wrapMode = button._autowrap
+	AutoWrap[wrapMode](textBatch, text, buttonW, textAlign)
+
 	local offsetX, offsetY = 0, 0
 	local availableW, availableH = buttonW, buttonH
 
@@ -51,8 +54,22 @@ function DrawButton:themeUpdate(button)
 		local _, _, textureW, textureH = iconSource.quad:getViewport()
 		local scale = 1
 
+		---@type number, number # The max dimensions the icon has room for
+		local iconSpaceW, iconSpaceH =
+			buttonW - textBatch:getWidth(),
+			buttonH - textBatch:getHeight()
+
 		if iconExpand then
-			scale = math.min(buttonW / textureW, buttonH / textureH)
+			if iconAlign ~= "center" then
+				-- Constrained by width
+				scale = iconSpaceW / textureW
+			elseif iconJustify ~= "center" then
+				-- Constrained by height
+				scale = iconSpaceH / textureH
+			else
+				-- Constrained by both, but ignore the TextBatch
+				scale = math.min(buttonW / textureW, buttonH / textureH)
+			end
 		end
 		button._iconScale = scale
 
@@ -66,14 +83,10 @@ function DrawButton:themeUpdate(button)
 		elseif iconAlign == "left" then
 			-- Icon on the left
 			button._iconX = 0
-
 			offsetX = iconW
-			availableW = availableW - iconW
 		else
 			-- Icon on the right
 			button._iconX = availableW - iconW
-
-			availableW = availableW - iconW
 		end
 
 		if iconJustify == "center" then
@@ -82,14 +95,10 @@ function DrawButton:themeUpdate(button)
 		elseif iconJustify == "top" then
 			-- Icon on the top
 			button._iconY = 0
-
 			offsetY = iconH
-			availableH = availableH - iconH
 		else
 			-- Icon on the bottom
-			button._iconY = availableH - iconH
-
-			availableH = availableH - iconH
+			button._iconY = buttonH - iconH
 		end
 
 		if iconJustify == "center" and iconAlign == "center" then
@@ -97,12 +106,12 @@ function DrawButton:themeUpdate(button)
 				0, 0
 			availableW, availableH =
 				buttonW, buttonH
+		else
+			availableW, availableH =
+				buttonW - iconW,
+				buttonH - iconH
 		end
 	end
-
-	textBatch:setf(text, availableW, textAlign)
-	local wrapMode = button._autowrap
-	AutoWrap[wrapMode](textBatch, text, buttonW, button._textAlign)
 
 	local tbWidth, tbHeight = textBatch:getDimensions()
 	if buttonH < tbHeight then
