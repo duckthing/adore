@@ -19,6 +19,94 @@ Toolbox.godRoot = nil
 ---@type Toolbox.MainWindow
 Toolbox.mainWindow = nil
 
+---An array of every path in this project
+---@type string[]
+local allFiles = {}
+
+---An array of string patterns to avoid searching
+---@type string[]
+local excludedSearchPatterns = {
+	"%.lua$",
+	"^%.",
+	"^"..ADORE_PATH,
+}
+
+---Whether the array of all class names should be updated
+---@type boolean
+local shouldReloadFileList = true
+
+---Marks the file list to reload on next call to `Toolbox.getFilePaths()`
+function Toolbox.reloadFileList()
+	shouldReloadFileList = true
+end
+
+---Adds a file path for Toolbox to include while searching.
+---If this item is a directory, it won't include items underneath automatically.
+---@param path string
+function Toolbox.addFilePath(path)
+	local length = #allFiles
+	for i = 1, length do
+		-- Only insert if not found
+		if allFiles[i] == path then return end
+	end
+	allFiles[length+1] = path
+end
+
+do
+local info = {}
+
+---Adds files from a starting folder
+---@param folder string
+local function addFromDirectory(folder)
+	---@type string[]
+	local dirItems = love.filesystem.getDirectoryItems(folder)
+	for i = 1, #dirItems do
+		local localPath = dirItems[i]
+
+		local excluded = false
+		for j = 1, #excludedSearchPatterns do
+			-- Check if this item matches any excluded patterns
+			local pattern = excludedSearchPatterns[j]
+			if localPath:match(pattern) then
+				-- Exclude it
+				excluded = true
+				break
+			end
+		end
+
+		if not excluded then
+			-- This path isn't excluded, work on it
+			local fullPath = folder..localPath
+			love.filesystem.getInfo(fullPath, info)
+			local fileType = info.type
+
+			if fileType == "file" then
+				allFiles[#allFiles+1] = fullPath
+			elseif fileType == "directory" then
+				addFromDirectory(fullPath.."/")
+			end
+		end
+	end
+end
+
+---Returns a read-only array containing every file path in this project
+---@return string[] filePaths
+function Toolbox.getFilePaths()
+	if shouldReloadFileList then
+		shouldReloadFileList = false
+
+		-- Clear the array
+		for i = #allFiles, 1, -1 do
+			allFiles[i] = nil
+		end
+
+		-- Now get every class name
+		addFromDirectory("")
+	end
+	return allFiles
+end
+end
+
 do
 -- Set Toolbox in Previewer (so it can push/pop the subroot)
 local Previewer = require(PKG_NAME..".ui.inspector.previewer")

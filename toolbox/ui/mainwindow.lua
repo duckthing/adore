@@ -17,10 +17,10 @@ local TabContainer = Nodes("TabContainer")
 local HBox = Nodes("HBox")
 local Button = Nodes("Button")
 local TextureButton = Nodes("TextureButton")
-local Label = Nodes("Label")
 local WindowPopup = Nodes("WindowPopup")
 local MenuButton = Nodes("MenuButton")
 local FormBuilder = Common("FormBuilder")
+local fzy = Adore.Libraries("fzy")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -515,7 +515,11 @@ function MainWindow:saveSceneAs()
 	window:addAction("Cancel", "close")
 	window:addAction("Save", "submit")
 	window.submit = function(...)
-		srContainer._lastFilepath = pathField._submittedText
+		local path = pathField._submittedText
+		if not srContainer._lastFilepath then
+			self.toolbox.addFilePath(path)
+		end
+		srContainer._lastFilepath = path
 		local item = sheet:getValue("format")
 		---@cast item PopupMenu.Item
 		srContainer._lastFormat = item.label
@@ -643,15 +647,10 @@ function MainWindow:addNode()
 	classField.textSubmitted:connect(window, "submit", false, false)
 	window:addChild(vbox)
 
-	-- Connect events
-	window:addAction("Cancel", "close")
-	window:addAction("Add", "submit")
-
 	-- Search result label
 	---@type Label
 	local matchLabel = sheet:getElement("searchMatch")
 	classField.textChanged:connectCallable(function(_, text)
-		local fzy = Adore.Libraries("fzy")
 		local match = fzy.get_best_match(text, Adore.getClassNames())
 		if match then
 			matchLabel:setText(match)
@@ -660,17 +659,19 @@ function MainWindow:addNode()
 		end
 	end)
 
+	-- Connect events
+	window:addAction("Cancel", "close")
+	window:addAction("Add", "submit")
 	window.submit = function(...)
-		local classNameInput = classField._submittedText
+		local enteredClassName = classField._submittedText
 
-		local fzy = Adore.Libraries("fzy")
-		local match = fzy.get_best_match(classNameInput, Adore.getClassNames())
-		if not match then
+		local className = fzy.get_best_match(enteredClassName, Adore.getClassNames())
+		if not className then
 			return
 		end
 
-		print("Found", match)
-		local success, ClassOrErr = pcall(Adore.Any, match)
+		print("Found", className)
+		local success, ClassOrErr = pcall(Adore.Any, className)
 		if success then
 			if ClassOrErr:is(Node) or ClassOrErr == Node then
 				-- Create the scene and add the tab
@@ -686,7 +687,7 @@ function MainWindow:addNode()
 				self.sceneTree:selectNode(newNode)
 				window:close()
 			else
-				print(("Class '%s' is not a Node"):format(classNameInput))
+				print(("Class '%s' is not a Node"):format(enteredClassName))
 			end
 		else
 			print(ClassOrErr)
@@ -881,7 +882,7 @@ function MainWindow:linkScene()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -56, 90, 56
+		-90, -76, 90, 56
 	)
 
 	window:getTitleLabel():setText("Link scene...")
@@ -891,6 +892,7 @@ function MainWindow:linkScene()
 		{type = "body", text = "File Path"},
 		{id = "path", type = "textfield",
 				value = "scenes/myscene.json"},
+		{id = "searchMatch", type = "body", text = "Search result..."},
 	}
 
 	local vbox, sheet = FormBuilder.build(form)
@@ -907,11 +909,27 @@ function MainWindow:linkScene()
 		.textSubmitted:connect(window, "submit", false, false)
 	window:addChild(vbox)
 
+	-- Search result label
+	---@type Label
+	local matchLabel = sheet:getElement("searchMatch")
+	pathField.textChanged:connectCallable(function(_, text)
+		local match = fzy.get_best_match(text, self.toolbox.getFilePaths())
+		if match then
+			matchLabel:setText(match)
+		else
+			matchLabel:setText("(no match)")
+		end
+	end)
+
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Link", "submit")
 	window.submit = function(...)
-		local path = pathField._submittedText
+		local enteredPath = pathField._submittedText
+		local path = fzy.get_best_match(enteredPath, self.toolbox.getFilePaths())
+		if not path then
+			return
+		end
 
 		local scene, err = ObjectLoader:getFresh(path, "SceneFactory")
 		if scene then
