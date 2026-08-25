@@ -26,14 +26,6 @@ local allLazyRequires = {
 	Libraries = Libraries
 }
 
----An array containing every class name in Adore
----@type string[]
-local allClassNames = {}
-
----Whether the array of all class names should be updated
----@type boolean
-local shouldReloadClasses = true
-
 ---Finds a type somewhere in Adore, in case the developer mistyped something
 ---@param type string
 ---@param exclude string?
@@ -178,6 +170,14 @@ local function hasClassName(className)
 	end
 	return false
 end
+
+---An array containing every class name in Adore
+---@type string[]
+local allClassNames = {}
+
+---Whether the array of all class names should be updated
+---@type boolean
+local shouldReloadClasses = true
 
 ---Adds user-specified paths so that internal Adore operations can find them.
 ---
