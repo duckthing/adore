@@ -110,6 +110,17 @@ local actions = {
 		end
 		return true
 	end,
+
+	deselectNode = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		local sceneTree = mainWindow.sceneTree
+		if sceneTree.pressedNode then
+			sceneTree:selectNode()
+			mainWindow.inspector:onNodeSelectionChanged()
+			return true
+		end
+		return false
+	end
 }
 ---@type ShortcutContext.Keybinds?
 local pressedKeybinds = {
@@ -117,6 +128,7 @@ local pressedKeybinds = {
 		["`"] = "toggleFullView",
 		delete = "deleteSelectedNode",
 		f5 = "togglePause",
+		escape = "deselectNode",
 	},
 	ctrl = {
 		a = "addNode",
