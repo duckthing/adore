@@ -540,7 +540,7 @@ function MainWindow:loadScene()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -36, 90, 76
+		-90, -71, 90, 56
 	)
 
 	window:getTitleLabel():setText("Load scene...")
@@ -550,6 +550,7 @@ function MainWindow:loadScene()
 		{type = "body", text = "File Path"},
 		{id = "path", type = "textfield",
 				value = srContainer and srContainer._lastFilepath or "scenes/myscene.json"},
+		{id = "searchMatch", type = "body", text = "Search result..."},
 	}
 
 	local vbox, sheet = FormBuilder.build(form)
@@ -566,11 +567,27 @@ function MainWindow:loadScene()
 		.textSubmitted:connect(window, "submit", false, false)
 	window:addChild(vbox)
 
+	-- Search result label
+	---@type Label
+	local matchLabel = sheet:getElement("searchMatch")
+	pathField.textChanged:connectCallable(function(_, text)
+		local match = fzy.get_best_match(text, self.toolbox.getFilePaths())
+		if match then
+			matchLabel:setText(match)
+		else
+			matchLabel:setText("(no match)")
+		end
+	end)
+
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Load", "submit")
 	window.submit = function(...)
-		local path = pathField._submittedText
+		local enteredPath = pathField._submittedText
+		local path = fzy.get_best_match(enteredPath, self.toolbox.getFilePaths())
+		if not path then
+			return
+		end
 
 		local success, scene = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
 		if success then
@@ -804,6 +821,7 @@ function MainWindow:extendNode()
 		success, err = file:write(newSource)
 		if not success then print(err) return end
 
+		Adore.addUserPaths({[newClassName] = savePath})
 		window:close()
 	end
 

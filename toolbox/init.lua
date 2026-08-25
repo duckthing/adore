@@ -26,7 +26,6 @@ local allFiles = {}
 ---An array of string patterns to avoid searching
 ---@type string[]
 local excludedSearchPatterns = {
-	"%.lua$",
 	"^%.",
 	"^"..ADORE_PATH,
 }
