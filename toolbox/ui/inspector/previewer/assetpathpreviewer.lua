@@ -9,9 +9,6 @@ local fzy = Adore.Libraries("fzy")
 
 ---@type Previewer
 local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
-local VBox = Nodes("VBox")
-local Label = Nodes("Label")
-local LineEdit = Nodes("LineEdit")
 local WindowPopup = Nodes("WindowPopup")
 local Button = Nodes("Button")
 
