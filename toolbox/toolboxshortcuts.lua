@@ -94,7 +94,7 @@ local actions = {
 
 	selectNextScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		local tabbar = mainWindow.tabContainer._internalTabBar
+		local tabbar = mainWindow.gameTabContainer._internalTabBar
 		local tabCount = #tabbar._tabs
 		if tabCount > 1 then
 			tabbar:selectTab((tabbar._currentTab % tabCount) + 1)
@@ -103,7 +103,7 @@ local actions = {
 	end,
 	selectPreviousScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		local tabbar = mainWindow.tabContainer._internalTabBar
+		local tabbar = mainWindow.gameTabContainer._internalTabBar
 		local tabCount = #tabbar._tabs
 		if tabCount > 1 then
 			tabbar:selectTab((tabbar._currentTab - 2) % tabCount + 1)

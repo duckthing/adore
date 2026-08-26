@@ -120,7 +120,7 @@ function MainWindow:new(toolbox, subroot)
 		self:updateButtonTexture()
 		self:populateToolbar()
 	end)
-	self.tabContainer = gameTabContainer
+	self.gameTabContainer = gameTabContainer
 
 	--======== PANELS
 	local leftPanel = TabContainer()
@@ -303,7 +303,7 @@ end
 ---@return Toolbox.EditableScene?
 function MainWindow:getSubrootContainer()
 	if self._fullView then return self._currentTab end
-	local selectedTab = self.tabContainer:getActiveTab()
+	local selectedTab = self.gameTabContainer:getActiveTab()
 	if selectedTab and selectedTab:is(EditableScene) then
 		---@cast selectedTab Toolbox.EditableScene
 		return selectedTab
@@ -338,8 +338,8 @@ function MainWindow:togglePause()
 			if scene then
 				gScene:changeSceneTo(scene)
 				gScene.name = ("Game (%s)"):format(path:match(".*[/\\](.*)$"))
-				self.tabContainer:addChild(gScene)
-				self.tabContainer:selectTab(self.tabContainer:getIndexOfChild(gScene))
+				self.gameTabContainer:addChild(gScene)
+				self.gameTabContainer:selectTab(self.gameTabContainer:getIndexOfChild(gScene))
 			else
 				print(err)
 			end
@@ -352,10 +352,10 @@ function MainWindow:toggleFull()
 	if not self._fullView then
 		-- We are going to fullscreen
 		-- Remove the current tab from the TabContainer, and make it fullscreen on the main window
-		local tab = self.tabContainer:getActiveTab()
+		local tab = self.gameTabContainer:getActiveTab()
 		if tab then
 			self._fullView = true
-			self._tabIndex = self.tabContainer:getIndexOfChild(tab)
+			self._tabIndex = self.gameTabContainer:getIndexOfChild(tab)
 
 			self:addChild(tab)
 			tab:setVisible(true)
@@ -369,8 +369,8 @@ function MainWindow:toggleFull()
 		local tab = self._currentTab
 		if tab then
 			self._fullView = false
-			self.tabContainer:insertChild(tab, self._tabIndex)
-			self.tabContainer:selectTab(tab)
+			self.gameTabContainer:insertChild(tab, self._tabIndex)
+			self.gameTabContainer:selectTab(tab)
 
 			self.editor:setVisible(true)
 		end
@@ -389,7 +389,7 @@ end
 
 ---Creates an empty EditableScene and selects it
 function MainWindow:newScene()
-	local tabContainer = self.tabContainer
+	local tabContainer = self.gameTabContainer
 	local eScene = EditableScene()
 	eScene:createSubroot()
 	eScene.name = "(Empty)"
@@ -404,12 +404,9 @@ end
 function MainWindow:closeScene()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local index = self.tabContainer:getIndexOfChild(srContainer)
+	local index = self.gameTabContainer:getIndexOfChild(srContainer)
 	if index then
-		self.tabContainer:removeChildAtIndex(index)
-		-- if index > 1 then
-		-- 	self.tabContainer:selectTab(index - 1)
-		-- end
+		self.gameTabContainer:removeChildAtIndex(index)
 	end
 end
 
@@ -440,7 +437,6 @@ function MainWindow:saveScene()
 		local PackedScene = Resources("PackedScene")
 		scene = PackedScene()
 	else
-		local TableScene = Resources("TableScene")
 		scene = TableScene()
 	end
 	scene:pack(sceneRoot)
@@ -526,7 +522,7 @@ function MainWindow:saveSceneAs()
 		srContainer._lastFormat = item.label
 		if self:saveScene() then
 			window:close()
-			self.tabContainer:updateTabs()
+			self.gameTabContainer:updateTabs()
 		end
 	end
 
@@ -593,13 +589,13 @@ function MainWindow:loadScene()
 			return
 		end
 
-		local success, scene = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
+		local success, sceneOrErr = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
 		if success then
 			-- Create the scene and add the tab
 			---@cast scene SceneFactory
 			local eScene = EditableScene()
 			eScene:createSubroot()
-			eScene:changeSceneTo(scene)
+			eScene:changeSceneTo(sceneOrErr)
 			eScene._lastFilepath = path
 
 			local extension = path:match("^.*%.(.*)")
@@ -612,11 +608,11 @@ function MainWindow:loadScene()
 			local fileName = path:match(".*[/\\](.*)$")
 			eScene.name = fileName
 
-			self.tabContainer:addChild(eScene)
-			self.tabContainer:selectTab(eScene)
+			self.gameTabContainer:addChild(eScene)
+			self.gameTabContainer:selectTab(eScene)
 			window:close()
 		else
-			print(scene)
+			print(sceneOrErr)
 		end
 	end
 
@@ -1012,7 +1008,7 @@ local tabToPackedContents = {}
 ---@param dependencyPath string
 function MainWindow:prepareReloadDependency(dependencyPath)
 	tclear(tabToPackedContents)
-	local tabbar = self.tabContainer._internalTabBar
+	local tabbar = self.gameTabContainer._internalTabBar
 	local tabs = tabbar._tabs
 
 	for i = 1, #tabs do
