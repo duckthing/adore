@@ -143,8 +143,9 @@ do
 ---@param desiredLayer CanvasLayer | RootNode
 ---@return boolean
 local function node2dBelongsToLayer(node, desiredLayer)
+	-- TODO: This doesn't seem to check if it belongs to the layer correctly
 	return node:hasAncestor(desiredLayer) and node:isVisibleInTree()
-		and node:is(Node2d)
+		and node:is(Node2d) and not node:is(CanvasLayer)
 end
 
 ---Returns `true` if this Node2d overlaps the given point
@@ -161,6 +162,7 @@ local function node2dOverlaps(node, layer, worldX, worldY)
 end
 
 ---Returns the highest visible Node2d at a certain **Viewport** point, and returns the result from `forEach`.
+---The default `currNodeValidator` checks if the Node2d belongs to this layer.
 ---
 ---**Very slow!** Use this method only if you have to.
 ---Consider using a spatial hash (`Adore.Libraries("Shash")`) or the physics world for better performance.
