@@ -34,11 +34,11 @@ end
 
 ---Returns `true` if this Node2d overlaps the point and has drawn contents
 ---@param node Node2d
----@param layer CanvasLayer | RootNode
+---@param desiredLayer CanvasLayer | RootNode
 ---@param worldX integer
 ---@param worldY integer
 ---@return Node?
-local function node2dOverlapsAndDrawn(node, layer, worldX, worldY)
+local function node2dOverlapsAndDrawn(node, desiredLayer, worldX, worldY)
 	local gcr = node._globalContentRect
 	if gcr and node:doesPointOverlap(worldX, worldY) then
 		if (node.draw ~= Node2d.draw and not node:is(Light2d)) or node:is(CollisionShape) then
@@ -54,20 +54,17 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 		local subroot = assert(srContainer.subroot)
 		local layers = subroot._canvasLayers
 
-		local wx, wy = srContainer:toLocal(mx, my)
+		local containerX, containerY = srContainer:toLocal(mx, my)
 		local toSelect = nil
 		for i = #layers, 1, -1 do
 			local layer = layers[i]
 			local viewport = layer._viewport
 			local toolboxTransform = viewport._toolboxTransform
-			local usedX, usedY = wx, wy
 
-			if viewport._pixelScale then
-				local factor = 1 / viewport._pixelScale
-				usedX, usedY =
-					usedX * factor,
-					usedY * factor
-			end
+			local factor = 1 / viewport._pixelScale
+			local usedX, usedY =
+				containerX * factor,
+				containerY * factor
 
 			local worldX, worldY = toolboxTransform:inverseTransformPoint(usedX, usedY)
 
