@@ -37,7 +37,7 @@ function NodeRefP:onInput()
 	---@type boolean
 	local val = property:get(object, propertyName)
 	if val then
-		self.inspector.sceneTree:selectNode(val)
+		self.inspector.sceneTree:focusNode(val)
 	end
 end
 

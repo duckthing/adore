@@ -100,8 +100,8 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 			end
 		end
 
-		mainWindow.sceneTree:selectNode(toSelect)
-		mainWindow.inspector:onNodeSelectionChanged(toSelect)
+		mainWindow.sceneTree:focusNode(toSelect)
+		mainWindow.inspector:onNodeFocusChanged(toSelect)
 		return true
 	end
 	return false

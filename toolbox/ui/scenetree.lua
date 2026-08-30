@@ -16,7 +16,7 @@ local font = love.graphics.getFont()
 local fontHeight = font:getHeight()
 
 local SCROLL_SPEED = -50
-local buttonSize = 12
+local buttonSize = 14
 local labelYOffset = (buttonSize - fontHeight) * 0.5
 local labelXOffset = 2
 
@@ -39,6 +39,11 @@ function SceneTreeViewer:new(toolbox, container)
 	self.tree = {}
 	---@type integer # The number of Nodes in this tree; equal to `#tree / 3`
 	self.treeLength = 0
+	---@type boolean # [Default: `true`] If this SceneTreeViewer can make changes to the internal tree.
+	---Only relevant if we're re-using the table somewhere else.
+	self.shouldUpdateTree = true
+	---@type boolean # [Default: `true`] Pressing a Node focuses on it
+	self.focusPressedNode = true
 
 	---@type number # Time since the last update
 	self.timeSinceUpdate = 9
@@ -49,15 +54,20 @@ function SceneTreeViewer:new(toolbox, container)
 	---@type number # The max we can scroll
 	self.maxScroll = 0
 
-	---@type Node? # What Node is pressed?
-	self.pressedNode = nil
-	---@type integer # What is the index of the pressed Node
-	self.pressedIndex = 0
+	---@type Node? # What Node is focused?
+	self.focusedNode = nil
+	---@type integer # What is the index of the focused Node
+	self.focusedIndex = 0
 	---@type integer # What index is getting hovered over?
 	self.hoveredIndex = 0
 
-	---@type Signal # Fired when a new Node is (de)selected
-	self.nodeSelected = self:newSignal()
+	---@type integer # The tree index the mouse is pressing down on
+	self._pressedIndex = 0
+
+	---@type Signal # Fired when a new Node is pressed, with arguments (self, pressedNode, mouseButton, isTouch, pressCount)
+	self.nodePressed = self:newSignal()
+	---@type Signal # Fired when a new Node is (un)focused, with (self, focusedNode, inTree)
+	self.nodeFocused = self:newSignal()
 end
 
 ---@type Node[]
@@ -123,7 +133,8 @@ local function forEachNodeFull(node, depth, tree)
 		node, depth, node.name
 end
 
----Updates the scene tree used
+---Updates the scene tree contents.
+---Only called if `shouldUpdateTree` is `true`.
 function SceneTreeViewer:updateNodes()
 	local tree = self.tree
 	local start = self.startNode
@@ -142,35 +153,35 @@ function SceneTreeViewer:updateNodes()
 	self.maxScroll = self:getMaxScroll()
 	self.scrollY = min(self.maxScroll, self.scrollY)
 
-	local pressedNode = self.pressedNode
+	local pressedNode = self.focusedNode
 	if pressedNode then
 		if not pressedNode._inTree then
 			-- Pressed node was removed from the scene tree
-			self.pressedIndex = 0
-			self.pressedNode = nil
-			self.nodeSelected:fire(nil)
+			self.focusedIndex = 0
+			self.focusedNode = nil
+			self.nodeFocused:fire(self, nil, false)
 		else
 			-- See if we can find it in the scene tree
 			for i = 1, treeLength do
 				if tree[i * 3 - 2] == pressedNode then
 					-- Found it, change the index and exit
-					self.pressedIndex = i
+					self.focusedIndex = i
 					return
 				end
 			end
 
 			-- We couldn't find it
-			self.pressedIndex = 0
-			self.pressedNode = nil
-			self.nodeSelected:fire(nil)
+			self.focusedIndex = 0
+			self.focusedNode = nil
+			self.nodeFocused:fire(self, nil, false)
 		end
 	end
 end
 
----Returns the pressed Node, if it's visible and valid
+---Returns the pressed Node, if it's valid
 ---@return Node?
 function SceneTreeViewer:getPressedNode()
-	local pressed = self.pressedNode
+	local pressed = self.focusedNode
 	return (pressed and pressed._valid and pressed) or nil
 end
 
@@ -192,37 +203,57 @@ function SceneTreeViewer:setStartNode(node)
 	end
 end
 
----Attempts to select a Node
----@param toSelect Node?
----@param index integer? # Index of the Node in the tree
-function SceneTreeViewer:selectNode(toSelect, index)
-	if toSelect ~= self.pressedNode then
-		-- New (de)selection is different
-
-		if not index then
-			-- Find the index, if it wasn't passed
-			local tree = self.tree
-			for i = 1, self.treeLength do
-				local nodeIndex = i * 3 - 2
-				if tree[nodeIndex] == toSelect then
-					index = i
-					break
-				end
-			end
-
-			if not index then
-				-- Still couldn't find it
-				-- Might be an object, inspect it
-				self.pressedIndex = 0
-				self.pressedNode = nil
-				self.nodeSelected:fire(toSelect)
-				return
+---Returns the internal tree index of a Node.
+---* If it doesn't belong to the tree/is `nil`, `nil` is returned
+---* If it is in the tree, but isn't 'visible' in the viewer, `nil` is returned
+---	* A Node can be invisible in "owned" mode
+---* The internal index may be incorrect after a tree update
+---@param node Node?
+---@return integer? index
+function SceneTreeViewer:getTreeIndexOfNode(node)
+	if node then
+		local tree = self.tree
+		for i = 1, self.treeLength do
+			local nodeIndex = i * 3 - 2
+			if tree[nodeIndex] == node then
+				return i
 			end
 		end
-		self.pressedIndex = index
+	end
+end
 
-		self.pressedNode = toSelect
-		self.nodeSelected:fire(toSelect)
+---Returns the Node at the internal tree index.
+---@param index integer?
+---@return Node?
+function SceneTreeViewer:getNodeFromTreeIndex(index)
+	if index and index ~= 0 then
+		return (index ~= 0 and self.tree[index * 3 - 2]) or nil
+	end
+end
+
+---Attempts to focus a Node
+---@param toSelect Node?
+---@param index integer? # Index of the Node in the tree
+function SceneTreeViewer:focusNode(toSelect, index)
+	if toSelect ~= self.focusedNode then
+		-- New (de)selection is different
+
+		-- Find the index of a Node, if it wasn't passed
+		index = index or self:getTreeIndexOfNode(toSelect)
+
+		if not index then
+			-- Still couldn't find it (outside of tree)
+			-- Might be an object, inspect it
+			self.focusedIndex = 0
+			self.focusedNode = nil
+			self.nodeFocused:fire(self, toSelect, false)
+			return
+		end
+
+		-- Index is valid here, meaning it's in the tree
+		self.focusedIndex = index
+		self.focusedNode = toSelect
+		self.nodeFocused:fire(self, toSelect, true)
 	end
 end
 
@@ -231,7 +262,10 @@ end
 ---@param mx integer
 ---@param my integer
 local function getIndexAtPoint(self, mx, my)
-	local tree = self.tree
+	if not self:doesPointOverlap(mx, my) then
+		return 0
+	end
+
 	local treeLength = self.treeLength
 	local index = ceil((self.scrollY - self._localContentRect.y + my) / buttonSize)
 
@@ -251,12 +285,22 @@ function SceneTreeViewer:mousemoved(mx, my)
 	self.hoveredIndex = getIndexAtPoint(self, mx, my)
 end
 
-function SceneTreeViewer:mousepressed(mx, my, button)
+function SceneTreeViewer:mousepressed(mx, my, button, isTouch, pressCount)
 	local index = getIndexAtPoint(self, mx, my)
-	if button == 1 then
-		local toSelect = (index ~= 0 and self.tree[index * 3 - 2]) or nil
-		self:selectNode(toSelect, index)
+	local pressedNode = self:getNodeFromTreeIndex(index)
+	self._pressedIndex = index
+	self.nodePressed:fire(self, pressedNode, button, isTouch, pressCount)
+	self:pushModal()
+end
+
+function SceneTreeViewer:mousereleased(mx, my, button)
+	local index = getIndexAtPoint(self, mx, my)
+	if button == 1 and self._pressedIndex == index and self.focusPressedNode then
+		local pressedNode = self:getNodeFromTreeIndex(index)
+		self:focusNode(pressedNode, index)
 	end
+	self._pressedIndex = nil
+	self:popModal()
 end
 
 function SceneTreeViewer:uiMouseExited()
@@ -267,23 +311,36 @@ end
 function SceneTreeViewer:update(dt)
 	local running = self.toolbox.subrootContext.running
 
-	if running then
-		self.timeSinceUpdate = self.timeSinceUpdate + dt
-		if self.timeSinceUpdate > self.interval then
-			self.timeSinceUpdate = 0
-			self:updateNodes()
+	if self.shouldUpdateTree then
+		if running then
+			-- Running, tick until we should update
+			self.timeSinceUpdate = self.timeSinceUpdate + dt
+			if self.timeSinceUpdate > self.interval then
+				self.timeSinceUpdate = 0
+				self:updateNodes()
+			end
+		else
+			-- Not running, update once
+			if self.timeSinceUpdate > 0 then
+				self.timeSinceUpdate = 0
+				self:updateNodes()
+			end
 		end
 	else
-		if self.timeSinceUpdate > 0 then
-			self.timeSinceUpdate = 0
-			self:updateNodes()
-		end
+		-- Constantly update the tree length since we don't own this table
+		self.treeLength = floor(#self.tree * 0.3333334)
 	end
 end
 
-local shouldHighlight = {
-	[-2] = true,
-	[-1] = true
+local selectedColor = {0.4, 0.4, 0.43}
+local pressedColor = {0.15, 0.15, 0.2}
+local normalColor = {0.2, 0.2, 0.24}
+
+---@type {[integer]: number[]}
+local nodeHighlights = {
+	[-3] = nil,
+	[-2] = nil,
+	[-1] = nil
 }
 function SceneTreeViewer:draw()
 	SceneTreeViewer.super.draw(self)
@@ -301,24 +358,25 @@ function SceneTreeViewer:draw()
 	local upperCull = ceil((h + scrollY) / buttonSize)
 
 	local hoveredIndex = self.hoveredIndex
-	local pressedIndex = self.pressedIndex
-	shouldHighlight[hoveredIndex] = true
-	shouldHighlight[pressedIndex] = true
+	local focusedIndex = self.focusedIndex
+	local pressedIndex = self._pressedIndex
+	nodeHighlights[hoveredIndex] = selectedColor
+	nodeHighlights[focusedIndex] = selectedColor
+	if pressedIndex then
+		nodeHighlights[hoveredIndex] = nil
+		nodeHighlights[pressedIndex] = pressedColor
+	end
 
 	local yOffset = -scrollY + y + (lowerCull - 1) * buttonSize
 
 	for nodeIndex = lowerCull, min(self.treeLength, upperCull) do
 		local i = nodeIndex * 3 - 2
 
-		local node, depth, name = tree[i], tree[i + 1], tree[i + 2]
+		local depth, name = tree[i + 1], tree[i + 2]
 		local xOffset = 8 * (depth - 1)
 
 		local rx, ry, rw, rh = x + xOffset, yOffset, w - xOffset, buttonSize
-		if shouldHighlight[nodeIndex] then
-			love.graphics.setColor(0.4, 0.4, 0.43)
-		else
-			love.graphics.setColor(0.2, 0.2, 0.24)
-		end
+		love.graphics.setColor(nodeHighlights[nodeIndex] or normalColor)
 		love.graphics.rectangle("fill", rx, ry, rw, rh)
 		love.graphics.setColor(0.8, 0.8, 0.8)
 		love.graphics.print(name, rx + labelXOffset, ry + labelYOffset)
@@ -326,7 +384,7 @@ function SceneTreeViewer:draw()
 		yOffset = yOffset + buttonSize
 	end
 
-	tclear(shouldHighlight)
+	tclear(nodeHighlights)
 end
 
 return SceneTreeViewer

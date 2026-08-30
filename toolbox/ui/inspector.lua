@@ -59,12 +59,14 @@ function Inspector:new(toolbox, sceneTree)
 	self:addChild(nameLabel)
 	self:addChild(vbox)
 
-	self.sceneTree.nodeSelected:connect(self, "onNodeSelectionChanged")
+	self.sceneTree.nodeFocused:connect(self, "onNodeFocusChanged")
 end
 
----Fired when a Node is (de)selected
+---Fired when a Node is (un)focused
+---@param viewer Toolbox.SceneTree
 ---@param node Node?
-function Inspector:onNodeSelectionChanged(node)
+---@param inTree boolean
+function Inspector:onNodeFocusChanged(viewer, node, inTree)
 	-- Node selection is the same
 	if self.selected == node then return end
 

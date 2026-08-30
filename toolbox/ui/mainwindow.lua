@@ -116,7 +116,7 @@ function MainWindow:new(toolbox, subroot)
 	gameTabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
 		self.sceneTree.iterateMode = (tabInfo and tabInfo.node:is(GameScene) and "full") or "owned"
 		self.sceneTree:setStartNode((tabInfo and tabInfo.node) or nil)
-		self.inspector:onNodeSelectionChanged(nil)
+		self.inspector:onNodeFocusChanged(nil)
 		self:updateButtonTexture()
 		self:populateToolbar()
 	end)
@@ -701,7 +701,7 @@ function MainWindow:addNode()
 
 				srContainer:popSubroot()
 				self.sceneTree:updateNodes()
-				self.sceneTree:selectNode(newNode)
+				self.sceneTree:focusNode(newNode)
 				window:close()
 			else
 				print(("Class '%s' is not a Node"):format(enteredClassName))
@@ -842,7 +842,7 @@ function MainWindow:deleteSelectedNode()
 	srContainer:popSubroot()
 
 	local sceneTree = self.sceneTree
-	sceneTree:selectNode(nil)
+	sceneTree:focusNode()
 	sceneTree:updateNodes()
 end
 
@@ -882,7 +882,7 @@ function MainWindow:duplicateSelectedNode()
 
 		local sceneTree = self.sceneTree
 		sceneTree:updateNodes()
-		sceneTree:selectNode(clone)
+		sceneTree:focusNode(clone)
 	end
 end
 end
@@ -963,7 +963,7 @@ function MainWindow:linkScene()
 			srContainer:popSubroot()
 			self.sceneTree:updateNodes()
 			if instanced then
-				self.sceneTree:selectNode(instanced)
+				self.sceneTree:focusNode(instanced)
 			end
 			window:close()
 		else

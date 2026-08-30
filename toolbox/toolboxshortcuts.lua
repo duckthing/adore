@@ -114,9 +114,9 @@ local actions = {
 	deselectNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
 		local sceneTree = mainWindow.sceneTree
-		if sceneTree.pressedNode then
-			sceneTree:selectNode()
-			mainWindow.inspector:onNodeSelectionChanged()
+		if sceneTree.focusedNode then
+			sceneTree:focusNode()
+			mainWindow.inspector:onNodeFocusChanged()
 			return true
 		end
 		return false
