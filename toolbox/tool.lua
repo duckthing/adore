@@ -186,7 +186,7 @@ end
 ---@param eScene Toolbox.EditableScene
 function Tool:drawForeground(eScene)
 	local mainWindow = Tool.mainWindow
-	local selected = mainWindow.sceneTree:getSelectedNode()
+	local selected = mainWindow.sceneTree:getPressedNode()
 	if selected then
 		local zoom = eScene.camera._zoom.x
 		local pixelScale = selected:getViewport()._pixelScale

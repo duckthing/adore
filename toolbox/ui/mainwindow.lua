@@ -626,7 +626,7 @@ function MainWindow:addNode()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
 	local sceneRoot = srContainer:getSceneRoot()
-	local instanceUnder = self.sceneTree:getSelectedNode() or sceneRoot
+	local instanceUnder = self.sceneTree:getPressedNode() or sceneRoot
 	if not (instanceUnder and instanceUnder._valid) then
 		instanceUnder = srContainer.subroot
 	end
@@ -720,7 +720,7 @@ end
 function MainWindow:extendNode()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local selectedNode = self.sceneTree:getSelectedNode()
+	local selectedNode = self.sceneTree:getPressedNode()
 	if not (selectedNode and selectedNode:is(Node)) then return end
 
 	-- Create the popup
@@ -834,7 +834,7 @@ end
 function MainWindow:deleteSelectedNode()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local selectedNode = self.sceneTree:getSelectedNode()
+	local selectedNode = self.sceneTree:getPressedNode()
 	if not (selectedNode and selectedNode:is(Node)) then return end
 
 	srContainer:pushSubroot()
@@ -863,7 +863,7 @@ end
 function MainWindow:duplicateSelectedNode()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
-	local selectedNode = self.sceneTree:getSelectedNode()
+	local selectedNode = self.sceneTree:getPressedNode()
 	if not (selectedNode and selectedNode:is(Node)) then return end
 	local sceneRoot = srContainer:getSceneRoot()
 	if not (sceneRoot and sceneRoot ~= selectedNode) then return end
@@ -893,7 +893,7 @@ function MainWindow:linkScene()
 	if not srContainer then return end
 	local sceneRoot = srContainer:getSceneRoot()
 	if not sceneRoot then return end
-	local instanceUnder = self.sceneTree:getSelectedNode() or sceneRoot
+	local instanceUnder = self.sceneTree:getPressedNode() or sceneRoot
 	if not instanceUnder then return end
 
 	-- Create the popup

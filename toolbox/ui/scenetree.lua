@@ -3,16 +3,9 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
+local tclear = Adore.Common("Structures").tableClear
 local floor, ceil = math.floor, math.ceil
 local min, max = math.min, math.max
-
-local tclear
-local tnew
-do
-	local Structures = Adore.Common("Structures")
-	tclear, tnew =
-		Structures.tableClear, Structures.tableNew
-end
 
 ---@class Toolbox.SceneTree: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.SceneTree
@@ -42,8 +35,10 @@ function SceneTreeViewer:new(toolbox, container)
 	---@type "full" | "owned" # How to build the tree
 	self.iterateMode = "full"
 
-	self.tree = tnew(32, 1)
-	self.tree.length = 0
+	---@type table # Array of elements in the tree
+	self.tree = {}
+	---@type integer # The number of Nodes in this tree; equal to `#tree / 3`
+	self.treeLength = 0
 
 	---@type number # Time since the last update
 	self.timeSinceUpdate = 9
@@ -116,7 +111,6 @@ local function forEachNodeOwned(node, depth, tree, owner)
 		local newIndex = #tree + 1
 		tree[newIndex], tree[newIndex + 1], tree[newIndex + 2] =
 			node, depth, node.name
-		tree.length = tree.length + 1
 	end
 end
 
@@ -127,22 +121,24 @@ local function forEachNodeFull(node, depth, tree)
 	local newIndex = #tree + 1
 	tree[newIndex], tree[newIndex + 1], tree[newIndex + 2] =
 		node, depth, node.name
-	tree.length = tree.length + 1
 end
 
+---Updates the scene tree used
 function SceneTreeViewer:updateNodes()
 	local tree = self.tree
 	local start = self.startNode
 
 	tclear(tree)
-	tree.length = 0
 	if not start then return end
 
 	local forEach = self.iterateMode == "owned" and forEachNodeOwned or forEachNodeFull
 
 	cheapIterateAll(start, forEach, tree, start.children[1])
+	local treeLength = floor(#tree * 0.3333334)
+	self.treeLength = treeLength
+
 	-- Delay tree updates based off the amount of nodes there are
-	self.interval = max(1, min(tree.length * 0.04, 5))
+	self.interval = max(1, min(treeLength * 0.04, 5))
 	self.maxScroll = self:getMaxScroll()
 	self.scrollY = min(self.maxScroll, self.scrollY)
 
@@ -155,7 +151,7 @@ function SceneTreeViewer:updateNodes()
 			self.nodeSelected:fire(nil)
 		else
 			-- See if we can find it in the scene tree
-			for i = 1, tree.length do
+			for i = 1, treeLength do
 				if tree[i * 3 - 2] == pressedNode then
 					-- Found it, change the index and exit
 					self.pressedIndex = i
@@ -171,6 +167,21 @@ function SceneTreeViewer:updateNodes()
 	end
 end
 
+---Returns the pressed Node, if it's visible and valid
+---@return Node?
+function SceneTreeViewer:getPressedNode()
+	local pressed = self.pressedNode
+	return (pressed and pressed._valid and pressed) or nil
+end
+
+---Returns how far we can scroll, with the current Control height and tree length
+---@return integer
+function SceneTreeViewer:getMaxScroll()
+	local height = self._localContentRect.h
+	local treeLength = self.treeLength
+	return max(0, treeLength * buttonSize - height)
+end
+
 ---Sets the start node, which is where the scene tree begins
 ---@param node Toolbox.EditableScene?
 function SceneTreeViewer:setStartNode(node)
@@ -179,25 +190,6 @@ function SceneTreeViewer:setStartNode(node)
 		self.startNode = node and node.subroot or nil
 		self:updateNodes()
 	end
-end
-
----Returns the pressed Node, if it's visible and valid
----@return Node?
-function SceneTreeViewer:getSelectedNode()
-	local pressed = self.pressedNode
-	return (pressed and pressed._valid and pressed) or nil
-end
-
-function SceneTreeViewer:onSubrootPushed()
-end
-
-function SceneTreeViewer:onSubrootPopped()
-end
-
-function SceneTreeViewer:getMaxScroll()
-	local height = self._localContentRect.h
-	local treeLength = self.tree.length
-	return max(0, treeLength * buttonSize - height)
 end
 
 ---Attempts to select a Node
@@ -210,7 +202,7 @@ function SceneTreeViewer:selectNode(toSelect, index)
 		if not index then
 			-- Find the index, if it wasn't passed
 			local tree = self.tree
-			for i = 1, tree.length do
+			for i = 1, self.treeLength do
 				local nodeIndex = i * 3 - 2
 				if tree[nodeIndex] == toSelect then
 					index = i
@@ -234,30 +226,13 @@ function SceneTreeViewer:selectNode(toSelect, index)
 	end
 end
 
-function SceneTreeViewer:update(dt)
-	local running = self.toolbox.subrootContext.running
-
-	if running then
-		self.timeSinceUpdate = self.timeSinceUpdate + dt
-		if self.timeSinceUpdate > self.interval then
-			self.timeSinceUpdate = 0
-			self:updateNodes()
-		end
-	else
-		if self.timeSinceUpdate > 0 then
-			self.timeSinceUpdate = 0
-			self:updateNodes()
-		end
-	end
-end
-
 ---Gets the tree index at the specific screen point
 ---@param self Toolbox.SceneTree
 ---@param mx integer
 ---@param my integer
 local function getIndexAtPoint(self, mx, my)
 	local tree = self.tree
-	local treeLength = tree.length
+	local treeLength = self.treeLength
 	local index = ceil((self.scrollY - self._localContentRect.y + my) / buttonSize)
 
 	if index > 0 and index <= treeLength then
@@ -281,29 +256,29 @@ function SceneTreeViewer:mousepressed(mx, my, button)
 	if button == 1 then
 		local toSelect = (index ~= 0 and self.tree[index * 3 - 2]) or nil
 		self:selectNode(toSelect, index)
-	elseif button == 3 then
-		-- Middle click to remove Nodes
-		---@type Node
-		local hoveredNode = self.tree[index * 3 - 2]
-		if hoveredNode and hoveredNode._valid and hoveredNode.parent then
-			if hoveredNode == self.pressedNode then
-				-- If we're removing the selected node, remove it here too
-				self.pressedIndex = 0
-				self.pressedNode = nil
-				self.nodeSelected:fire(nil)
-			end
-
-			local srContainer = self.subrootContainer
-			srContainer:pushSubroot()
-			hoveredNode.parent:removeChild(hoveredNode, true)
-			srContainer:popSubroot()
-			self.timeSinceUpdate = self.interval + 1
-		end
 	end
 end
 
 function SceneTreeViewer:uiMouseExited()
+	-- Unhover
 	self.hoveredIndex = 0
+end
+
+function SceneTreeViewer:update(dt)
+	local running = self.toolbox.subrootContext.running
+
+	if running then
+		self.timeSinceUpdate = self.timeSinceUpdate + dt
+		if self.timeSinceUpdate > self.interval then
+			self.timeSinceUpdate = 0
+			self:updateNodes()
+		end
+	else
+		if self.timeSinceUpdate > 0 then
+			self.timeSinceUpdate = 0
+			self:updateNodes()
+		end
+	end
 end
 
 local shouldHighlight = {
@@ -332,7 +307,7 @@ function SceneTreeViewer:draw()
 
 	local yOffset = -scrollY + y + (lowerCull - 1) * buttonSize
 
-	for nodeIndex = lowerCull, min(tree.length, upperCull) do
+	for nodeIndex = lowerCull, min(self.treeLength, upperCull) do
 		local i = nodeIndex * 3 - 2
 
 		local node, depth, name = tree[i], tree[i + 1], tree[i + 2]
