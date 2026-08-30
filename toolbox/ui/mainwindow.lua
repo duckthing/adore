@@ -944,7 +944,7 @@ function MainWindow:linkScene()
 	window:addAction("Link", "submit")
 	window.submit = function(...)
 		local enteredPath = pathField._submittedText
-		local path = fzy.get_best_match(enteredPath, self.toolbox.getFilePaths())
+		local path = fzy.get_best_match(enteredPath, self.toolbox.getFilePaths()) or enteredPath
 		if not path then
 			return
 		end

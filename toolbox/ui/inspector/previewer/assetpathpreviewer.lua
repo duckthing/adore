@@ -98,7 +98,7 @@ function AssetP:showPopup()
 	window:addAction("Set", "submit")
 	window.submit = function(...)
 		local enteredPath = pathField._submittedText
-		local path = fzy.get_best_match(enteredPath, Previewer.Toolbox.getFilePaths())
+		local path = fzy.get_best_match(enteredPath, Previewer.Toolbox.getFilePaths()) or enteredPath
 		if not path then
 			return
 		end
