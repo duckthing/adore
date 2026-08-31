@@ -626,9 +626,10 @@ end
 ---@param gx integer
 ---@param gy integer
 function Control:setPosition(gx, gy)
+	local currX, currY = self._localContentRect.x, self._localContentRect.y
 	local diffX, diffY =
-		gx - self._offsetLeft,
-		gy - self._offsetTop
+		gx - currX,
+		gy - currY
 
 	self._offsetLeft, self._offsetRight, self._offsetTop, self._offsetBottom =
 		self._offsetLeft + diffX,
