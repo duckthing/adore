@@ -19,6 +19,7 @@ local Button = Nodes("Button")
 local TextureButton = Nodes("TextureButton")
 local WindowPopup = Nodes("WindowPopup")
 local MenuButton = Nodes("MenuButton")
+local PopupMenu = Nodes("PopupMenu")
 local FormBuilder = Common("FormBuilder")
 local fzy = Adore.Libraries("fzy")
 
@@ -266,8 +267,69 @@ function MainWindow:new(toolbox, subroot)
 			end
 		end
 
+		-- Context menu for right-clicking a popup
+		---@type PopupMenu.Item[]
+		local nodeActions = {
+			{label = "Add Node...", func = function()
+				self:addNode()
+			end},
+			{label = "Link Scene...", func = function()
+				self:linkScene()
+			end},
+			{separator = true},
+			{label = "Cut", func = function()
+				self:deleteSelectedNode()
+			end},
+			{label = "Copy", func = function()
+			end},
+			{label = "Duplicate", func = function()
+				self:duplicateSelectedNode()
+			end},
+			{separator = true},
+			{label = "Extend...", func = function()
+				self:extendNode()
+			end},
+			{label = "Change Type...", func = function()
+			end},
+			{separator = true},
+			{label = "Move Up", func = function()
+			end},
+			{label = "Move Down", func = function()
+			end},
+			{label = "Move Higher", func = function()
+			end},
+			{label = "Move Deeper", func = function()
+			end},
+			{label = "Make Scene Root", func = function()
+			end},
+			{separator = true},
+			{label = "Delete Node", func = function()
+				self:deleteSelectedNode()
+			end},
+		}
+
+		-- Call the function contained in the menu
+		local nodeContextMenu = PopupMenu(nodeActions)
+		nodeContextMenu.itemSelected:connectCallable(function(_, _, item)
+			local f = item.func
+			if f then f() end
+		end)
+
+		-- Open the menu when right-clicking something
+		---@param pressedNode Node
+		---@param button integer
+		sceneTree.nodePressed:connectCallable(function(_, pressedNode, button)
+			if button == 2 then
+				nodeContextMenu:setPosition(love.mouse.getPosition())
+				self.sceneTree:focusNode(pressedNode)
+				nodeContextMenu:popup()
+			end
+		end)
+
+		-- Build the container
 		sceneTreeContainer:addChild(sceneTree)
 		sceneTreeContainer:addChild(treeActionBar)
+		sceneTreeContainer:addChild(nodeContextMenu)
 	end
 
 	--======== INSPECTOR

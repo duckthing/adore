@@ -64,9 +64,11 @@ function SceneTreeViewer:new(toolbox, container)
 	---@type integer # The tree index the mouse is pressing down on
 	self._pressedIndex = 0
 
-	---@type Signal # Fired when a new Node is pressed, with arguments (self, pressedNode, mouseButton, isTouch, pressCount)
+	---@type Signal # Fired when a Node is pressed, with arguments (self, pressedNode, mouseButton, isTouch, pressCount)
 	self.nodePressed = self:newSignal()
-	---@type Signal # Fired when a new Node is (un)focused, with (self, focusedNode, inTree)
+	---@type Signal # Fired when a Node is released, with arguments (self, releasedNode, mouseButton)
+	self.nodeReleased = self:newSignal()
+	---@type Signal # Fired when a Node is (un)focused, with (self, focusedNode, inTree)
 	self.nodeFocused = self:newSignal()
 end
 
@@ -288,16 +290,25 @@ end
 function SceneTreeViewer:mousepressed(mx, my, button, isTouch, pressCount)
 	local index = getIndexAtPoint(self, mx, my)
 	local pressedNode = self:getNodeFromTreeIndex(index)
-	self._pressedIndex = index
-	self.nodePressed:fire(self, pressedNode, button, isTouch, pressCount)
-	self:pushModal()
+	if index and pressedNode then
+		self._pressedIndex = index
+		self.nodePressed:fire(self, pressedNode, button, isTouch, pressCount)
+		self:pushModal()
+		return true
+	end
 end
 
 function SceneTreeViewer:mousereleased(mx, my, button)
 	local index = getIndexAtPoint(self, mx, my)
-	if button == 1 and self._pressedIndex == index and self.focusPressedNode then
+	if self._pressedIndex == index then
 		local pressedNode = self:getNodeFromTreeIndex(index)
-		self:focusNode(pressedNode, index)
+
+		if pressedNode then
+			self.nodeReleased:fire(self, pressedNode, button)
+			if button == 1 and self.focusPressedNode then
+				self:focusNode(pressedNode, index)
+			end
+		end
 	end
 	self._pressedIndex = nil
 	self:popModal()
