@@ -142,7 +142,10 @@ function SceneTreeViewer:updateNodes()
 	local start = self.startNode
 
 	tclear(tree)
-	if not start then return end
+	if not start then
+		self.treeLength = 0
+		return
+	end
 
 	local forEach = self.iterateMode == "owned" and forEachNodeOwned or forEachNodeFull
 
