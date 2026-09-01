@@ -310,6 +310,7 @@ function MainWindow:new(toolbox, subroot)
 
 		-- Call the function contained in the menu
 		local nodeContextMenu = PopupMenu(nodeActions)
+		nodeContextMenu._resizeWithParent = false
 		nodeContextMenu.itemSelected:connectCallable(function(_, _, item)
 			local f = item.func
 			if f then f() end
