@@ -98,10 +98,15 @@ function Popup:onRefreshed()
 		local viewport = getTargetViewport(self)
 		local safeX, safeY, safeW, safeH = viewport:getSafeArea()
 		local x, y, w, h = self._localContentRect:unpack()
-		x, y =
+		local clampedX, clampedY =
 			max(safeX, min(x, safeW - w)),
 			max(safeY, min(y, safeH - h))
-		self:_setModalRect(x, y, w, h)
+
+		if clampedX ~= x or clampedY ~= y then
+			-- Move to clamped position
+			self:setPosition(clampedX, clampedY)
+			updateDimensions(self)
+		end
 	end
 end
 
