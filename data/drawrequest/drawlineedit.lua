@@ -80,7 +80,7 @@ function DrawLineEdit:draw(edit)
 	local r, g, b, a = love.graphics.getColor()
 	local x, y, w, h = lcr.x, lcr.y, lcr.w, lcr.h
 
-	love.graphics.intersectScissor(x, y, w, h)
+	love.graphics.intersectScissor(edit._globalContentRect:unpack())
 
 	-- Draw the button's background
 	love.graphics.setColor(mixRGBA(r, g, b, a, unpack(self.backgroundColor, 1, 4)))
