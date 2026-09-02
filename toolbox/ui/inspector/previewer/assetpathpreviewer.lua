@@ -88,8 +88,12 @@ function AssetP:showPopup()
 		local match = fzy.get_best_match(text, Previewer.Toolbox.getFilePaths())
 		if match then
 			matchLabel:setText(match)
-		else
+		elseif text ~= "" then
+			-- Entered text isn't empty
 			matchLabel:setText("(no match)")
+		else
+			-- It's empty
+			matchLabel:setText("(nil)")
 		end
 	end)
 
@@ -98,17 +102,26 @@ function AssetP:showPopup()
 	window:addAction("Set", "submit")
 	window.submit = function(...)
 		local enteredPath = pathField._submittedText
-		local path = fzy.get_best_match(enteredPath, Previewer.Toolbox.getFilePaths()) or enteredPath
-		if not path then
-			return
+		local path
+		if enteredPath ~= "" then
+			-- Entered path isn't empty; search for the asset
+			path = fzy.get_best_match(enteredPath, Previewer.Toolbox.getFilePaths()) or enteredPath
+			if not path then
+				return
+			end
 		end
 
-		local success, newAsset = pcall(Collection.get, Collection, path)
-		if success then
-			self:attemptSet(newAsset)
-			window:close()
+		if path then
+			local success, newAsset = pcall(Collection.get, Collection, path)
+			if success then
+				self:attemptSet(newAsset)
+				window:close()
+			else
+				print(newAsset)
+			end
 		else
-			print(newAsset)
+			self:attemptSet()
+			window:close()
 		end
 	end
 
