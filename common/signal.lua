@@ -35,9 +35,9 @@ local SConnectionMT = {__index = SConnection}
 
 local tremove = table.remove
 
----Creates a new Signal, and binds it to the Node `source`.
----All connections will get removed if `source` is destroyed.
----If the source is nil, it will not do validity checks, and can leak memory.
+---Creates a new Signal, and binds it to a (non-)Node `source`.
+---* All connections will get removed if `source` is destroyed
+---* If the source is `nil`, it will not check if the source exists and is valid, and can leak memory
 ---@param source Node | Object | table
 function Signal.new(source)
 	---@class Signal
