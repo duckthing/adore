@@ -17,7 +17,7 @@ local font = love.graphics.getFont()
 local fontHeight = font:getHeight()
 
 local SCROLL_SPEED = -50
-local buttonSize = 21
+local buttonSize = 25
 local labelYOffset = (buttonSize - fontHeight) * 0.5
 local labelXOffset = 2
 
@@ -61,6 +61,9 @@ function SceneTreeViewer:new(toolbox, container)
 	self.focusedIndex = 0
 	---@type integer # What index is getting hovered over?
 	self.hoveredIndex = 0
+	---@type integer # When dropping a Node, where will the Node be inserted at?
+	self.insertIndex = 0
+	self.insertAsChild = false
 
 	---@type integer # The tree index the mouse is pressing down on
 	self._pressedIndex = 0
@@ -307,15 +310,28 @@ local function getInsertRequestAtPoint(self, mx, my, droppingNode)
 		if percent < 0.25 and index > 1 then
 			-- In case we just missed the next Node...
 			-- ...insert adjacent to that one
-			node = self:getNodeFromTreeIndex(index - 1)
-			local parent = node.parent
-			if node == droppingNode then
-				-- Move it out of its parent
-				parent = parent.parent
-				return parent, #parent.children
+			local correctedNode = self:getNodeFromTreeIndex(index - 1)
+
+			if correctedNode == droppingNode.parent then
+				-- Move the Node we're dropping to be first in the children list
+				return correctedNode, 1
+			end
+
+			local parent = correctedNode.parent
+			if correctedNode == droppingNode then
+				-- The Node we're dropping is directly "above" what we just dropped on
+				if droppingNode.parent ~= node.parent then
+					-- Move it after its parent
+					local higherParent = parent.parent
+					return higherParent, higherParent:getIndexOfChild(parent) + 1
+				else
+					-- Move it into it the index it was corrected to
+					return parent, parent:getIndexOfChild(correctedNode)
+				end
 			else
 				-- Move it into the descendant list directly above
-				return parent, parent:getIndexOfChild(node) + 1
+				parent = node.parent
+				return parent, parent:getIndexOfChild(node)
 			end
 		end
 
@@ -345,6 +361,12 @@ end
 
 function SceneTreeViewer:mousemoved(mx, my)
 	self.hoveredIndex = getIndexAtPoint(self, mx, my)
+	local coreUI = self:getRoot()._coreUIContext
+	if coreUI._dragging then
+		self:_canDropData(mx, my, coreUI._dragData)
+	else
+		self.insertIndex = 0
+	end
 end
 
 function SceneTreeViewer:mousepressed(mx, my, button, isTouch, pressCount)
@@ -382,7 +404,27 @@ function SceneTreeViewer:_canDropData(posX, posY, data)
 		local hoveredNode = self:getNodeFromTreeIndex(hoveredIndex)
 		if not hoveredNode then return false end
 		-- It exists, but don't allow the parent to have a descendant as its parent
-		return not hoveredNode:hasAncestor(data)
+		if hoveredNode:hasAncestor(data) then return false end
+		-- Valid
+		local insertInto, childIndex = getInsertRequestAtPoint(self, posX, posY, data)
+		if insertInto then
+			local child = insertInto.children[childIndex]
+			local insertIndex
+			if child then
+				insertIndex = self:getTreeIndexOfNode(child)
+				self.insertAsChild = false
+			else
+				if #insertInto.children > 0 then
+					insertIndex = self:getTreeIndexOfNode(insertInto.children[childIndex - 1]) + 1
+					self.insertAsChild = false
+				else
+					insertIndex = self:getTreeIndexOfNode(insertInto)
+					self.insertAsChild = true
+				end
+			end
+			self.insertIndex = insertIndex or 0
+			return true
+		end
 	end
 end
 
@@ -402,6 +444,7 @@ function SceneTreeViewer:_dropData(posX, posY, data)
 	if data and type(data) == "table" and data.IS_NODE then
 		---@cast data Node
 		local insertInto, index = getInsertRequestAtPoint(self, posX, posY, data)
+		self.insertIndex = 0
 		if insertInto and insertInto ~= data and not insertInto:hasAncestor(data) then
 			insertInto:insertChild(data, index)
 			self:updateNodes()
@@ -466,6 +509,7 @@ function SceneTreeViewer:draw()
 
 	local hoveredIndex = self.hoveredIndex
 	local focusedIndex = self.focusedIndex
+	local insertIndex = self.insertIndex
 	local pressedIndex = self._pressedIndex
 	nodeHighlights[hoveredIndex] = selectedColor
 	nodeHighlights[focusedIndex] = selectedColor
@@ -487,6 +531,18 @@ function SceneTreeViewer:draw()
 		love.graphics.rectangle("fill", rx, ry, rw, rh)
 		love.graphics.setColor(0.8, 0.8, 0.8)
 		love.graphics.print(name, rx + labelXOffset, ry + labelYOffset)
+
+		if nodeIndex == insertIndex then
+			local lineX = x + xOffset
+			local lineY = yOffset
+			if self.insertAsChild then
+				lineX = lineX + 16
+				lineY = lineY + buttonSize
+			end
+
+			love.graphics.setColor(1, 1, 1)
+			love.graphics.line(lineX, lineY, w, lineY)
+		end
 
 		yOffset = yOffset + buttonSize
 	end
