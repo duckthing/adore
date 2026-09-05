@@ -267,6 +267,7 @@ end
 ---@param self Toolbox.SceneTree
 ---@param mx integer
 ---@param my integer
+---@return integer index
 local function getIndexAtPoint(self, mx, my)
 	if not self:doesPointOverlap(mx, my) then
 		return 0
@@ -279,6 +280,61 @@ local function getIndexAtPoint(self, mx, my)
 		return index
 	else
 		return 0
+	end
+end
+
+---Decides where to move a Node due to a drag/drop
+---@param self Toolbox.SceneTree
+---@param mx integer
+---@param my integer
+---@param droppingNode Node?
+---@return Node? underneath
+---@return integer? index
+local function getInsertRequestAtPoint(self, mx, my, droppingNode)
+	if not self:doesPointOverlap(mx, my) then
+		return
+	end
+
+	local indexFraction = (self.scrollY - self._localContentRect.y + my) / buttonSize
+	local index = ceil(indexFraction)
+	local node = self:getNodeFromTreeIndex(index)
+
+	if node then
+		local percent = indexFraction % 1
+		local children = node.children
+		local childCount = #children
+
+		if percent < 0.25 and index > 1 then
+			-- In case we just missed the next Node...
+			-- ...insert adjacent to that one
+			node = self:getNodeFromTreeIndex(index - 1)
+			local parent = node.parent
+			if node == droppingNode then
+				-- Move it out of its parent
+				parent = parent.parent
+				return parent, #parent.children
+			else
+				-- Move it into the descendant list directly above
+				return parent, parent:getIndexOfChild(node) + 1
+			end
+		end
+
+		if percent > 0.75 then
+			-- (0.75..1] AND [0..0.25)
+			-- Insert below this Node
+			if childCount == 0 then
+				-- No children; make it adjacent
+				local parent = node.parent
+				return parent, parent:getIndexOfChild(node) + 1
+			else
+				-- Has children; insert at the first index
+				return node, 1
+			end
+		else
+			-- [0.25..0.75)
+			-- Insert at the end of this Node's children
+			return node, childCount + 1
+		end
 	end
 end
 
@@ -345,12 +401,12 @@ end
 function SceneTreeViewer:_dropData(posX, posY, data)
 	if data and type(data) == "table" and data.IS_NODE then
 		---@cast data Node
-		local hoveredIndex = self.hoveredIndex
-		if not hoveredIndex then return end
-		local hoveredNode = self:getNodeFromTreeIndex(hoveredIndex)
-		if not hoveredNode or hoveredNode == data then return end
-		hoveredNode:addChild(data)
-		self:updateNodes()
+		local insertInto, index = getInsertRequestAtPoint(self, posX, posY, data)
+		if insertInto and insertInto ~= data and not insertInto:hasAncestor(data) then
+			insertInto:insertChild(data, index)
+			self:updateNodes()
+			self:focusNode(data)
+		end
 	end
 end
 
