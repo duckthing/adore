@@ -626,15 +626,17 @@ end
 ---@param gx integer
 ---@param gy integer
 function Control:setPosition(gx, gy)
-	local currX, currY = self._localContentRect.x, self._localContentRect.y
+	local currX, currY = self._offsetLeft, self._offsetBottom
 	local diffX, diffY =
 		gx - currX,
 		gy - currY
 
-	self._offsetLeft, self._offsetRight, self._offsetTop, self._offsetBottom =
-		self._offsetLeft + diffX,
+	-- Anchors don't work well here
+	self._anchorLeft, self._anchorTop, self._anchorRight, self._anchorBottom = 0, 0, 0, 0
+	self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom =
+		currX + diffX,
+		currY + diffY,
 		self._offsetRight + diffX,
-		self._offsetTop + diffY,
 		self._offsetBottom + diffY
 	self:deferRefreshSelf()
 end
@@ -779,6 +781,29 @@ end
 ---* This Control moves in global space
 function Control:_updateGlobalBounds()
 	self._globalContentRect:iCopyRect(self._localContentRect):iTransformBox(self._globalTransform)
+end
+
+---When a drag is requested on this Control, returns the data to pass.
+---The second return value is the drag preview. It is destroyed immediately after dragging.
+---@return any dragData
+---@return Control? preview # The drag preview
+function Control:_getDragData()
+end
+
+---Returns `true` if the given data can be dropped here
+---@param posX number
+---@param posY number
+---@param data any
+---@return boolean canDrop
+function Control:_canDropData(posX, posY, data)
+	return false
+end
+
+---Receives the dropped data
+---@param posX number
+---@param posY number
+---@param data any
+function Control:_dropData(posX, posY, data)
 end
 
 ---Updates the positions of the children below.

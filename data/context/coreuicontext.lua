@@ -1,6 +1,8 @@
 ---@type AdoreInit
 local Adore = require ""
 local ShortcutContext = Adore.Resources("ShortcutContext")
+local Vec2 = Adore.Common("Vec2")
+local Signal = Adore.Common("Signal")
 
 ---CoreUIContext is used by the RootNode for default UI navigation. You shouldn't need to instance this.
 ---@class CoreUIContext: ShortcutContext
@@ -175,6 +177,28 @@ function CoreUIContext:new(root)
 	self.allowUnfocus = true
 	---@type CoreUIContext.GrabFocusMode # Does pressing (Shift+)Tab focus the UI when there is no focus currently?
 	self.allowTabFocus = "always"
+
+	---@type Vec2 # Where the user started pressing from, in window space.
+	---* Used for drag-and-drop
+	---* Gets set to `(-1, -1)` when not used
+	self._pressedPos = Vec2(-1, -1)
+	---@type Control? # The Control the user began pressing on
+	self._pressedControl = nil
+	---@type Control? # The drag preview; set to the cursor position and will be destroyed afterwards
+	self._dragPreview = nil
+	---@type any # Data returned from the dragged Control
+	self._dragData = nil
+	---@type boolean # If the user is pressing down
+	self._pressing = false
+	---@type boolean # If the user is dragging
+	self._dragging = false
+	---@type number # [Default: `64`, which is 8^2] How far to move until we're considered dragging, squared
+	self._distanceToDrag2 = 64
+
+	---@type Signal # Fired when the user starts a drag, with (CoreUIContext, dragData, pressedControl)
+	self.draggingStarted = Signal.new(self)
+	---@type Signal # Fired when the user stops dragging, with (CoreUIContext, stopX, stopY, dragData, overControl)
+	self.draggingEnded = Signal.new(self)
 end
 
 ---Makes points relative to the Control's Viewport
@@ -202,8 +226,76 @@ local function checkCanReceiveMouseInput(control, x, y)
 	return control:canReceiveInput(true, x, y)
 end
 
+---Starts a drag operation
+---@param dragData any
+---@param dragPreview Control?
+---@param fromControl Control?
+function CoreUIContext:startDrag(dragData, dragPreview, fromControl)
+	assert(not self._dragging, "Cannot start dragging while another drag operation is occurring")
+	self._dragging = true
+	self._dragData, self._pressedControl =
+		dragData, fromControl
+
+	if dragPreview then
+		-- TODO: Make setting drag preview independent from this method
+		self._dragPreview = dragPreview
+		self.root:addChild(dragPreview)
+	end
+
+	self.root:uiUnfocus()
+	self.draggingStarted:fire(self, dragData, fromControl)
+end
+
+---Stops dragging
+---@param x number
+---@param y number
+---@param ontoControl Control?
+function CoreUIContext:stopDrag(x, y, ontoControl)
+	assert(self._dragging, "Can only stop dragging while currently dragging")
+	local dragData = self._dragData
+	self._dragging = false
+	self._dragData = nil
+	if dragData ~= nil and ontoControl and ontoControl:_canDropData(x, y, dragData) then
+		-- Drop the data
+		ontoControl:_dropData(x, y, dragData)
+	end
+	local preview = self._dragPreview
+	if preview then
+		-- Destroy the drag preview
+		self._dragPreview = nil
+		if preview._valid then
+			preview:queueDestroy(true)
+		end
+	end
+	self.draggingEnded:fire(self, x, y, ontoControl, dragData)
+end
+
 function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 	local root = self.root
+	if not self._dragging then
+		local pressedPos = self._pressedPos
+		local pressedX, pressedY = pressedPos.x, pressedPos.y
+		if pressedX >= 0 and ((x - pressedX) + (y - pressedY))^2 > self._distanceToDrag2 then
+			-- Start dragging
+			local pressedControl = self._pressedControl
+			local data, preview
+			if pressedControl then
+				-- Set the data and preview
+				data, preview = pressedControl:_getDragData()
+				if preview then
+					preview:setPosition(x, y)
+				end
+			end
+			self:startDrag(data, preview, pressedControl)
+		end
+	else
+		-- Dragging, move the preview
+		local preview = self._dragPreview
+		if preview then
+			preview:setPosition(x, y)
+		end
+	end
+
 	local rootViewport = root._viewport
 
 	-- The RootNode might have an irregular Viewport (ex. fixed resolution, scaled pixels)
@@ -292,6 +384,13 @@ end
 
 function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 	local root = self.root
+	if button == 1 then
+		-- Set the starting press position
+		self._pressedPos:iSetComponents(x, y)
+		self._pressedControl = root._hoveredControl
+		self._pressing = true
+	end
+
 	local rootViewport = root._viewport
 
 	local rx, ry = rootViewport:windowToViewportPoint(x, y)
@@ -353,6 +452,17 @@ end
 
 function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 	local root = self.root
+	if button == 1 then
+		-- Reset the starting press position
+		self._pressedPos:iSetComponents(-1, -1)
+		self._pressing = false
+		self._pressedControl = nil
+		if self._dragging then
+			-- Stop dragging
+			self:stopDrag(x, y, root._hoveredControl)
+		end
+	end
+
 	local rootViewport = root._viewport
 
 	local rx, ry = rootViewport:windowToViewportPoint(x, y)
