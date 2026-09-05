@@ -3,6 +3,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
+local Label = Nodes("Label")
 local tclear = Adore.Common("Structures").tableClear
 local floor, ceil = math.floor, math.ceil
 local min, max = math.min, math.max
@@ -16,7 +17,7 @@ local font = love.graphics.getFont()
 local fontHeight = font:getHeight()
 
 local SCROLL_SPEED = -50
-local buttonSize = 14
+local buttonSize = 21
 local labelYOffset = (buttonSize - fontHeight) * 0.5
 local labelXOffset = 2
 
@@ -315,6 +316,42 @@ function SceneTreeViewer:mousereleased(mx, my, button)
 	end
 	self._pressedIndex = nil
 	self:popModal()
+end
+
+function SceneTreeViewer:_canDropData(posX, posY, data)
+	if data and type(data) == "table" and data.IS_NODE then
+		---@cast data Node
+		local hoveredIndex = self.hoveredIndex
+		if not hoveredIndex then return false end
+		local hoveredNode = self:getNodeFromTreeIndex(hoveredIndex)
+		if not hoveredNode then return false end
+		-- It exists, but don't allow the parent to have a descendant as its parent
+		return not hoveredNode:hasAncestor(data)
+	end
+end
+
+function SceneTreeViewer:_getDragData()
+	self:popModal()
+	local pressedIndex = self._pressedIndex
+	if pressedIndex then
+		local node = self:getNodeFromTreeIndex(pressedIndex)
+		if node then
+			local label = Label(node.name)
+			return node, label
+		end
+	end
+end
+
+function SceneTreeViewer:_dropData(posX, posY, data)
+	if data and type(data) == "table" and data.IS_NODE then
+		---@cast data Node
+		local hoveredIndex = self.hoveredIndex
+		if not hoveredIndex then return end
+		local hoveredNode = self:getNodeFromTreeIndex(hoveredIndex)
+		if not hoveredNode or hoveredNode == data then return end
+		hoveredNode:addChild(data)
+		self:updateNodes()
+	end
 end
 
 function SceneTreeViewer:uiMouseExited()
