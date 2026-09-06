@@ -750,16 +750,15 @@ function MainWindow:addNode()
 			return
 		end
 
-		print("Found", className)
 		local success, ClassOrErr = pcall(Adore.Any, className)
 		if success then
-			if ClassOrErr:is(Node) or ClassOrErr == Node then
+			if ClassOrErr.is and ClassOrErr:is(Node) or ClassOrErr == Node then
 				-- Create the scene and add the tab
 				srContainer:pushSubroot()
 
 				---@type Node
 				local newNode = ClassOrErr()
-				instanceUnder:addChild(newNode)
+				srContainer:handleInsideSubroot(instanceUnder.addChild, instanceUnder, newNode)
 				newNode._owner = sceneRoot
 
 				srContainer:popSubroot()
@@ -767,7 +766,7 @@ function MainWindow:addNode()
 				self.sceneTree:focusNode(newNode)
 				window:close()
 			else
-				print(("Class '%s' is not a Node"):format(enteredClassName))
+				print(("Class '%s' is not a Node"):format(className))
 			end
 		else
 			print(ClassOrErr)
@@ -900,9 +899,7 @@ function MainWindow:deleteSelectedNode()
 	local selectedNode = self.sceneTree:getPressedNode()
 	if not (selectedNode and selectedNode:is(Node)) then return end
 
-	srContainer:pushSubroot()
-	selectedNode:unparent()
-	srContainer:popSubroot()
+	srContainer:handleInsideSubroot(selectedNode.unparent, selectedNode)
 
 	local sceneTree = self.sceneTree
 	sceneTree:focusNode()
