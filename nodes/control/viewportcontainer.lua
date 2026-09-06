@@ -59,8 +59,9 @@ function ViewportContainer:draw()
 end
 
 function ViewportContainer:update(dt)
-	if not self.paused then
-		self._subViewport:update(dt)
+	local subViewport = self._subViewport
+	if not self.paused and subViewport then
+		subViewport:update(dt)
 	end
 end
 

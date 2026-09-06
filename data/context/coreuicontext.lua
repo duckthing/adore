@@ -276,17 +276,17 @@ function CoreUIContext:mousemoved(x, y, dx, dy, isTouch)
 		local pressedPos = self._pressedPos
 		local pressedX, pressedY = pressedPos.x, pressedPos.y
 		if pressedX >= 0 and ((x - pressedX) + (y - pressedY))^2 > self._distanceToDrag2 then
-			-- Start dragging
+			-- Start dragging if the Control has any data
 			local pressedControl = self._pressedControl
 			local data, preview
 			if pressedControl then
 				-- Set the data and preview
 				data, preview = pressedControl:_getDragData()
-				if preview then
+				if data and preview then
 					preview:setPosition(x, y)
+					self:startDrag(data, preview, pressedControl)
 				end
 			end
-			self:startDrag(data, preview, pressedControl)
 		end
 	else
 		-- Dragging, move the preview
