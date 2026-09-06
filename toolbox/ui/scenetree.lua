@@ -449,7 +449,8 @@ function SceneTreeViewer:_dropData(posX, posY, data)
 		local insertInto, index = getInsertRequestAtPoint(self, posX, posY, data)
 		self.insertIndex = 0
 		if insertInto and insertInto ~= data and not insertInto:hasAncestor(data) then
-			insertInto:insertChild(data, index)
+			local eScene = self.subrootContainer
+			eScene:handleInsideSubroot(insertInto.insertChild, insertInto, data, index)
 			self:updateNodes()
 			self:focusNode(data)
 		end

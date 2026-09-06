@@ -203,6 +203,32 @@ local function handleDirectDrawError(error)
 	return ("%s%s"):format(error, traceback)
 end
 
+---Calls a function with the subroot pushed.
+---If there's an error, it gets caught inside of this EditableScene.
+---@param func function
+---@param ... unknown
+---@return boolean success
+---@return string err
+function EScene:handleInsideSubroot(func, ...)
+	if self._errorMessage then return false, self._errorMessage end
+	local shouldPush = not self:isPushed()
+	if shouldPush then
+		self:pushSubroot()
+	end
+
+	local success, err = xpcall(func, handleSubrootError, ...)
+	if not success then
+		print(("Errored while calling function inside of '%s':"):format(tostring(self)))
+		print(err)
+
+		self._errorMessage, lastError = lastError
+	end
+
+	if shouldPush then
+		self:popSubroot()
+	end
+	return success, err
+end
 
 ---Calls a method on the subroot, pushing and popping as necessary
 ---@param methodName string
