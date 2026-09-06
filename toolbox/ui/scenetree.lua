@@ -63,6 +63,8 @@ function SceneTreeViewer:new(toolbox, container)
 	self.hoveredIndex = 0
 	---@type integer # When dropping a Node, where will the Node be inserted at?
 	self.insertIndex = 0
+	---@type integer # When dropping a Node, what will it be put underneath?
+	self.insertUnderIndex = 0
 	self.insertAsChild = false
 
 	---@type integer # The tree index the mouse is pressing down on
@@ -410,6 +412,7 @@ function SceneTreeViewer:_canDropData(posX, posY, data)
 		if insertInto then
 			local child = insertInto.children[childIndex]
 			local insertIndex
+			self.insertUnderIndex = self:getTreeIndexOfNode(insertInto) or 0
 			if child then
 				insertIndex = self:getTreeIndexOfNode(child)
 				self.insertAsChild = false
@@ -535,8 +538,14 @@ function SceneTreeViewer:draw()
 		if nodeIndex == insertIndex then
 			local lineX = x + xOffset
 			local lineY = yOffset
+
+			if self.insertUnderIndex then
+				local insertDepth = tree[(self.insertUnderIndex * 3) - 1]
+				lineX = x + 8 * (insertDepth)
+			end
+
 			if self.insertAsChild then
-				lineX = lineX + 16
+				lineX = lineX + 8
 				lineY = lineY + buttonSize
 			end
 
