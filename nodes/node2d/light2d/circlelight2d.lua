@@ -24,6 +24,7 @@ function CircleLight2d:setRadius(newRadius)
 		-- TODO: Fix disappearing when not completely offscreen
 		self.lightRadius = newRadius
 		self._localContentRect:iSetComponents(-newRadius, -newRadius, newRadius * 2, newRadius * 2)
+		self:_updateGlobalBounds()
 	end
 	return self
 end
