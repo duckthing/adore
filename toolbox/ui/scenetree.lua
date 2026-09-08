@@ -17,9 +17,9 @@ local font = love.graphics.getFont()
 local fontHeight = font:getHeight()
 
 local SCROLL_SPEED = -50
-local buttonSize = 25
+local buttonSize = 21
 local labelYOffset = (buttonSize - fontHeight) * 0.5
-local labelXOffset = 2
+local labelXOffset = labelYOffset
 
 ---@param toolbox Toolbox
 ---@param container Toolbox.EditableScene
@@ -449,6 +449,19 @@ function SceneTreeViewer:_dropData(posX, posY, data)
 		local insertInto, index = getInsertRequestAtPoint(self, posX, posY, data)
 		self.insertIndex = 0
 		if insertInto and insertInto ~= data and not insertInto:hasAncestor(data) then
+			if insertInto == data.parent then
+				-- If we're moving this Node inside of its parent, the insert index will be off by one
+				local childIndex = insertInto:getIndexOfChild(data)
+				if childIndex then
+					-- This fixes both directions
+					data:unparent()
+					if childIndex < index then
+						-- ...if it's moving up, go down by 1
+						index = index - 1
+					end
+				end
+			end
+
 			local eScene = self.subrootContainer
 			eScene:handleInsideSubroot(insertInto.insertChild, insertInto, data, index)
 			self:updateNodes()
@@ -488,7 +501,8 @@ end
 
 local selectedColor = {0.4, 0.4, 0.43}
 local pressedColor = {0.15, 0.15, 0.2}
-local normalColor = {0.2, 0.2, 0.24}
+local normal1Color = {0.2, 0.2, 0.24}
+local normal2Color = {0.19, 0.19, 0.22}
 
 ---@type {[integer]: number[]}
 local nodeHighlights = {
@@ -531,7 +545,7 @@ function SceneTreeViewer:draw()
 		local xOffset = 8 * (depth - 1)
 
 		local rx, ry, rw, rh = x + xOffset, yOffset, w - xOffset, buttonSize
-		love.graphics.setColor(nodeHighlights[nodeIndex] or normalColor)
+		love.graphics.setColor(nodeHighlights[nodeIndex] or (nodeIndex % 2 == 0 and normal1Color or normal2Color))
 		love.graphics.rectangle("fill", rx, ry, rw, rh)
 		love.graphics.setColor(0.8, 0.8, 0.8)
 		love.graphics.print(name, rx + labelXOffset, ry + labelYOffset)
