@@ -104,13 +104,13 @@ Vec2MT = {
 }
 
 ---Returns the length squared
----@return number
+---@return number length2
 function Vec2:getLength2()
 	return self.x * self.x + self.y * self.y
 end
 
 ---Returns the length
----@return number
+---@return number length
 function Vec2:getLength()
 	return sqrt(self.x * self.x + self.y * self.y)
 end
@@ -137,6 +137,7 @@ end
 
 ---Creates a new Vec2 that heads in the same direction as this one, but with a length of 1
 ---@return Vec2
+---@nodiscard
 function Vec2:getNormalized()
 	local l = sqrt(self.x * self.x + self.y * self.y)
 	if l > 0 then
@@ -221,6 +222,7 @@ end
 ---Returns a new Vec2 that is equal to this Vec2's reflection off of Vec2 'n'
 ---@param n Vec2
 ---@return Vec2
+---@nodiscard
 function Vec2:getReflection(n)
 	return self - 2 * (self:dot(n)) * n
 end
@@ -238,6 +240,7 @@ end
 ---Returns a new Vec2 that is equal to this Vec2 rotated by an angle, in radians
 ---@param angle number
 ---@return Vec2 rotated
+---@nodiscard
 function Vec2:getRotated(angle)
 	local sinResult, cosResult =
 		sin(angle),
@@ -252,6 +255,7 @@ end
 ---@param to Vec2
 ---@param amount number
 ---@return Vec2
+---@nodiscard
 function Vec2:getSteppedTowards(to, amount)
 	tempVec2:iCopyVector(to):iSub(self)
 	local len2 = tempVec2:getLength2()
@@ -269,6 +273,7 @@ end
 ---@param to Vec2
 ---@param percent number
 ---@return Vec2
+---@nodiscard
 function Vec2:getLerped(to, percent)
 	local diff = tempVec2:iCopyVector(to):iSub(self)
 	return self + diff:iMult(max(0, min(percent, 1)))
@@ -516,6 +521,7 @@ end
 
 ---Returns a clone of this Vec2
 ---@return Vec2
+---@nodiscard
 function Vec2:clone()
 	return Vec2C(self.x, self.y)
 end

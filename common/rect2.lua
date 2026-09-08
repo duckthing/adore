@@ -59,6 +59,7 @@ end
 
 ---Returns a new Rect2 with the width and height made positive
 ---@return Rect2
+---@nodiscard
 function Rect2:getAbs()
 	local x, y, w, h = self.x, self.y, self.w, self.h
 	if w < 0 then x, w = x + w, -w end
@@ -260,6 +261,7 @@ end
 
 ---Returns a clone of this Rect2
 ---@return Rect2
+---@nodiscard
 function Rect2:clone()
 	return Rect2C(self.x, self.y, self.w, self.h)
 end
@@ -334,5 +336,5 @@ else
 	end
 end
 
-tempVec2 = Rect2C(0, 0, 0, 0)
+tempRect2 = Rect2C(0, 0, 0, 0)
 return Rect2C
