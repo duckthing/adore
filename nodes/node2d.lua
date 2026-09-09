@@ -90,9 +90,9 @@ function Node2d:_eParentGlobalTransformUpdated(parentGlobalTransform)
 		self._globalTransform:setMatrix(parentGlobalTransform:getMatrix())
 			:apply(self._localTransform)
 		local parent = self.parent
-		local parentRotation = parent._rotation
-		if parentRotation then
-			self._ancestorRotation = (parentRotation + parent._ancestorRotation) % PI2
+		local pAncestorRotation = rawget(parent, "_ancestorRotation")
+		if pAncestorRotation then
+			self._ancestorRotation = (parent._rotation + pAncestorRotation) % PI2
 		else
 			self._ancestorRotation = 0
 		end
