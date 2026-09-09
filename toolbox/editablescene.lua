@@ -82,6 +82,8 @@ function EScene:new(root)
 	self._lastFilepath = nil
 	---@type ObjectSaver.Format? # The last format this was saved in
 	self._lastFormat = nil
+	---@type boolean # If this EditableScene was sourced from a Lua script (and should not be saved over)
+	self._fromScript = false
 end
 
 ---Returns an array of tool descriptions; used for populating the topbar
@@ -166,6 +168,7 @@ function EScene:changeSceneTo(scene)
 		self.subroot:changeSceneTo(require(scene))
 	elseif sceneType == "table" then
 		self.subroot:changeSceneTo(scene)
+		self._fromScript = scene.CLASS_NAME == "SceneFactory"
 	end
 	self:popSubroot()
 end

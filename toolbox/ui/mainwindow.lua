@@ -56,7 +56,7 @@ local gameActions = {
 
 local menuActions = {
 	{
-		"Scene",
+		"File",
 		{
 			{label = "New Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
@@ -83,10 +83,6 @@ local menuActions = {
 				window:closeScene()
 			end},
 		}
-	},
-	{
-		"Project",
-		{}
 	},
 	{
 		"Editor",
@@ -296,14 +292,9 @@ function MainWindow:new(toolbox, subroot)
 			end},
 			{label = "Move Down", func = function()
 			end},
-			{label = "Move Higher", func = function()
-			end},
-			{label = "Move Deeper", func = function()
-			end},
 			{label = "Make Scene Root", func = function()
 			end},
-			{separator = true},
-			{label = "Delete Node", func = function()
+			{label = "Delete", func = function()
 				self:deleteSelectedNode()
 			end},
 		}
@@ -389,23 +380,41 @@ function MainWindow:togglePause()
 			srContainer._errorMessage = nil
 			self:updateButtonTexture()
 		else
-			local path, format = srContainer._lastFilepath, srContainer._lastFormat
-			if not (path and format) then return self:saveSceneAs() end
-			self:saveScene()
+			-- Run the scene
+			local gScene
+			if not srContainer._fromScript then
+				-- Only save if this EditableScene wasn't from a script
+				local path, format = srContainer._lastFilepath, srContainer._lastFormat
+				if not (path and format) then return self:saveSceneAs() end
+				self:saveScene()
 
-			local gScene = GameScene()
-			gScene:createSubroot()
+				gScene = GameScene()
+				gScene:createSubroot()
 
-			local scene, err = ObjectSaver.loadFromFilePath(path, format, "SceneFactory", true)
-
-			if scene then
-				gScene:changeSceneTo(scene)
-				gScene.name = ("Game (%s)"):format(path:match(".*[/\\](.*)$"))
-				self.gameTabContainer:addChild(gScene)
-				self.gameTabContainer:selectTab(self.gameTabContainer:getIndexOfChild(gScene))
+				-- Load from file
+				local scene, err = ObjectSaver.loadFromFilePath(path, format, "SceneFactory", true)
+				if scene then
+					gScene:changeSceneTo(scene)
+				else
+					print(err)
+					return
+				end
 			else
-				print(err)
+				-- Load from script
+				gScene = GameScene()
+				gScene:createSubroot()
+				local path = srContainer._lastFilepath
+				local requirePath = path:match("(.*)%.lua"):gsub("/", ".")
+				gScene:changeSceneTo(requirePath)
+				gScene.name = ("Game (%s)"):format(path:match(".*[/\\](.*)$"))
 			end
+
+			-- Insert this tab
+			gScene.name = ("Game (%s)"):format(srContainer._lastFilepath:match(".*[/\\](.*)$"))
+			local tabContainer = self.gameTabContainer
+			local index = (tabContainer:getIndexOfChild(self:getSubrootContainer()) or #tabContainer.children) + 1
+			tabContainer:insertChild(gScene, index)
+			tabContainer:selectTab(gScene)
 		end
 	end
 end
