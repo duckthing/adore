@@ -11,7 +11,7 @@ local Control = Nodes("Control")
 local Tool = require(ADORE_PATH..".toolbox.tool")
 
 ---@class Toolbox.Tool.Move: Toolbox.Tool
----@overload fun(): Toolbox.Tool.Select
+---@overload fun(): Toolbox.Tool.Move
 local MoveTool = Tool:extend()
 
 ---@type Toolbox.EditableScene
