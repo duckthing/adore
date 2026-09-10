@@ -18,6 +18,8 @@ local Rect2 = Common("Rect2")
 local Tool = require(ADORE_PATH..".toolbox.tool")
 ---@type Toolbox.Tool.Select
 local SelectTool = require(ADORE_PATH..".toolbox.tool.select")
+---@type Toolbox.Tool.Move
+local MoveTool = require(ADORE_PATH..".toolbox.tool.move")
 
 local lgReplaceTransform = love.graphics.replaceTransform
 local lgIntersectScissor = love.graphics.intersectScissor
@@ -36,6 +38,7 @@ end
 
 local tools = {
 	Select = SelectTool(),
+	Move = MoveTool(),
 }
 
 ---@type {label: string?, icon: TextureSource?}[]

@@ -56,7 +56,7 @@ local gameActions = {
 
 local menuActions = {
 	{
-		"File",
+		"Scene",
 		{
 			{label = "New Scene", func = function(window)
 				---@cast window Toolbox.MainWindow

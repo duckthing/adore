@@ -39,6 +39,40 @@ function Tool:isBusy()
 	return Tool._busy or self.panning
 end
 
+---Converts a container point to a sublayer Viewport world point
+---@param viewport Viewport
+---@param containerX number
+---@param containerY number
+---@return number worldX
+---@return number worldY
+function Tool.containerToSubLayerPoint(viewport, containerX, containerY)
+	local toolboxTransform = viewport._toolboxTransform
+
+	local factor = 1 / viewport._pixelScale
+	local scaledX, scaledY =
+		containerX * factor,
+		containerY * factor
+
+	return toolboxTransform:inverseTransformPoint(scaledX, scaledY)
+end
+
+---Converts movement in the container to a sublayer Viewport world
+---@param viewport Viewport
+---@param containerDX number
+---@param containerDY number
+---@return number worldDX
+---@return number worldDY
+function Tool.containerToSubLayerChange(viewport, containerDX, containerDY)
+	local camera = Tool.srContainer.camera
+	local speed = camera._zoom.x
+	local factor = 1 / viewport._pixelScale
+	local scaledDX, scaledDY =
+		containerDX * factor * speed,
+		containerDY * factor * speed
+
+	return scaledDX, scaledDY
+end
+
 function Tool:mousepressed(mx, my, button, isTouch, pressCount)
 	if button == 3 or (button == 1 and love.keyboard.isDown("space")) then
 		-- Start panning

@@ -59,14 +59,8 @@ function SelectTool:mousepressed(mx, my, button, isTouch, pressCount)
 		for i = #layers, 1, -1 do
 			local layer = layers[i]
 			local viewport = layer._viewport
-			local toolboxTransform = viewport._toolboxTransform
 
-			local factor = 1 / viewport._pixelScale
-			local usedX, usedY =
-				containerX * factor,
-				containerY * factor
-
-			local worldX, worldY = toolboxTransform:inverseTransformPoint(usedX, usedY)
+			local worldX, worldY = Tool.containerToSubLayerPoint(viewport, containerX, containerY)
 
 			-- Get the highest Control...
 			local highestControl = viewport:getControlAtPoint(worldX, worldY, controlBelongsToLayer, layer, worldX, worldY)
