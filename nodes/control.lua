@@ -275,6 +275,15 @@ function Control:setRotation(rotation)
 	return self
 end
 
+---Gets the difference between this Control's +X axis towards the global point
+---@param gx number
+---@param gy number
+---@return number angle
+function Control:getAngleTo(gx, gy)
+	local lx, ly = self:toLocal(gx, gy)
+	return math.atan2(ly, lx)
+end
+
 ---Sets the scale of this Control
 ---@param x number
 ---@param y number
