@@ -25,12 +25,17 @@ function Vec2P:newValue()
 end
 
 function Vec2P:set(obj, property, value)
-	local vec = rawget(obj, property)
-	if not vec then
-		vec = self:newValue()
-		obj[property] = vec
+	if value then
+		local vec = rawget(obj, property)
+		if not vec then
+			vec = self:newValue()
+			obj[property] = vec
+		end
+		vec:iCopyVector(value)
+	else
+		-- Value is nil so remove it
+		obj[property] = nil
 	end
-	vec:iCopyVector(value)
 end
 Vec2P.rawSet = Vec2P.set
 
