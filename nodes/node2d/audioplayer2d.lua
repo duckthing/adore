@@ -40,13 +40,13 @@ function AudioPlayer2d:_onGlobalTransformChanged()
 
 	if not self._source then return end
 
-	local x, y = self:getPosition(true)
+	local x, y = self:getWorldPosition()
 	local z = self._sourceZ
 
 	-- The direction vector
 	local dx, dy = 1, 0
 	if self._useRotation then
-		local rotation = self:getRotation(true)
+		local rotation = self:getWorldRotation()
 		dx, dy = cos(rotation), sin(rotation)
 	end
 

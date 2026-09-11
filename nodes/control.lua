@@ -132,7 +132,7 @@ function Control:new()
 
 	---@type Rect2 # The local Rect2 of this Control, which contains the untransformed Control in local space
 	self._localContentRect = Rect2(0, 0, 0, 0)
-	---@type Rect2 # The global Rect2 of this Control, which contains the transformed Control in global space
+	---@type Rect2 # The global Rect2 of this Control, which contains the transformed Control in world space
 	self._globalContentRect = Rect2(0, 0, 0, 0)
 end
 
@@ -275,7 +275,7 @@ function Control:setRotation(rotation)
 	return self
 end
 
----Gets the difference between this Control's +X axis towards the global point
+---Gets the difference between this Control's +X axis towards the world point
 ---@param gx number
 ---@param gy number
 ---@return number angle
@@ -787,7 +787,7 @@ end
 ---Called whenever the global axis-aligned bounds of the content inside this Control *should* change.
 ---Can occur when:
 ---* Local bounds change
----* This Control moves in global space
+---* This Control moves in world space
 function Control:_updateGlobalBounds()
 	self._globalContentRect:iCopyRect(self._localContentRect):iTransformBox(self._globalTransform)
 end
@@ -1008,11 +1008,11 @@ function Control:canFocus(isMouse)
 	return mode == "all" or (mode == "click" and isMouse)
 end
 
----Checks if we can receive this input, with a global screen position used if it is mouse input.
+---Checks if we can receive this input, with a Viewport position used if it is mouse input.
 ---Does not check if the given point overlaps; you'll have to use `:doesPointOverlap`.
 ---@overload fun(self, isMouse: false): boolean
 ---@overload fun(self, isMouse: true, gx: integer, gy: integer): boolean
-function Control:canReceiveInput(isMouse, gx, gy)
+function Control:canReceiveInput(isMouse, sx, sy)
 	if self._inputMode == "ignore" then return false end
 	if isMouse and self._mouseInputMode == "ignore" then return false end
 
@@ -1053,7 +1053,7 @@ function Control:canReceiveInput(isMouse, gx, gy)
 					--...or clipping the input
 					(
 						currNode.clipChildren
-						and not currNode:doesPointOverlap(gx, gy)
+						and not currNode:doesPointOverlap(sx, sy)
 					)
 				)
 			)

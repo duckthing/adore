@@ -28,12 +28,12 @@ end
 
 ---@param self AudioListener2d
 local function setPosition(self)
-	local x, y = self:getPosition(true)
+	local x, y = self:getWorldPosition()
 	love.audio.setPosition(x, y, self._listenerZ)
 	if self._useRotation then
 		-- Forward axis stays the same
 		-- Rotate the up axis instead
-		local rotation = self:getRotation(true)
+		local rotation = self:getWorldRotation()
 		love.audio.setOrientation(
 			0, 0, 1,
 			sin(rotation), -cos(rotation), 0

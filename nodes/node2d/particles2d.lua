@@ -146,7 +146,7 @@ function Particles2d:draw()
 			-- Particles are drawn based on their original position
 			love.graphics.push("transform")
 			love.graphics.origin()
-			love.graphics.draw(system, 0, 0, self:getRotation(true))
+			love.graphics.draw(system, 0, 0, self:getWorldRotation())
 			love.graphics.pop()
 		else
 			-- Particles are drawn relative to this node's transform

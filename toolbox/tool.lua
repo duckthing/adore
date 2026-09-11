@@ -159,14 +159,14 @@ function Tool:drawNode2dBoundingBox(selected, baseThickness)
 	love.graphics.rectangle("line", gcr:unpack())
 
 	-- Draw axes
-	local globalX, globalY = selected:getPosition(true)
+	local globalX, globalY = selected:getWorldPosition()
 	local axisLength = 25 * baseThickness
 	-- +X
 	love.graphics.setColor(1, 0, 0, 0.8)
 	love.graphics.line(
 		globalX, globalY,
 		tempVec2:iSetComponents(1, 0)
-			:iRotate(selected:getRotation(true)):iMult(axisLength)
+			:iRotate(selected:getWorldRotation()):iMult(axisLength)
 			:iAddComponents(globalX, globalY):unpack()
 	)
 	-- +Y
@@ -174,7 +174,7 @@ function Tool:drawNode2dBoundingBox(selected, baseThickness)
 	love.graphics.line(
 		globalX, globalY,
 		tempVec2:iSetComponents(0, 1)
-			:iRotate(selected:getRotation(true)):iMult(axisLength)
+			:iRotate(selected:getWorldRotation()):iMult(axisLength)
 			:iAddComponents(globalX, globalY):unpack()
 	)
 end

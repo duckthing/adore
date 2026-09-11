@@ -150,7 +150,7 @@ function Raycast2d:update(dt)
 	local world = self:getViewport()._physicsWorld
 
 	-- The start point
-	local ax, ay = self:getPosition(true)
+	local ax, ay = self:getWorldPosition()
 	-- The end point
 	local bx, by = self:toGlobal(self._distance, 0)
 	self:_raycastPerform(world, ax, ay, bx, by)

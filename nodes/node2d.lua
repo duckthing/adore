@@ -141,13 +141,13 @@ function Node2d:translate(x, y)
 	return self
 end
 
----Translates this Node2d in global space
+---Translates this Node2d in world space
 ---@param x number
 ---@param y number
 ---@return Node2d
-function Node2d:globalTranslate(x, y)
-	local gx, gy = self:getPosition(true)
-	self:setGlobalPosition(gx + x, gy + y)
+function Node2d:worldTranslate(x, y)
+	local gx, gy = self:getWorldPosition()
+	self:setWorldPosition(gx + x, gy + y)
 	return self
 end
 
@@ -173,25 +173,27 @@ function Node2d:setPositionVector(vector)
 	return self
 end
 
----Sets the global position of this Node2d
+---Sets the world position of this Node2d
 ---@param gx number
 ---@param gy number
 ---@return Node2d
-function Node2d:setGlobalPosition(gx, gy)
+function Node2d:setWorldPosition(gx, gy)
 	self:setPosition(self:getParentGlobalTransform():inverseTransformPoint(gx, gy))
 	return self
 end
 
 ---Gets the local position of this Node2D
----@param doGlobal boolean?
 ---@return number x
 ---@return number y
-function Node2d:getPosition(doGlobal)
-	if doGlobal then
-		return self._globalTransform:transformPoint(0, 0)
-	else
-		return self._position.x, self._position.y
-	end
+function Node2d:getPosition()
+	return self._position.x, self._position.y
+end
+
+---Gets the world position of this Node2D
+---@return number gx
+---@return number gy
+function Node2d:getWorldPosition()
+	return self._globalTransform:transformPoint(0, 0)
 end
 
 ---Sets the relative scale
@@ -240,14 +242,18 @@ function Node2d:setGlobalRotation(angle)
 end
 
 ---Gets the local rotation of this Node2D
----@param doGlobal boolean?
 ---@return number angle
-function Node2d:getRotation(doGlobal)
-	return (doGlobal and (self._rotation + self._ancestorRotation) % PI2)
-		or self._rotation
+function Node2d:getRotation()
+	return self._rotation
 end
 
----Gets the difference between this Node2d's +X axis towards the global point
+---Gets the world rotation of this Node2D
+---@return number worldAngle
+function Node2d:getWorldRotation()
+	return (self._rotation + self._ancestorRotation) % PI2
+end
+
+---Gets the difference between this Node2d's +X axis towards the world point
 ---@param gx number
 ---@param gy number
 ---@return number angle
@@ -256,14 +262,14 @@ function Node2d:getAngleTo(gx, gy)
 	return math.atan2(ly, lx)
 end
 
----Makes this Node2d point its +X axis towards the global point
+---Makes this Node2d point its +X axis towards the world point
 ---@param gx number
 ---@param gy number
 function Node2d:lookAt(gx, gy)
 	self:rotate(self:getAngleTo(gx, gy))
 end
 
----Converts global coordinates to the local space
+---Converts world coordinates to the local space
 ---@param gx number
 ---@param gy number
 ---@return number lx
@@ -272,7 +278,7 @@ function Node2d:toLocal(gx, gy)
 	return self._globalTransform:inverseTransformPoint(gx, gy)
 end
 
----Converts local coordinates to the global space
+---Converts local coordinates to the world space
 ---@param lx number
 ---@param ly number
 ---@return number gx

@@ -131,7 +131,7 @@ else
 			love.graphics.push("all")
 
 			-- Reset the alpha
-			local x, y = light:getPosition(true)
+			local x, y = light:getWorldPosition()
 			posArr[1], posArr[2] = x, y
 			SHADOW_MESH_SHADER:send("LightPosition", posArr)
 

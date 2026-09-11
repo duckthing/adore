@@ -19,8 +19,8 @@ function YSort.sortCondition(a, b)
 		return true
 	end
 
-	local _, ay = a:getPosition(true)
-	local _, by = b:getPosition(true)
+	local _, ay = a:getWorldPosition()
+	local _, by = b:getWorldPosition()
 	return ay < by
 end
 

@@ -557,7 +557,7 @@ for _, method in ipairs(methodsThatUpdatePosition) do
 		superMethod(self, ...)
 		local body = self.body
 		if not body then return end
-		body:setPosition(self:getPosition(true))
+		body:setPosition(self:getWorldPosition())
 		body:setAwake(true)
 
 		for _, contact in ipairs(body:getContacts()) do
@@ -578,7 +578,7 @@ for _, method in ipairs(methodsThatUpdateRotation) do
 		superMethod(self, ...)
 		local body = self.body
 		if not body then return end
-		body:setAngle(self:getRotation(true))
+		body:setAngle(self:getWorldRotation())
 		body:setAwake(true)
 
 		for _, contact in ipairs(body:getContacts()) do
