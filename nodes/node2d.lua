@@ -19,6 +19,7 @@ Node2d._blendMode = "alpha"
 local DEFAULT_TRANSFORM = love.math.newTransform(0, 0)
 local PI = math.pi
 local PI2 = PI * 2
+local atan2 = math.atan2
 
 ---@param x number?
 ---@param y number?
@@ -241,13 +242,13 @@ function Node2d:setGlobalRotation(angle)
 	return self:setRotation(angle - self._ancestorRotation)
 end
 
----Gets the local rotation of this Node2D
+---Gets the local rotation of this Node2d
 ---@return number angle
 function Node2d:getRotation()
 	return self._rotation
 end
 
----Gets the world rotation of this Node2D
+---Gets the world rotation of this Node2d
 ---@return number worldAngle
 function Node2d:getWorldRotation()
 	return (self._rotation + self._ancestorRotation) % PI2
@@ -259,7 +260,7 @@ end
 ---@return number angle
 function Node2d:getAngleTo(gx, gy)
 	local lx, ly = self:toLocal(gx, gy)
-	return math.atan2(ly, lx)
+	return atan2(ly, lx)
 end
 
 ---Makes this Node2d point its +X axis towards the world point

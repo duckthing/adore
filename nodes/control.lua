@@ -7,7 +7,8 @@ local CanvasLayer = Nodes("CanvasLayer")
 local Rect2 = Common("Rect2")
 local Vec2 = Common("Vec2")
 
-local min, max, huge = math.min, math.max, math.huge
+local huge, atan2, abs =
+	math.huge, math.atan2, math.abs
 
 local PI2 = math.pi * 2
 local BLANK_TRANSFORM = love.math.newTransform()
@@ -218,12 +219,14 @@ function Control:setOffsetTop(value) self._offsetTop = value; self:deferRefreshS
 ---@type Control.RectSetter
 function Control:setOffsetBottom(value) self._offsetBottom = value; self:deferRefreshSelf(); return self end
 
----Sets the pivot of this Control
----@param x number
----@param y number
+---Sets the pivot of this Control.
+---If a parameter is `nil`, it won't be changed.
+---@param x number?
+---@param y number?
 ---@return Control
 function Control:setPivot(x, y)
 	local pivot = self._pivot
+	x, y = x or pivot.x, y or pivot.y
 	if pivot.x ~= x or pivot.y ~= y then
 		pivot.x, pivot.y = x, y
 		self:deferRefreshSelf()
@@ -239,57 +242,72 @@ function Control:setPivotVec(vec)
 	return self
 end
 
----Sets the pivot X offset of this Control
----@param x number
+---Rotates this Control, in radians
+---@param angle number
 ---@return Control
-function Control:setPivotX(x)
-	local pivot = self._pivot
-	if pivot.x ~= x then
-		pivot.x = x
+function Control:rotate(angle)
+	self._rotation = self._rotation + angle
+	return self
+end
+
+---Sets the local rotation of this Node2d, in radians
+---@param angle number
+---@return Control
+function Control:setRotation(angle)
+	angle = (angle and angle % PI2) or 0
+	if self._rotation ~= angle then
+		self._rotation = angle
 		self:deferRefreshSelf()
 	end
 	return self
 end
 
----Sets the pivot Y offset of this Control
----@param y number
----@return Control
-function Control:setPivotY(y)
-	local pivot = self._pivot
-	if pivot.y ~= y then
-		pivot.y = y
-		self:deferRefreshSelf()
-	end
-	return self
+---Gets the local rotation of this Control
+---@return number angle
+function Control:getRotation()
+	return self._rotation
 end
 
----Sets the rotation of this Control
----@param rotation number
----@return Control
-function Control:setRotation(rotation)
-	rotation = (rotation and rotation % PI2) or 0
-	if self._rotation ~= rotation then
-		self._rotation = rotation
-		self:deferRefreshSelf()
+---Gets the world rotation of this Control
+---@return number worldAngle
+function Control:getWorldRotation()
+	local rotationSum = self._rotation
+	local parent = self.parent
+	-- ...it exists and doesn't have a Node2d property
+	while parent and parent:is(Control) do
+		-- Add up rotation of all Controls (and not Node2d)
+		local rot = rawget(parent, "_rotation") or 0
+		rotationSum = rotationSum + rot
+		parent = parent.parent
 	end
-	return self
+	return rotationSum % PI2
 end
 
----Gets the difference between this Control's +X axis towards the world point
+---Gets the difference between this Control's +X axis towards the world point.
+---Relative to the pivot.
 ---@param gx number
 ---@param gy number
 ---@return number angle
 function Control:getAngleTo(gx, gy)
 	local lx, ly = self:toLocal(gx, gy)
-	return math.atan2(ly, lx)
+	return atan2(ly, lx)
 end
 
----Sets the scale of this Control
----@param x number
----@param y number
+---Makes this Control point its +X axis towards the world point
+---@param gx number
+---@param gy number
+function Control:lookAt(gx, gy)
+	self:rotate(self:getAngleTo(gx, gy))
+end
+
+---Sets the scale of this Control.
+---If a parameter is `nil`, it won't be changed.
+---@param x number?
+---@param y number?
 ---@return Control
 function Control:setScale(x, y)
 	local scale = self._scale
+	x, y = x or scale.x, y or scale.y
 	if scale.x ~= x or scale.y ~= y then
 		scale.x, scale.y = x, y
 		self:deferRefreshSelf()
@@ -302,30 +320,6 @@ end
 ---@return Control
 function Control:setScaleVec(vec)
 	self:setScale(vec.x, vec.y)
-	return self
-end
-
----Sets the scale X offset of this Control
----@param x number
----@return Control
-function Control:setScaleX(x)
-	local scale = self._scale
-	if scale.x ~= x then
-		scale.x = x
-		self:deferRefreshSelf()
-	end
-	return self
-end
-
----Sets the scale Y offset of this Control
----@param y number
----@return Control
-function Control:setScaleY(y)
-	local scale = self._scale
-	if scale.y ~= y then
-		scale.y = y
-		self:deferRefreshSelf()
-	end
 	return self
 end
 
@@ -631,14 +625,15 @@ function Control:getOffsets()
 	return self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 end
 
----Sets the position of this Control, relative to the top-left corner
+---Sets the position of this Control, relative to its pivot
 ---@param gx integer
 ---@param gy integer
 function Control:setPosition(gx, gy)
-	local currX, currY = self._offsetLeft, self._offsetBottom
+	local pivotX, pivotY = self._pivot:unpack()
+	local currX, currY = self:getPosition()
 	local diffX, diffY =
-		gx - currX,
-		gy - currY
+		gx - currX - pivotX,
+		gy - currY - pivotY
 
 	-- Anchors don't work well here
 	self._anchorLeft, self._anchorTop, self._anchorRight, self._anchorBottom = 0, 0, 0, 0
@@ -648,6 +643,21 @@ function Control:setPosition(gx, gy)
 		self._offsetRight + diffX,
 		self._offsetBottom + diffY
 	self:deferRefreshSelf()
+end
+
+---Gets the local position of this Control, relative to its pivot.
+---This value is only accurate after a refresh and may not be relevant.
+function Control:getPosition()
+	local lcr, pivot = self._localContentRect, self._pivot
+	return lcr.x + pivot.x, lcr.y + pivot.y
+end
+
+---Gets the world position of this Control, relative to its pivot.
+---This value is only accurate after a refresh and may not be relevant.
+---@return number gx
+---@return number gy
+function Control:getWorldPosition()
+	return self._globalTransform:transformPoint(self:getPosition())
 end
 
 ---Translates the offsets by the given amount
@@ -765,7 +775,7 @@ end
 function Control:_getOffsetSize()
 	local oLeft, oTop, oRight, oBottom =
 		self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
-	return math.abs(oRight - oLeft), math.abs(oBottom - oTop)
+	return abs(oRight - oLeft), abs(oBottom - oTop)
 end
 
 ---Called when a child or descendant is focused. Controls that sort children should implement this.
@@ -1177,9 +1187,10 @@ end
 ---@return number lx
 ---@return number ly
 function Control:toLocal(gx, gy)
+	local pivot = self._pivot
 	local lx, ly = self._globalTransform:inverseTransformPoint(gx, gy)
 	local lcr = self._localContentRect
-	return lx - lcr.x, ly - lcr.y
+	return lx - lcr.x - pivot.x, ly - lcr.y - pivot.y
 end
 
 ---Converts a local point into a Viewport one
