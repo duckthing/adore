@@ -22,10 +22,10 @@ RotateTool._busy = false
 function RotateTool:new()
 	RotateTool.super.new(self)
 	self.rotating = false
-	---@type number, number
-	self.startX, self.startY = 0, 0
 	---@type number
 	self.startRotation = 0
+	---@type number, number
+	self.startX, self.startY = 0, 0
 end
 
 function RotateTool:mousepressed(mx, my, button, isTouch, pressCount)
@@ -37,9 +37,13 @@ function RotateTool:mousepressed(mx, my, button, isTouch, pressCount)
 		local viewport = focusedNode:getViewport()
 		if not viewport then return false end
 		if not (focusedNode:is(Node2d) or focusedNode:is(Control)) then return false end
+		---@cast focusedNode Node2d | Control
 
-		self.startRotation = focusedNode._rotation
-		self.startX, self.startY = mx, my
+		local srContainer = mainWindow:getSubrootContainer()
+		local layerX, layerY =
+			Tool.containerToSubLayerPoint(viewport, srContainer:toLocal(mx, my))
+		local gx, gy = focusedNode:getWorldPosition()
+		self.startRotation = focusedNode:getRotation() - math.atan2(layerY - gy, layerX - gx)
 		self.rotating = true
 		return true
 	end
@@ -57,7 +61,15 @@ function RotateTool:mousemoved(mx, my, dx, dy, isTouch)
 		local srContainer = mainWindow:getSubrootContainer()
 		---@cast focusedNode Node2d | Control
 
-		focusedNode:setRotation((mx - self.startX) * 0.001 + self.startRotation)
+		local layerX, layerY = Tool.containerToSubLayerPoint(viewport, srContainer:toLocal(mx, my))
+		if focusedNode:is(Control) then
+			---@cast focusedNode Control
+			focusedNode:deferRefreshSelf()
+			focusedNode:getViewport():performRefreshesUntilDone()
+		end
+		local gx, gy = focusedNode:getWorldPosition()
+		local angle = math.atan2(layerY - gy, layerX - gx)
+		focusedNode:setRotation(angle + self.startRotation)
 		return true
 	end
 	return false

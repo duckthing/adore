@@ -61,16 +61,10 @@ function MoveTool:mousemoved(mx, my, dx, dy, isTouch)
 
 		if selectionType == "Node2d" then
 			---@cast focusedNode Node2d
-			local gx, gy = focusedNode:getWorldPosition()
-			scaledDX, scaledDY = focusedNode:toLocal(gx + scaledDX, gy + scaledDY)
-			local scale = focusedNode._scale
-			focusedNode:translate(scaledDX * scale.x, scaledDY * scale.y)
+			focusedNode:worldTranslate(scaledDX, scaledDY)
 		elseif selectionType == "Control" then
 			---@cast focusedNode Control
-			local gx, gy = focusedNode._globalContentRect.x, focusedNode._globalContentRect.y
-			scaledDX, scaledDY = focusedNode:toLocal(gx + scaledDX, gy + scaledDY)
-			local scale = focusedNode._scale
-			focusedNode:translate(scaledDX * scale.x, scaledDY * scale.y)
+			focusedNode:translate(scaledDX, scaledDY)
 		end
 		return true
 	end
