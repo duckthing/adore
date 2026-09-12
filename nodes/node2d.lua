@@ -130,7 +130,7 @@ function Node2d:_onLocalTransformUpdated()
 	self:_onGlobalTransformChanged()
 end
 
----Translates the Node2D locally
+---Translates this Node2D locally
 ---@param x number
 ---@param y number
 ---@return self self

@@ -246,7 +246,8 @@ end
 ---@param angle number
 ---@return Control
 function Control:rotate(angle)
-	self._rotation = self._rotation + angle
+	self._rotation = (self._rotation + angle) % PI2
+	self:deferRefreshSelf()
 	return self
 end
 
@@ -283,8 +284,9 @@ function Control:getWorldRotation()
 	return rotationSum % PI2
 end
 
----Gets the difference between this Control's +X axis towards the world point.
----Relative to the pivot.
+---Gets the difference between this Control's +X axis from the pivot towards the world point.
+---This method is only accurate immediately after a refresh;
+---use `Control:getViewport():performRefreshesUntilDone()` before to fix.
 ---@param gx number
 ---@param gy number
 ---@return number angle
@@ -293,7 +295,9 @@ function Control:getAngleTo(gx, gy)
 	return atan2(ly, lx)
 end
 
----Makes this Control point its +X axis towards the world point
+---Makes this Control point its +X axis towards the world point.
+---This method is only accurate immediately after a refresh;
+---use `Control:getViewport():performRefreshesUntilDone()` before to fix.
 ---@param gx number
 ---@param gy number
 function Control:lookAt(gx, gy)
@@ -628,9 +632,10 @@ end
 ---Sets the position of this Control, relative to its pivot
 ---@param gx integer
 ---@param gy integer
+---@return Control
 function Control:setPosition(gx, gy)
 	local pivotX, pivotY = self._pivot:unpack()
-	local currX, currY = self:getPosition()
+	local currX, currY = self._offsetLeft, self._offsetTop
 	local diffX, diffY =
 		gx - currX - pivotX,
 		gy - currY - pivotY
@@ -643,24 +648,27 @@ function Control:setPosition(gx, gy)
 		self._offsetRight + diffX,
 		self._offsetBottom + diffY
 	self:deferRefreshSelf()
+	return self
 end
 
 ---Gets the local position of this Control, relative to its pivot.
----This value is only accurate after a refresh and may not be relevant.
+---This method is only accurate immediately after a refresh;
+---use `Control:getViewport():performRefreshesUntilDone()` before to fix.
 function Control:getPosition()
 	local lcr, pivot = self._localContentRect, self._pivot
 	return lcr.x + pivot.x, lcr.y + pivot.y
 end
 
 ---Gets the world position of this Control, relative to its pivot.
----This value is only accurate after a refresh and may not be relevant.
+---This method is only accurate immediately after a refresh;
+---use `Control:getViewport():performRefreshesUntilDone()` before to fix.
 ---@return number gx
 ---@return number gy
 function Control:getWorldPosition()
 	return self._globalTransform:transformPoint(self:getPosition())
 end
 
----Translates the offsets by the given amount
+---Translates this Control locally
 ---@param x integer
 ---@param y integer
 function Control:translate(x, y)
