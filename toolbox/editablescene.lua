@@ -22,6 +22,8 @@ local SelectTool = require(ADORE_PATH..".toolbox.tool.select")
 local MoveTool = require(ADORE_PATH..".toolbox.tool.move")
 ---@type Toolbox.Tool.Rotate
 local RotateTool = require(ADORE_PATH..".toolbox.tool.rotate")
+---@type Toolbox.Tool.Scale
+local ScaleTool = require(ADORE_PATH..".toolbox.tool.scale")
 
 local lgReplaceTransform = love.graphics.replaceTransform
 local lgIntersectScissor = love.graphics.intersectScissor
@@ -42,6 +44,7 @@ local tools = {
 	Select = SelectTool(),
 	Move = MoveTool(),
 	Rotate = RotateTool(),
+	Scale = ScaleTool(),
 }
 
 ---@type {label: string?, icon: TextureSource?}[]

@@ -11,7 +11,7 @@ local Control = Nodes("Control")
 local Tool = require(ADORE_PATH..".toolbox.tool")
 
 ---@class Toolbox.Tool.Rotate: Toolbox.Tool
----@overload fun(): Toolbox.Tool.Select
+---@overload fun(): Toolbox.Tool.Rotate
 local RotateTool = Tool:extend()
 
 ---@type Toolbox.EditableScene
@@ -24,8 +24,6 @@ function RotateTool:new()
 	self.rotating = false
 	---@type number
 	self.startRotation = 0
-	---@type number, number
-	self.startX, self.startY = 0, 0
 end
 
 function RotateTool:mousepressed(mx, my, button, isTouch, pressCount)
