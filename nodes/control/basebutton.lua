@@ -86,7 +86,9 @@ function BaseButton:mousepressed(x, y, button)
 		self:grabFocus(true)
 		self.pressed:fire(self, button)
 		self:_updateSubclass()
+		return true
 	end
+	return false
 end
 
 ---@param x integer
@@ -101,7 +103,9 @@ function BaseButton:mousereleased(x, y, button)
 			self.clicked:fire(self, button)
 		end
 		self:_updateSubclass()
+		return true
 	end
+	return false
 end
 
 function BaseButton:uiMouseEntered(x, y)

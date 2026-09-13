@@ -419,23 +419,21 @@ function CoreUIContext:mousepressed(x, y, button, isTouch, pressCount)
 		end
 	end
 
-	do
-		-- Send to focused
-		local focused = root._focusedControl
-		if focused then
-			local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
+	-- Send to focused
+	local focused = root._focusedControl
+	if focused and focused ~= hovered then
+		local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
 
-			if not focused:doesPointOverlap(focusedX, focusedY) then
-				-- Clicked out of bounds, release focus
-				focused:releaseFocus()
-				return self.sinkHandledInput
-			end
+		if not focused:doesPointOverlap(focusedX, focusedY) then
+			-- Clicked out of bounds, release focus
+			focused:releaseFocus()
+			return self.sinkHandledInput
 		end
 	end
 
 	-- Send to modal
 	local modal = root._modalStack[#root._modalStack]
-	if modal then
+	if modal and modal ~= hovered and modal ~= focused then
 		local mMousePressed = modal.mousepressed
 		if mMousePressed and modal:canReceiveInput(true, x, y) then
 			local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
@@ -467,23 +465,21 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 
 	local rx, ry = rootViewport:windowToViewportPoint(x, y)
 
-	do
-		-- Send to focused
-		local focused = root._focusedControl
-		if focused then
-			local fMouseReleased = focused.mousereleased
-			-- Instead of using the mouse variant of :canReceiveInput, do the check manually
-			-- in case there is a Control that is clipping it
-			if fMouseReleased and focused:canReceiveInput(false) and focused._mouseInputMode ~= "ignore" then
-				local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
-				fMouseReleased(focused, focusedX, focusedY, button)
-			end
+	-- Send to focused
+	local focused = root._focusedControl
+	if focused then
+		local fMouseReleased = focused.mousereleased
+		-- Instead of using the mouse variant of :canReceiveInput, do the check manually
+		-- in case there is a Control that is clipping it
+		if fMouseReleased and focused:canReceiveInput(false) and focused._mouseInputMode ~= "ignore" then
+			local focusedX, focusedY = controlToLocal(rootViewport, focused, rx, ry)
+			fMouseReleased(focused, focusedX, focusedY, button)
 		end
 	end
 
 	-- Send to hovered
 	local hovered = root._hoveredControl
-	if hovered then
+	if hovered and hovered ~= focused then
 		local hMouseReleased = hovered.mousereleased
 		if hMouseReleased and hovered:canReceiveInput(true, x, y) then
 			local hoveredX, hoveredY = controlToLocal(rootViewport, hovered, rx, ry)
@@ -495,7 +491,7 @@ function CoreUIContext:mousereleased(x, y, button, isTouch, pressCount)
 
 	-- Send to modal
 	local modal = root._modalStack[#root._modalStack]
-	if modal then
+	if modal and modal ~= focused and modal ~= hovered then
 		local mMouseReleased = modal.mousereleased
 		if mMouseReleased and modal:canReceiveInput(true, x, y) then
 			local modalX, modalY = controlToLocal(rootViewport, modal, rx, ry)
