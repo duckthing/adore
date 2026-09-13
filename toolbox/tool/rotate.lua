@@ -24,6 +24,8 @@ function RotateTool:new()
 	self.rotating = false
 	---@type number
 	self.startRotation = 0
+	---@type "Node2d" | "Control"
+	self.selectionType = "Node2d"
 end
 
 function RotateTool:mousepressed(mx, my, button, isTouch, pressCount)
@@ -43,6 +45,14 @@ function RotateTool:mousepressed(mx, my, button, isTouch, pressCount)
 		local gx, gy = focusedNode:getWorldPosition()
 		self.startRotation = focusedNode:getRotation() - math.atan2(layerY - gy, layerX - gx)
 		self.rotating = true
+
+		if focusedNode:is(Node2d) then
+			self.selectionType = "Node2d"
+		elseif focusedNode:is(Control) then
+			self.selectionType = "Control"
+		else
+			return false
+		end
 		return true
 	end
 	return false
@@ -59,12 +69,14 @@ function RotateTool:mousemoved(mx, my, dx, dy, isTouch)
 		local srContainer = mainWindow:getSubrootContainer()
 		---@cast focusedNode Node2d | Control
 
-		local layerX, layerY = Tool.containerToSubLayerPoint(viewport, srContainer:toLocal(mx, my))
-		if focusedNode:is(Control) then
+		if self.selectionType == "Control" then
 			---@cast focusedNode Control
+			-- Do all refreshes to prevent some jittering
 			focusedNode:deferRefreshSelf()
 			focusedNode:getViewport():performRefreshesUntilDone()
 		end
+
+		local layerX, layerY = Tool.containerToSubLayerPoint(viewport, srContainer:toLocal(mx, my))
 		local gx, gy = focusedNode:getWorldPosition()
 		local angle = math.atan2(layerY - gy, layerX - gx)
 		focusedNode:setRotation(angle + self.startRotation)
