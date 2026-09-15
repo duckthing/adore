@@ -4,6 +4,7 @@ local Nodes = Adore.Nodes
 local Node2d = Nodes("Node2d")
 local Physical2d = Nodes("Physical2d")
 local Vec2 = Adore.Common("Vec2")
+local min = math.min
 
 ---`CollisionShape` nodes add a `love.Shape` to a parent `Physical2d` node.
 ---Any changes to the local transform will not be reflected; you must
@@ -68,7 +69,8 @@ function CollisionShape:_transformShape()
 		-- Transform only the position
 		---@cast shape love.CircleShape
 		local x, y = self:getPosition()
-		finalShape = love.physics.newCircleShape(x, y, shape:getRadius())
+		finalShape = love.physics.newCircleShape(x, y,
+			shape:getRadius() * min(self._scale.x, self._scale.y))
 	else
 		finalShape = shape
 	end
