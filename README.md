@@ -25,6 +25,7 @@ Currently built for Love2D **11.5**, with target platforms of **Windows**, **Lin
 		* Scale up the pixel scale to render at a low resolution at any window size
 		* Each `CanvasLayer` can have their own `Viewport` with a separate render resolution
 	* Render separate scenes to different `CanvasLayer`s, apply post-processing, and more
+	* Optional culling on every Node2d
 * UI/Control
 	* Themes
 		* Inherit from other themes
@@ -32,6 +33,8 @@ Currently built for Love2D **11.5**, with target platforms of **Windows**, **Lin
 	* Keyboard and gamepad navigation
 		* ...which can be modified/disabled via `CoreUIContext` and the input stack
 	* Scale, rotate, and animate Controls while keeping mouse input functional
+	* Drag and drop data between elements
+	* Clip children rendering or receiving input outside of the bounds of an ancestor element
 * Asset loader
 	* Load an asset only once, and reference it anywhere
 	* Load `.glsl` files into a shader
@@ -58,8 +61,30 @@ Currently built for Love2D **11.5**, with target platforms of **Windows**, **Lin
 	* A convenient way to create temporary animations
 	* Tween a function parameter with `:tweenArgument`, and run custom code with little boilerplate
 * Math functions can avoid creating intermediary objects
-	* In `Vec2`, methods that are prefixed with `:i...` are in-place, meaning they overwrite the existing object
-* Pause processing at any step of the tree
+	* In `Vec2` and `Rect2`, methods that are prefixed with `:i...` are in-place, meaning they overwrite the existing object
+	* FFI is used wherever possible, when supported
+* Game logic
+	* Modify the game speed
+	* Pause processing at any step of the tree
+* Scenes
+	* Save and load scenes to JSON, Lua, and binary
+		* ...and easily write to other file formats!
+		* Scenes are a flat array with Lua quirks (like self-referencing) handled automatically
+		* `PackedScene` supports binary data within scenes
+		* `TableScene` is simple, and works for most cases
+	* Link other scenes, which can also link other scenes
+		* Infinite loops are detected and prevented
+	* Anything with defined properties can be de/serialized
+
+Adore also includes **Toolbox**, an optional, work-in-progress editor.
+* Easy to include and remove from your project (only one line!)
+* Author scenes and save to any supported format
+* Add Nodes or link scenes anywhere in the tree
+* Edit properties in the inspector
+* Open any scene to debug, including SceneFunctions written in Lua
+* Start a game from any scene
+* Catch errors as they happen
+	* You can then remove any problematic Nodes and resume a game
 
 ## Minimal example
 Clone the project into any folder. It may not work outside of your project root (`./adore`).
@@ -86,7 +111,7 @@ When ran for one second, this should print to the console that you are missing a
 >[!WARNING]
 >Do not set `love.update` or `love.draw`. Adore sets those with `root:addMissingCallbacks()`.
 
-Scenes are functions. Write your own in here.
+Scenes can be functions. Write your own in here.
 ```lua
 --- scenes/level1.lua
 local Adore = require "adore"
@@ -114,10 +139,10 @@ local function mySceneFunction()
 	return scene
 end
 
--- There are two ways to use scenes:
+-- There are two ways to use scenes from a script:
 -- 1. Return the function
 --		* This doesn't tag the source file
--- return mySceneFunction
+return mySceneFunction
 
 -- 2. Return a new SceneFactory
 --		* Protection against infinite loops
@@ -127,6 +152,17 @@ return SceneFactory(mySceneFunction, ...)
 -- Somewhere else...
 local level = require "scenes.level1"
 root:changeSceneTo(level)
+
+
+-- There's something else you have to do if you aren't writing a script
+-- and are instead authoring a scene from Toolbox.
+-- 1. Get the `ObjectLoader` collection
+local ObjectLoader = Loader.getCollection("ObjectLoader")
+
+-- 2. Get the asset from its path
+--		* The second parameter, "SceneFactory", is for type checking
+--		* Packed/TableScene inherits from SceneFactory
+local level = ObjectLoader:get("scenes/level2.json", "SceneFactory")
 ```
 You may want some way to get input now. Use a new `GameContext`.
 ```lua
@@ -219,7 +255,8 @@ The target platforms for Adore is **Windows**, **Linux**, and **web** (through [
 I do not have the ability to test Android, iOS, and Mac right now.
 
 > [!NOTE]
-> Some parts of Adore do not work on all targets. See [INCOMPATIBILITY.md](./INCOMPATIBILITY.md) for more information.
+> Some parts of Adore do not work on all targets. See [Platform Issues](https://github.com/duckthing/adore/wiki/Platform-Issues-(Incompatibility))
+> for more information.
 
 ## Acknowledgments
 These projects are used within Adore (inside `./lib`). You are also required to acknowledge them in your projects.
