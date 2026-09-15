@@ -4,7 +4,6 @@ local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 
 local Control = Nodes("Control")
-local HBox = Nodes("HBox")
 local Label = Nodes("Label")
 
 ---@class Previewer: Control
@@ -17,6 +16,7 @@ Previewer.Toolbox = nil
 ---@param object Object
 ---@param property Property
 ---@param propertyName string
+---@param inspector Toolbox.Inspector
 function Previewer:new(object, property, propertyName, inspector)
 	Previewer.super.new(self)
 	self:setAnchors(0, 0, 1, 0)
