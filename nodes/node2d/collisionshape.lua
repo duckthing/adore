@@ -29,8 +29,50 @@ function CollisionShape:new(shape, density)
 
 	---@type love.Shape? # The default shape of this CollisionShape
 	self._shape = shape
+	---@type love.Shape? # The transformed shape
+	self._transformedShape = nil
+
 	---@type love.Fixture? # The created fixture
 	self._fixture = nil
+end
+
+function CollisionShape:_transformShape()
+	local shape = self._shape
+	if self._transformedShape then
+		-- Remove the old shape
+		if self._transformedShape ~= shape then
+			self._transformedShape:release()
+		end
+		self._transformedShape = nil
+	end
+	if not shape then return end
+
+	local shapeType = shape:getType()
+	local finalShape
+
+	if shapeType == "polygon" then
+		-- Transform every point
+		---@cast shape love.PolygonShape
+		local transform = self._localTransform
+		local newPoints = {}
+		local oldPoints = {shape:getPoints()}
+
+		for i = 1, #oldPoints, 2 do
+			local ox, oy = oldPoints[i], oldPoints[i+1]
+			newPoints[i], newPoints[i+1]
+				= transform:transformPoint(ox, oy)
+		end
+
+		finalShape = love.physics.newPolygonShape(newPoints)
+	elseif shapeType == "circle" then
+		-- Transform only the position
+		---@cast shape love.CircleShape
+		local x, y = self:getPosition()
+		finalShape = love.physics.newCircleShape(x, y, shape:getRadius())
+	else
+		finalShape = shape
+	end
+	self._transformedShape = finalShape
 end
 
 ---Sets the `love.Shape` this `CollisionShape` will use
@@ -66,7 +108,8 @@ function CollisionShape:_addFixture()
 		self:_destroyFixture()
 		local pBody = parent.body
 		if pBody and not pBody:isDestroyed() then
-			local shape = self._shape
+			self:_transformShape()
+			local shape = self._transformedShape
 			if shape then
 				self._fixture = parent:_addShape(shape, self._density)
 				self._fixture:setUserData(self)
@@ -76,10 +119,22 @@ function CollisionShape:_addFixture()
 	end
 end
 
+function CollisionShape:_onLocalTransformUpdated()
+	CollisionShape.super._onLocalTransformUpdated(self)
+	if self._fixture then
+		self:_destroyFixture()
+		self:_addFixture()
+	end
+end
+
 function CollisionShape:_updateGlobalBounds()
 	local fixture = self._fixture
 	if fixture then
-		self._globalContentRect:iSetFromPoints(fixture:getBoundingBox())
+		local parent = self.parent
+		---@cast parent Physical2d
+		if parent.body:isActive() then
+			self._globalContentRect:iSetFromPoints(fixture:getBoundingBox())
+		end
 	end
 end
 
