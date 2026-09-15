@@ -997,8 +997,7 @@ function Control:_updateShash()
 		end
 	else
 		-- Currently in the tree and can receive input
-		local lcr = self._localContentRect
-		local gx, gy, gw, gh = lcr:transformBox(self._globalTransform)
+		local gx, gy, gw, gh = self._globalContentRect:unpack()
 		if not inShash then
 			-- Add to the shash
 			shash:add(self, gx, gy, gw, gh)
