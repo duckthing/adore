@@ -12,8 +12,9 @@ DropdownButton.DEFAULT_VARIANT = ""
 ---@param icon TextureSource
 ---@param items PopupMenu.Item[]
 function DropdownButton:new(icon, items)
-	DropdownButton.super.new(self, items[1].label, icon, items)
-	self._selectedItem = items[1]
+	local firstItem = items[1]
+	DropdownButton.super.new(self, (firstItem and firstItem.label) or "", icon, items)
+	self._selectedItem = firstItem
 	self._selectedItemIndex= 1
 	self:getPopupMenu().itemSelected:connect(self, "_onPopupMenuItemSelected", false, false)
 end

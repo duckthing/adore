@@ -11,7 +11,7 @@ local MenuButton = Button:extend()
 MenuButton.CLASS_NAME = "MenuButton"
 MenuButton.DEFAULT_VARIANT = "flat"
 
----@param text string
+---@param text string?
 ---@param icon TextureSource
 ---@param items PopupMenu.Item[]?
 function MenuButton:new(text, icon, items)
