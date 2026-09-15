@@ -165,6 +165,18 @@ local constructors = {
 			return love.physics.newRectangleShape(width, height)
 		end
 	},
+	{
+		label = "CircleShape",
+		class = "CircleShape",
+		form = {
+			{type = "body", text = "Radius"},
+			{id = "radius", type = "textfield", value = "10"},
+		},
+		submit = function(sheet)
+			local radius = sheet:getValue("radius")
+			return love.physics.newCircleShape(radius)
+		end
+	},
 }
 
 ---Gets a list of Forms for the given classes
@@ -237,7 +249,7 @@ function LObjectP:showPopup()
 		end
 
 		---@type VBox, Form.Sheet
-		otherVBox, otherSheet = FormBuilder.build(dropdown:getSelectedItem().form)
+		otherVBox, otherSheet = FormBuilder.build(item.form)
 		otherVBox:setAnchorsAndOffsets(
 			0, 0, 1, 1,
 			0, 10, 0, 0
