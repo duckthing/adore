@@ -62,7 +62,7 @@ function NodeRefP:newValueLabel(object, property, propertyName, inspector)
 	if not selectable and val ~= nil then name = ("%s [INTERNAL]"):format(name) end
 	local button = Button(name)
 		:setAnchors(1, 0, 1, 1)
-		:setOffsets(-120, 0, -20, 0)
+		:setOffsets(-150, 0, -20, 0)
 	button.clicked:connect(self, "focusNode")
 	button:setDisabled(not selectable)
 

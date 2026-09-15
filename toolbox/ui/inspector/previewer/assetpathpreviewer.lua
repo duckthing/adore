@@ -20,15 +20,29 @@ function AssetP:new(...)
 	self:setOffsets(0, 0, 0, 60)
 end
 
+function AssetP:construct(object, property, propertyName)
+	self.nameLabel = self:newNameLabel(object, property, propertyName)
+	self.value = self:newValueLabel(object, property, propertyName)
+
+	local nilButton = Button("x")
+		:setAnchors(1, 0, 1, 1)
+		:setOffsets(-20, 0, 0, 0)
+	nilButton.clicked:connect(self, "makeNil")
+
+	self:addChild(self.nameLabel)
+	self:addChild(self.value)
+	self:addChild(nilButton)
+end
+
 function AssetP:newValueLabel(object, property, propertyName)
 	---@cast property Property.AssetPath
 	local collectionName = property.collectionName
 	local Collection = Loader.getCollection(collectionName)
 	local asset = property:get(self.object, propertyName)
-	local assetPath = asset and Collection:getAssetPath(asset) or ""
+	local assetPath = asset and Collection:getAssetPath(asset) or "nil"
 	local button = Button(assetPath)
 		:setAnchors(1, 0, 1, 1)
-		:setOffsets(-130, 0, 0, 0)
+		:setOffsets(-150, 0, -20, 0)
 		:setIconAlign("center")
 		:setIconJustify("top")
 		:setIconExpand(true)
@@ -131,6 +145,11 @@ function AssetP:showPopup()
 	pathField:grabFocus(false)
 end
 
+---Used for a Button connection; sets this property to `nil`
+function AssetP:makeNil()
+	return self:attemptSet()
+end
+
 function AssetP:onInput(item)
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
@@ -144,7 +163,7 @@ function AssetP:onInput(item)
 	local collectionName = property.collectionName
 	local Collection = Loader.getCollection(collectionName)
 	local asset = property:get(object, propertyName)
-	local assetPath = asset and Collection:getAssetPath(asset) or ""
+	local assetPath = asset and Collection:getAssetPath(asset) or "nil"
 	valueButton:setText(assetPath)
 
 	if collectionName == "TextureLoader" then
