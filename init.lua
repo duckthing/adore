@@ -146,7 +146,7 @@ end
 ---@param name `T` | Adore.Nodes | Adore.Resources | Adore.Common | Adore.Libraries
 ---@return T
 Adore.User = function(name)
-	return fallbackToOthers(name, "User")
+	return User[name] or fallbackToOthers(name, "User")
 end
 
 ---Everything that can be loaded
