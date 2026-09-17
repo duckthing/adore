@@ -1170,12 +1170,14 @@ function Viewport:release()
 end
 
 ---Sets the love.World, usually from a deserialized object
----@param world love.World
+---@param world love.World?
 function Viewport:_setPhysicsWorld(world)
 	if self._physicsWorld ~= world then
 		self._physicsWorld = world
-		Physical2d.addWorldList(world)
-		world:setCallbacks(Physical2d.getWorldCallbacks())
+		if world then
+			Physical2d.addWorldList(world)
+			world:setCallbacks(Physical2d.getWorldCallbacks())
+		end
 		self:_onOptionsChanged()
 	end
 end

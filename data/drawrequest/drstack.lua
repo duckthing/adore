@@ -1,6 +1,6 @@
 ---@type AdoreInit
 local Adore = require ""
-local DrawRequest = Adore.Nodes("DrawRequest")
+local DrawRequest = Adore.Resources("DrawRequest")
 local min, max = math.min, math.max
 
 ---@class DrawRequest.DRStack: DrawRequest

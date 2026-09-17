@@ -42,8 +42,6 @@ local resourcePaths = {
 		["DrawRequest.NinePatchRect"] = "data.drawrequest.drawninepatchrect",
 		---@type DrawRequest.TabBar
 		["DrawRequest.TabBar"] = "data.drawrequest.drawtabbar",
-		---@type DrawRequest.TabContainer
-		["DrawRequest.TabContainer"] = "data.drawrequest.drawtabcontainer",
 		---@type DrawRequest.PopupMenu
 		["DrawRequest.PopupMenu"] = "data.drawrequest.drawpopupmenu",
 		---@type DrawRequest.WindowPopup

@@ -226,6 +226,41 @@ function Adore.getClassNames()
 	return allClassNames
 end
 
+---Returns an array of all classes which inherit from this class, including the base class
+---@param baseClassName string
+---@return string[] descendants
+function Adore.getClassDescendants(baseClassName)
+	local classNames = Adore.getClassNames()
+	local descendants = {baseClassName}
+	local BaseClass = Adore.Any(baseClassName)
+
+	for i = 1, #classNames do
+		local currClassName = classNames[i]
+		local Class = Adore.Any(currClassName)
+		if type(Class) == "table" and Class.is and Class:is(BaseClass) and Class ~= BaseClass then
+			descendants[#descendants+1] = currClassName
+		end
+	end
+
+	return descendants
+end
+
+---Returns an array of all super classes from this base class
+---@param baseClassName string
+---@return string[] ancestors
+function Adore.getClassAncestors(baseClassName)
+	local ancestors = {baseClassName}
+	local BaseClass = Adore.Any(baseClassName)
+
+	local CurrClass = BaseClass.super
+	while CurrClass do
+		ancestors[#ancestors+1] = CurrClass.CLASS_NAME
+		CurrClass = CurrClass.super
+	end
+
+	return ancestors
+end
+
 ---@type Adore.Loader # The asset loader, which prevents duplicating assets in memory
 Adore.Loader = Adore.Common("Adore.Loader")
 require(PKG_NAME..".loader.textureloader")
