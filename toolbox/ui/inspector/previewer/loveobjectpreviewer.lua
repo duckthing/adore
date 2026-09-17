@@ -251,10 +251,8 @@ end
 
 ---Shows a dialog to edit this LoveObject
 function LObjectP:showConstructPopup()
-	local object, property, propertyName =
-		self.object, self.property, self.propertyName
-	---@type love.Object?
-	local existingVal = property:get(object, propertyName)
+	local property, propertyName =
+		self.property, self.propertyName
 	local baseClass = property.baseClass
 
 	local window = WindowPopup()

@@ -100,10 +100,6 @@ local constructors = {
 		label = "Viewport",
 		class = "Viewport",
 		form = {
-			{type = "body", text = "Width"},
-			{id = "width", type = "textfield", value = "10"},
-			{type = "body", text = "Height"},
-			{id = "height", type = "textfield", value = "10"},
 		},
 		submit = function(sheet)
 			---@type Toolbox
@@ -152,10 +148,8 @@ end
 
 ---Shows a dialog to edit this Object
 function ObjectP:showConstructPopup()
-	local object, property, propertyName =
-		self.object, self.property, self.propertyName
-	---@type Object?
-	local existingVal = property:get(object, propertyName)
+	local property, propertyName =
+		self.property, self.propertyName
 	local baseClass = property.baseClass
 
 	local window = WindowPopup()
