@@ -29,8 +29,14 @@ function LObjectP:construct(object, property, propertyName)
 		:setOffsets(-20, 0, 0, 0)
 	nilButton.clicked:connect(self, "makeNil")
 
+	local newButton = Button("+")
+		:setAnchors(1, 0, 1, 1)
+		:setOffsets(-40, 0, -20, 0)
+	newButton.clicked:connect(self, "showConstructPopup")
+
 	self:addChild(self.nameLabel)
 	self:addChild(self.value)
+	self:addChild(newButton)
 	self:addChild(nilButton)
 end
 
@@ -41,27 +47,22 @@ function LObjectP:newValueLabel(object, property, propertyName, inspector)
 
 	local button = Button(name)
 		:setAnchors(1, 0, 1, 1)
-		:setOffsets(-150, 0, -20, 0)
+		:setOffsets(-150, 0, -40, 0)
 	button.clicked:connect(self, "onValueButtonClicked")
+	button:setDisabled(val == nil)
 
 	button.previewer = self
 
 	return button
 end
 
----When the value button is clicked, decide between a construct or edit popup
+---When the value button is clicked, show the edit popup
 function LObjectP:onValueButtonClicked()
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
 	local val = property:get(object, propertyName)
 
-	if val == nil then
-		-- No value; show the constructor popup
-		self:showConstructPopup()
-	else
-		-- Existing value; edit with the editor popup
-		self:showEditPopup(val)
-	end
+	self:showEditPopup(val)
 end
 
 ---Used for a Button connection; sets this property to `nil`
@@ -78,6 +79,7 @@ function LObjectP:onInput(node)
 	local name = tostring(val)
 
 	self.value:setText(name)
+		:setDisabled(val == nil)
 end
 
 ---@type {[string]: string} # Every Love object and the class they directly inherit from
@@ -140,11 +142,12 @@ local allLoveObjects = {
 	World = "Object",
 }
 
----Gets a list of all classes that inherit from a base class
+---Gets a list of all classes that inherit from a base class.
+---It's "below" this class.
 ---@param baseClass string
 ---@param arr string[]? # Existing matched classes
----@return string[]
-local function getInheritedClasses(baseClass, arr)
+---@return string[] descendants
+local function getClassDescendants(baseClass, arr)
 	-- Insert the base class, if it's found
 	if not arr and not allLoveObjects[baseClass] then return {} end
 	arr = arr or {baseClass}
@@ -153,7 +156,7 @@ local function getInheritedClasses(baseClass, arr)
 		-- Inherits from base class, and is not equal to itself (Object loop)
 		if inheritsFrom == baseClass and class ~= baseClass then
 			arr[#arr+1] = class
-			getInheritedClasses(class, arr)
+			getClassDescendants(class, arr)
 		end
 	end
 
@@ -163,7 +166,7 @@ end
 ---Gets a list of the super classes from the given class, including the current class
 ---@param className string
 ---@return string[]
-local function getSuperClasses(className)
+local function getClassAncestors(className)
 	local arr = {className}
 
 	local currClass = className
@@ -209,6 +212,20 @@ local constructors = {
 			return love.physics.newCircleShape(radius)
 		end
 	},
+	{
+		label = "Box2D World",
+		class = "World",
+		form = {
+			{type = "body", text = "Gravity X"},
+			{id = "gx", type = "textfield", value = "0"},
+			{type = "body", text = "Gravity Y"},
+			{id = "gy", type = "textfield", value = "0"},
+		},
+		submit = function(sheet)
+			local gx, gy = tonumber(sheet:getValue("gx")), tonumber(sheet:getValue("gy"))
+			return love.physics.newWorld(gx or 0, gy or 0)
+		end
+	},
 }
 
 ---Gets a list of constructor Forms for the given classes
@@ -249,7 +266,7 @@ function LObjectP:showConstructPopup()
 	window:getTitleLabel():setText(("Set '%s' (%s)"):format(propertyName, baseClass))
 
 	--- All classes that match the provided base class
-	local menuItems = getConstructorList(getInheritedClasses(baseClass))
+	local menuItems = getConstructorList(getClassDescendants(baseClass))
 
 	---@type Form
 	local form = {
@@ -370,9 +387,9 @@ local editForms = {
 		end,
 		submit = function(sheet, obj)
 			---@cast obj love.World
-			local gx, gy = sheet:getValue("gx"), sheet:getValue("gy")
+			local gx, gy = tonumber(sheet:getValue("gx")), tonumber(sheet:getValue("gy"))
 			local oldGX, oldGY = obj:getGravity()
-			obj:setGravity(tonumber(gx) or oldGX, tonumber(gy) or oldGY)
+			obj:setGravity(gx or oldGX, gy or oldGY)
 			return true
 		end
 	},
@@ -417,7 +434,7 @@ function LObjectP:showEditPopup(val)
 	window:getTitleLabel():setText(("Edit '%s' (%s)"):format(propertyName, baseClass))
 
 	-- All classes that match the provided base class
-	local menuItems = getEditFormList(getSuperClasses(baseClass))
+	local menuItems = getEditFormList(getClassAncestors(baseClass))
 
 	---@type Form
 	local form = {

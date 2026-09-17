@@ -78,7 +78,6 @@ end
 function NodeRefP:focusNode()
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
-	---@type boolean
 	local val = property:get(object, propertyName)
 	if val then
 		self.inspector.sceneTree:focusNode(val)
