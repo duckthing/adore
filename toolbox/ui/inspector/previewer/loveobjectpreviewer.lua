@@ -144,7 +144,7 @@ local allLoveObjects = {
 ---@param baseClass string
 ---@param arr string[]? # Existing matched classes
 ---@return string[]
-local function getMatchedClasses(baseClass, arr)
+local function getInheritedClasses(baseClass, arr)
 	-- Insert the base class, if it's found
 	if not arr and not allLoveObjects[baseClass] then return {} end
 	arr = arr or {baseClass}
@@ -153,8 +153,25 @@ local function getMatchedClasses(baseClass, arr)
 		-- Inherits from base class, and is not equal to itself (Object loop)
 		if inheritsFrom == baseClass and class ~= baseClass then
 			arr[#arr+1] = class
-			getMatchedClasses(class, arr)
+			getInheritedClasses(class, arr)
 		end
+	end
+
+	return arr
+end
+
+---Gets a list of the super classes from the given class, including the current class
+---@param className string
+---@return string[]
+local function getSuperClasses(className)
+	local arr = {className}
+
+	local currClass = className
+	while currClass ~= "Object" do
+		local inherited = allLoveObjects[currClass]
+		if not inherited then break end
+		arr[#arr+1] = inherited
+		currClass = inherited
 	end
 
 	return arr
@@ -232,7 +249,7 @@ function LObjectP:showConstructPopup()
 	window:getTitleLabel():setText(("Set '%s' (%s)"):format(propertyName, baseClass))
 
 	--- All classes that match the provided base class
-	local menuItems = getConstructorList(getMatchedClasses(baseClass))
+	local menuItems = getConstructorList(getInheritedClasses(baseClass))
 
 	---@type Form
 	local form = {
@@ -400,7 +417,7 @@ function LObjectP:showEditPopup(val)
 	window:getTitleLabel():setText(("Edit '%s' (%s)"):format(propertyName, baseClass))
 
 	-- All classes that match the provided base class
-	local menuItems = getEditFormList(getMatchedClasses(baseClass))
+	local menuItems = getEditFormList(getSuperClasses(baseClass))
 
 	---@type Form
 	local form = {
