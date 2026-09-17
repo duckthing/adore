@@ -1169,13 +1169,15 @@ function Viewport:release()
 	self.physicsStepped:release()
 end
 
----Sets the love.World from a deserialized object
+---Sets the love.World, usually from a deserialized object
 ---@param world love.World
 function Viewport:_setPhysicsWorld(world)
-	self._physicsWorld = world
-	Physical2d.addWorldList(world)
-	world:setCallbacks(Physical2d.getWorldCallbacks())
-	self:_onOptionsChanged()
+	if self._physicsWorld ~= world then
+		self._physicsWorld = world
+		Physical2d.addWorldList(world)
+		world:setCallbacks(Physical2d.getWorldCallbacks())
+		self:_onOptionsChanged()
+	end
 end
 
 ---Called when deserializing LightModel

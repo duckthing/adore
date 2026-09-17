@@ -80,11 +80,8 @@ end
 ---Sets the `love.Shape` this `CollisionShape` will use
 ---@param shape love.Shape
 function CollisionShape:setShape(shape)
-	local oldShape = self._shape
-	if oldShape ~= shape then
-		self._shape = shape
-		self:_addFixture()
-	end
+	self._shape = shape
+	self:_addFixture()
 end
 
 ---Sets the density the `love.Shape` will have
@@ -124,7 +121,6 @@ end
 function CollisionShape:_onLocalTransformUpdated()
 	CollisionShape.super._onLocalTransformUpdated(self)
 	if self._fixture then
-		self:_destroyFixture()
 		self:_addFixture()
 	end
 end

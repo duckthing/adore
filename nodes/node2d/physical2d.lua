@@ -46,8 +46,15 @@ setmetatable(bodyList, {__mode = "k"})
 
 ---When a love.World is created, you should call this
 ---@param world love.World
+---@return boolean success
 function Physical2d.addWorldList(world)
-	bodyList[world] = {}
+	if not bodyList[world] then
+		-- Doesn't exist yet
+		bodyList[world] = {}
+		return true
+	end
+	-- Already exists
+	return false
 end
 
 ---When a love.World is released, you should call this
