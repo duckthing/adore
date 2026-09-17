@@ -42,11 +42,26 @@ function LObjectP:newValueLabel(object, property, propertyName, inspector)
 	local button = Button(name)
 		:setAnchors(1, 0, 1, 1)
 		:setOffsets(-150, 0, -20, 0)
-	button.clicked:connect(self, "showPopup")
+	button.clicked:connect(self, "onValueButtonClicked")
 
 	button.previewer = self
 
 	return button
+end
+
+---When the value button is clicked, decide between a construct or edit popup
+function LObjectP:onValueButtonClicked()
+	local object, property, propertyName =
+		self.object, self.property, self.propertyName
+	local val = property:get(object, propertyName)
+
+	if val == nil then
+		-- No value; show the constructor popup
+		self:showConstructPopup()
+	else
+		-- Existing value; edit with the editor popup
+		self:showEditPopup(val)
+	end
 end
 
 ---Used for a Button connection; sets this property to `nil`
@@ -179,7 +194,7 @@ local constructors = {
 	},
 }
 
----Gets a list of Forms for the given classes
+---Gets a list of constructor Forms for the given classes
 ---@param classes string[]
 ---@return Previewer.LoveObject.Constructor[]
 local function getConstructorList(classes)
@@ -200,8 +215,8 @@ local function getConstructorList(classes)
 	return forms
 end
 
--- Shows a dialog to edit this LoveObject
-function LObjectP:showPopup()
+---Shows a dialog to edit this LoveObject
+function LObjectP:showConstructPopup()
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
 	---@type love.Object?
@@ -216,7 +231,7 @@ function LObjectP:showPopup()
 	)
 	window:getTitleLabel():setText(("Set '%s' (%s)"):format(propertyName, baseClass))
 
-	---@type PopupMenu.Item[] # All classes that match the provided base class
+	--- All classes that match the provided base class
 	local menuItems = getConstructorList(getMatchedClasses(baseClass))
 
 	---@type Form
@@ -251,9 +266,9 @@ function LObjectP:showPopup()
 		---@type VBox, Form.Sheet
 		otherVBox, otherSheet = FormBuilder.build(item.form)
 		otherVBox:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			0, 10, 0, 0
-		)
+				0, 0, 1, 1,
+				0, 10, 0, 0
+			)
 			:setResizeToContent(true)
 			:setMargin(4)
 		vbox:addChild(otherVBox)
@@ -264,9 +279,9 @@ function LObjectP:showPopup()
 		---@type VBox, Form.Sheet
 		otherVBox, otherSheet = FormBuilder.build(dropdown:getSelectedItem().form)
 		otherVBox:setAnchorsAndOffsets(
-			0, 0, 1, 1,
-			0, 10, 0, 0
-		)
+				0, 0, 1, 1,
+				0, 10, 0, 0
+			)
 			:setResizeToContent(true)
 			:setMargin(4)
 		vbox:addChild(otherVBox)
@@ -291,5 +306,186 @@ function LObjectP:showPopup()
 	window:popup()
 end
 
+---@alias Previewer.LoveObject.EditForm
+---| PopupMenu.Item
+---| {class: string, form: Form, submit: (fun(sheet: Form.Sheet, obj: love.Object): boolean)}
+---| {fill: (fun(sheet: Form.Sheet, obj: love.Object))?}
+
+---@type Previewer.LoveObject.EditForm[]
+local editForms = {
+	{
+		label = "CircleShape",
+		class = "CircleShape",
+		form = {
+			{type = "body", text = "Radius"},
+			{id = "radius", type = "textfield", value = "10"},
+		},
+		fill = function(sheet, obj)
+			---@cast obj love.CircleShape
+			local radiusField = sheet:getElement("radius")
+			---@cast radiusField LineEdit
+			radiusField:setText(tostring(obj:getRadius()))
+		end,
+		submit = function(sheet, obj)
+			---@cast obj love.CircleShape
+			local oldRadius = obj:getRadius()
+			obj:setRadius(tonumber(sheet:getValue("radius")) or oldRadius)
+			return true
+		end
+	},
+	{
+		label = "Box2D World",
+		class = "World",
+		form = {
+			{type = "body", text = "Gravity X"},
+			{id = "gx", type = "textfield", value = "0"},
+			{type = "body", text = "Gravity Y"},
+			{id = "gy", type = "textfield", value = "0"},
+		},
+		fill = function(sheet, obj)
+			---@cast obj love.World
+			local gxField, gyField = sheet:getElement("gx"), sheet:getElement("gy")
+			---@cast gxField LineEdit
+			---@cast gyField LineEdit
+			local gx, gy = obj:getGravity()
+			gxField:setText(tostring(gx))
+			gyField:setText(tostring(gy))
+		end,
+		submit = function(sheet, obj)
+			---@cast obj love.World
+			local gx, gy = sheet:getValue("gx"), sheet:getValue("gy")
+			local oldGX, oldGY = obj:getGravity()
+			obj:setGravity(tonumber(gx) or oldGX, tonumber(gy) or oldGY)
+			return true
+		end
+	},
+}
+
+---Gets a list of edit Forms for the given classes
+---@param classes string[]
+---@return Previewer.LoveObject.EditForm[]
+local function getEditFormList(classes)
+	---@type Previewer.LoveObject.EditForm[]
+	local forms = {}
+
+	---@type {[string]: true} # included[editForms[i].form] = true
+	local included = {}
+	for i = 1, #classes do included[classes[i]] = true end
+
+	for i = 1, #editForms do
+		local editForm = editForms[i]
+		if included[editForm.class] then
+			forms[#forms+1] = editForm
+		end
+	end
+
+	return forms
+end
+
+---Shows a dialog to edit this love.Object
+---@param val love.Object
+function LObjectP:showEditPopup(val)
+	if not val then return end
+
+	local object, property, propertyName =
+		self.object, self.property, self.propertyName
+	local baseClass = val:type()
+
+	local window = WindowPopup()
+	window._destroyOnClose = true
+	window:setAnchorsAndOffsets(
+		0, 1, 0, 1,
+		-200, -100, 0, 100
+	)
+	window:getTitleLabel():setText(("Edit '%s' (%s)"):format(propertyName, baseClass))
+
+	-- All classes that match the provided base class
+	local menuItems = getEditFormList(getMatchedClasses(baseClass))
+
+	---@type Form
+	local form = {
+		{type = "body", text = "Object Type"},
+		{id = "className", type = "dropdown", items = menuItems},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
+	vbox:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 10, -10, 0
+		)
+		:setResizeToContent(true)
+		:setMargin(4)
+
+	---@type VBox?, Form.Sheet?
+	local otherVBox, otherSheet
+
+	-- Add to the sheet when something is selected
+	---@type DropdownButton
+	local dropdown = sheet:getElement("className")
+	dropdown:getPopupMenu().itemSelected:connectCallable(function(_, _, item)
+		---@cast item Previewer.LoveObject.EditForm
+		if otherVBox then
+			-- Remove the old sheet
+			otherVBox:unparent()
+			otherVBox:queueDestroy(true)
+		end
+
+		---@type VBox, Form.Sheet
+		otherVBox, otherSheet = FormBuilder.build(item.form)
+		otherVBox:setAnchorsAndOffsets(
+				0, 0, 1, 1,
+				0, 10, 0, 0
+			)
+			:setResizeToContent(true)
+			:setMargin(4)
+
+		if item.fill then
+			-- Update the fields with the current values
+			item.fill(otherSheet, val)
+		end
+
+		vbox:addChild(otherVBox)
+	end)
+
+	-- Build the sheet with the current selection
+	if dropdown:getSelectedItem() then
+		---@type Previewer.LoveObject.EditForm
+		local editForm = dropdown:getSelectedItem()
+		---@type VBox, Form.Sheet
+		otherVBox, otherSheet = FormBuilder.build(editForm.form)
+		otherVBox:setAnchorsAndOffsets(
+				0, 0, 1, 1,
+				0, 10, 0, 0
+			)
+			:setResizeToContent(true)
+			:setMargin(4)
+
+		if editForm.fill then
+			-- Update the fields with the current values
+			editForm.fill(otherSheet, val)
+		end
+
+		vbox:addChild(otherVBox)
+	end
+
+	-- Connect events
+	window:addAction("Cancel", "close")
+	window:addAction("Set", "submit")
+	window.submit = function(...)
+		---@type Previewer.LoveObject.EditForm?
+		local item = dropdown:getSelectedItem()
+		if not item or not otherSheet then return end
+		local result = item.submit(otherSheet, val)
+		if result then
+			property:poke(object, propertyName)
+			window:close()
+		end
+	end
+
+	window:addChild(vbox)
+	self:addChild(window)
+	window:popup()
+end
 
 return LObjectP
