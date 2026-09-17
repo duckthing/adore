@@ -30,7 +30,7 @@ function Area2d:new(x, y)
 end
 
 function Area2d:_addShape(shape)
-	local fixture = Area2d.super._addShape(self, shape)
+	local fixture = Area2d.super._addShape(self, shape, 0)
 	fixture:setSensor(true)
 	return fixture
 end
@@ -98,6 +98,11 @@ function Area2d:endContact(this, other, contact)
 	end
 
 	-- Ended contact with an object that was never here
+end
+
+function Area2d:_createBody()
+	Area2d.super._createBody(self)
+	self.body:setGravityScale(0)
 end
 
 function Area2d:forceDestroy(...)
