@@ -229,11 +229,19 @@ function ObjectP:showConstructPopup()
 		---@type Previewer.Object.Constructor?
 		local item = dropdown:getSelectedItem()
 		if not item or not otherSheet then return end
+
+		local toolbox = Previewer.Toolbox
+		local srContainer = toolbox:getSubrootContainer()
+		if not srContainer then return end
+		srContainer:pushSubroot()
+
 		local result = item.submit(otherSheet)
 		if result then
 			self:attemptSet(result)
 			window:close()
 		end
+
+		srContainer:popSubroot()
 	end
 
 	window:addChild(vbox)

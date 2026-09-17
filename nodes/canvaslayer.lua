@@ -279,26 +279,29 @@ function CanvasLayer:getViewport()
 	return self._viewport or CanvasLayer.super.getViewport(self)
 end
 
----Used for deserialization
----@param newViewport Viewport
+---Sets the Viewport; used for deserialization and the editor
+---@param newViewport Viewport?
 function CanvasLayer:_setViewport(newViewport)
-	self._viewport = newViewport
+	if newViewport then
+		self._viewport = newViewport
+		---Returns the safe area of the Viewport when inside a CanvasLayer
+		---@param viewport Viewport
+		local function viewportGetSafeArea(viewport)
+			local gx, gy, gw, gh = self:getRoot():getViewport():getSafeArea()
+			local x, y = viewport:windowToViewportPoint(gx, gy)
+			local w, h = viewport:windowToViewportPoint(gx + gw, gy + gh)
 
-	---Returns the safe area of the Viewport when inside a CanvasLayer
-	---@param viewport Viewport
-	local function viewportGetSafeArea(viewport)
-		local gx, gy, gw, gh = self:getRoot():getViewport():getSafeArea()
-		local x, y = viewport:windowToViewportPoint(gx, gy)
-		local w, h = viewport:windowToViewportPoint(gx + gw, gy + gh)
-
-		return
-			max(0, x),
-			max(0, y),
-			min(w, viewport._canvasW),
-			min(h, viewport._canvasH)
+			return
+				max(0, x),
+				max(0, y),
+				min(w, viewport._canvasW),
+				min(h, viewport._canvasH)
+		end
+		newViewport.getSafeArea = viewportGetSafeArea
+	else
+		-- Set the Viewport to the Root's Viewport
+		self._viewport = Node._root._viewport
 	end
-	newViewport.getSafeArea = viewportGetSafeArea
-
 	self:shallowEmit("_eAncestorViewportChanged", self._viewport)
 end
 

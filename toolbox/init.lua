@@ -134,6 +134,8 @@ return setmetatable(Toolbox, {
 
 		Toolbox.mainWindow = MainWindow(self, originalRoot)
 		godRoot:addChild(Toolbox.mainWindow)
+		-- So it shows up as "internal" in the inspector
+		originalRoot._viewport._adoreSelectable = false
 
 		---@type Toolbox.SubrootContext
 		local subrootContext = require(PKG_NAME..".subrootcontext")(Toolbox)
