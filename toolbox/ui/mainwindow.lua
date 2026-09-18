@@ -853,7 +853,7 @@ function MainWindow:extendNode()
 		-- Check if the new class DOESN'T exist
 		local err
 		success, err = pcall(Adore.Any, newClassName)
-		if success then print(("Class '%s' already exists"):format(newClassField)) return end
+		if success then print(("Class '%s' already exists"):format(newClassName)) return end
 
 		-- Create the directories and open the file
 		local NativeFS = Adore.Libraries("NativeFS")
@@ -893,6 +893,17 @@ function MainWindow:extendNode()
 		if not success then print(err) return end
 
 		Adore.addUserPaths({[newClassName] = savePath})
+
+		-- Write the configuration
+		local toolbox = self.toolbox
+		local config = toolbox.config
+		if config then
+			local requirePath = savePath:match("(.*)%.lua"):gsub("/", ".")
+			config.userPaths = config.userPaths or {}
+			config.userPaths[newClassName] = requirePath
+			toolbox.godRoot:writeConfiguration()
+		end
+
 		window:close()
 	end
 

@@ -18,6 +18,8 @@ local Node = nil
 Toolbox.godRoot = nil
 ---@type Toolbox.MainWindow
 Toolbox.mainWindow = nil
+---@type AdoreInit.Config?
+Toolbox.config = nil
 
 ---An array of every path in this project
 ---@type string[]
@@ -131,6 +133,10 @@ return setmetatable(Toolbox, {
 
 		local godRoot = Adore:build({hideSceneWarning = true, allowTabFocus = "withModal"}, require(PKG_NAME..".themes.dark")())
 		Toolbox.godRoot = godRoot
+
+		local config = originalRoot._adoreConfig
+		godRoot._adoreConfig = config
+		Toolbox.config = config
 
 		Toolbox.mainWindow = MainWindow(self, originalRoot)
 		godRoot:addChild(Toolbox.mainWindow)
