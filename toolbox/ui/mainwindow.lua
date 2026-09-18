@@ -145,7 +145,7 @@ function MainWindow:new(toolbox, subroot)
 	self.bottomPanel = bottomPanel
 
 	--======== ORIGINAL ROOT
-	---@type Toolbox.GameScene # Where the game is rendered to
+	---@type Toolbox.GameScene? # Where the game is rendered to
 	local subWindow = GameScene(subroot)
 	---@type integer # The index of the currently fullscreened tab
 	self._tabIndex = 1
@@ -896,7 +896,7 @@ function MainWindow:extendNode()
 
 		-- Write the configuration
 		local toolbox = self.toolbox
-		local config = toolbox.config
+		local config = toolbox.projectConfig
 		if config then
 			local requirePath = savePath:match("(.*)%.lua"):gsub("/", ".")
 			config.userPaths = config.userPaths or {}

@@ -79,8 +79,8 @@ function Root:new(rootOptions, defaultTheme)
 	---@type boolean # `true` if this RootNode is not embedded inside of Toolbox
 	self.firstRoot = not rootExistsAlready
 	rootExistsAlready = true
-	---@type AdoreInit.Config? # The configuration file this RootNode was created from
-	self._adoreConfig = nil
+	---@type Adore.ProjectConfig? # The configuration file this RootNode was created from
+	self._projectConfig = nil
 
 	self.name = "root"
 	self._inTree = true
@@ -1597,7 +1597,7 @@ function Root:addMissingCallbacks()
 end
 
 do
----@type {[string]: fun(config: AdoreInit.Config): string?}
+---@type {[string]: fun(config: Adore.ProjectConfig): string?}
 local configWriters = {
 	json = function(config)
 		local JSON = Adore.Libraries("JSON")
@@ -1611,7 +1611,7 @@ local configWriters = {
 
 ---Writes the configuration to disk, if it exists
 function Root:writeConfiguration()
-	local config = self._adoreConfig
+	local config = self._projectConfig
 	if not config then return end
 	local path, extension = config.path, config.extension
 	if not (path and extension) then return end

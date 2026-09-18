@@ -31,7 +31,7 @@ function SceneTreeViewer:new(toolbox, container)
 	---@type Toolbox.EditableScene? # The current subroot container
 	self.subrootContainer = container
 	---@type Node? # Where the tree begins searching
-	self.startNode = container.subroot
+	self.startNode = container and container.subroot or nil
 
 	---@type "full" | "owned" # How to build the tree
 	self.iterateMode = "full"

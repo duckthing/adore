@@ -6,7 +6,8 @@ local Toolbox = {}
 
 ---@class Toolbox.InitOptions
 ---@field keybinds ShortcutContext.Keybinds? # Any keybinds for Toolbox's ShortcutContext; default is backtick (`) for full view
----@field openEditor boolean? # Should Toolbox start with the editor opened?
+---@field openEditor boolean? # [Default: `false`] Should Toolbox start with the editor opened?
+---@field skipRoot boolean? # [Default: `false`] Don't show the original root in the tabs
 
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
@@ -18,8 +19,8 @@ local Node = nil
 Toolbox.godRoot = nil
 ---@type Toolbox.MainWindow
 Toolbox.mainWindow = nil
----@type AdoreInit.Config?
-Toolbox.config = nil
+---@type Adore.ProjectConfig?
+Toolbox.projectConfig = nil
 
 ---An array of every path in this project
 ---@type string[]
@@ -134,12 +135,13 @@ return setmetatable(Toolbox, {
 		local godRoot = Adore:build({hideSceneWarning = true, allowTabFocus = "withModal"}, require(PKG_NAME..".themes.dark")())
 		Toolbox.godRoot = godRoot
 
-		local config = originalRoot._adoreConfig
-		godRoot._adoreConfig = config
-		Toolbox.config = config
+		local projectConfig = originalRoot._projectConfig
+		godRoot._projectConfig = projectConfig
+		Toolbox.projectConfig = projectConfig
 
-		Toolbox.mainWindow = MainWindow(self, originalRoot)
+		Toolbox.mainWindow = MainWindow(self, rootParam)
 		godRoot:addChild(Toolbox.mainWindow)
+
 		-- So it shows up as "internal" in the inspector
 		originalRoot._viewport._adoreSelectable = false
 
@@ -221,8 +223,16 @@ return setmetatable(Toolbox, {
 			end
 		end
 
-		if options and options.openEditor then
-			self.mainWindow:toggleFull()
+		if options then
+			if options.openEditor then
+				-- Open the editor into full screen
+				self.mainWindow:toggleFull()
+			end
+
+			if options.skipRoot then
+				-- Remove the original Root
+				self.mainWindow.gameTabContainer:removeChildAtIndex(1)
+			end
 		end
 
 		return originalRoot
