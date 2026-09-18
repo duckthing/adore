@@ -28,6 +28,8 @@ local libraryPaths = {
 	JSON = "lib.json",
 	---@type fzy
 	fzy = "lib.fzy",
+	---@type LuaPath
+	LuaPath = "lib.luapath",
 }
 Libraries = LazyRequire(libraryPaths, true)
 end
