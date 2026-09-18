@@ -270,7 +270,89 @@ require(PKG_NAME..".loader.fontloader")
 
 ---@class Adore.Builder: AdoreInit
 ---@field list {func: (fun(root: RootNode, adore: AdoreInit, ...): RootNode), args: table}[]
+---@field configObj AdoreInit.Config?
+---@field configPath string?
+---@field configExtension "json" | "toml"
 local AdoreBuilderMT = {__index = Adore}
+
+---@return Adore.Builder
+local function createBuilder()
+	local builder = setmetatable({
+		list = {},
+	}, AdoreBuilderMT)
+	---@cast builder Adore.Builder
+	return builder
+end
+
+do
+---@type {[string]: fun(contents: string): AdoreInit.Config}
+local configReaders = {
+	json = function(contents)
+		local JSON = Adore.Libraries("JSON")
+		local config, err = JSON.decode(contents)
+		if not config then
+			error(("Errored while reading config: %s"):format(err))
+		end
+		return config
+	end,
+	toml = function(contents)
+		local TinyTOML = Adore.Libraries("TinyTOML")
+		local config = TinyTOML.parse(contents, {load_from_string = true})
+		return config
+	end
+}
+
+---Sets the configuration file path, which makes the parameters in
+---`:builder` unnecessary.
+---* `Adore:config("path/config.toml"):build()`
+---* `Adore:config("path/config.json"):build()`
+---* etc.
+---@return Adore.Builder
+function Adore:config(path)
+	if self == Adore then
+		self = createBuilder()
+	end
+	---@cast self Adore.Builder
+
+	local LuaPath = Adore.Libraries("LuaPath")
+	local extension = LuaPath:extension_name(path)
+
+	local reader = configReaders[extension]
+	if not reader then
+		error(("Invalid config extension '%s'"):format(extension))
+	end
+
+	---@type AdoreInit.Config
+	local config
+	local shouldWrite = false
+
+	-- Get the Config
+	if love.filesystem.getInfo(path, "file") then
+		-- The file exists
+		local contents, err = love.filesystem.read(path)
+		if not contents then
+			error(("Failed to read contents at '%s':\n%s"):format(path, err))
+		end
+
+		config = reader(contents)
+	else
+		-- Create the default config (and write it to disk later)
+		---@type AdoreInit.Config
+		local Config = require(PKG_NAME..".data.config")
+		config = Config()
+		shouldWrite = true
+	end
+	config.path = path
+	config.extension = extension
+
+	self.configObj = config
+	self.configPath = path
+	self.configExtension = extension
+	self.shouldWriteConfig = shouldWrite
+
+	return self
+end
+end
 
 ---Calls a function, with either the `RootNode` or former function's return value passed into it.
 ---It should return a value; if not, it will use the passed parameter as the return value.
@@ -279,9 +361,7 @@ local AdoreBuilderMT = {__index = Adore}
 ---@return Adore.Builder
 function Adore:with(func, ...)
 	if self == Adore then
-		self = setmetatable({
-			list = {}
-		}, AdoreBuilderMT)
+		self = createBuilder()
 	end
 	---@cast self Adore.Builder
 
@@ -310,6 +390,14 @@ end
 function Adore:build(rootOptions, defaultTheme)
 	local root
 
+	local config = self.configObj
+	if config then
+		-- The configuration exists
+		if config.userPaths then
+			Adore.addUserPaths(config.userPaths)
+		end
+	end
+
 	do
 		-- Create the RootNode
 		defaultTheme = defaultTheme or Adore.Resources("DefaultTheme")()
@@ -322,6 +410,10 @@ function Adore:build(rootOptions, defaultTheme)
 		end
 
 		root = Adore.Nodes("RootNode")(rootOptions, defaultTheme)
+		root._adoreConfig = config
+		if self.shouldWriteConfig and config then
+			root:writeConfiguration()
+		end
 	end
 
 	if self ~= Adore then

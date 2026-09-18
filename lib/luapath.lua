@@ -205,7 +205,7 @@ end
 ---`"/some/more/folders/file.txt"` => `"/some/more/folders"`, `"file.txt"`
 ---@param P string
 ---@return string dirName
----@return string baseName
+---@return string fileName
 function PATH:split_path(P)
 	return string.match(P,"^(.-)[\\/]?([^\\/]*)$")
 end
@@ -245,11 +245,11 @@ function PATH:split_drive(P)
 	return '', P
 end
 
----Returns the base name of a path
+---Returns the file part of a path
 ---`"/some/more/folders/file.txt"` => `"file.txt"`
 ---@param P string
----@return string baseName
-function PATH:base_name(P)
+---@return string fileName
+function PATH:file_name(P)
 	local s1,s2 = self:split_path(P)
 	return s2
 end
@@ -274,6 +274,19 @@ function PATH:extension(P)
 	return s2
 end
 
+---Returns the extension of a path, with the dot excluded
+---* If there is no extension, it returns an empty string
+---* `path.splitext("/some/file.txt")` => `"txt"`
+---* `path.splitext("/some/.passwords")` => `""`
+---* `path.splitext("/some/.file.passwords")` => `"passwords"`
+---@param P string
+---@return string extensionName
+function PATH:extension_name(P)
+	local s1,s2 = self:split_ext(P)
+	if #s2 > 1 then return s2:sub(2) end
+	return s2
+end
+
 ---Return first path part for absolute path
 ---* On Windows this is drive letter (e.g. "c:\\some\path" => "c:")
 ---* On *nix this is first directory name (e.g. "/usr/etc" => "/usr")
@@ -290,12 +303,6 @@ end
 ---@return boolean isFull
 function PATH:is_full_path(P)
 	return (self:root(P) ~= '') and P and true or false
-end
-
-do -- Python aliases
-PATH.split = PATH.split_path
-PATH.isabs = PATH.is_full_path
-PATH.normpath = PATH.normalize
 end
 
 local function path_new(o)
