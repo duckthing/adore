@@ -1,23 +1,19 @@
---[[ local PKG_NAME = ...
-local ADORE_PATH = PKG_NAME:match("^(.*)%.data")
----@type AdoreInit
-local Adore = require(ADORE_PATH) --]]
-
----Configuration for Adore (and Toolbox)
----@class AdoreInit.Config
----@overload fun(): AdoreInit.Config
-local Config = {}
+---Configuration for Adore projects.
+---Written into by Toolbox.
+---@class Adore.ProjectConfig
+---@overload fun(): Adore.ProjectConfig
+local ProjectConfig = {}
 local ConfigMT
 ConfigMT = {
-	__index = Config,
+	__index = ProjectConfig,
 	__call = function()
 		local t = setmetatable({}, ConfigMT)
-		Config.new(t)
+		ProjectConfig.new(t)
 		return t
 	end,
 }
 
-function Config:new()
+function ProjectConfig:new()
 	---@type string # Where this file came from
 	self.path = "config.toml"
 	---@type "json" | "toml"
@@ -34,4 +30,4 @@ function Config:new()
 
 end
 
-return setmetatable(Config, ConfigMT)
+return setmetatable(ProjectConfig, ConfigMT)

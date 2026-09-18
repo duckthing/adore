@@ -270,22 +270,23 @@ require(PKG_NAME..".loader.fontloader")
 
 ---@class Adore.Builder: AdoreInit
 ---@field list {func: (fun(root: RootNode, adore: AdoreInit, ...): RootNode), args: table}[]
----@field configObj AdoreInit.Config?
----@field configPath string?
----@field configExtension "json" | "toml"
 local AdoreBuilderMT = {__index = Adore}
 
 ---@return Adore.Builder
 local function createBuilder()
 	local builder = setmetatable({
 		list = {},
+		---@type Adore.ProjectConfig
+		projectConfig = nil,
+		---@type boolean # If we should write the Project Config
+		shouldWriteConfig = false,
 	}, AdoreBuilderMT)
 	---@cast builder Adore.Builder
 	return builder
 end
 
 do
----@type {[string]: fun(contents: string): AdoreInit.Config}
+---@type {[string]: fun(contents: string): Adore.ProjectConfig}
 local configReaders = {
 	json = function(contents)
 		local JSON = Adore.Libraries("JSON")
@@ -322,11 +323,11 @@ function Adore:config(path)
 		error(("Invalid config extension '%s'"):format(extension))
 	end
 
-	---@type AdoreInit.Config
-	local config
+	---@type Adore.ProjectConfig
+	local projectConfig
 	local shouldWrite = false
 
-	-- Get the Config
+	-- Get the Project Config
 	if love.filesystem.getInfo(path, "file") then
 		-- The file exists
 		local contents, err = love.filesystem.read(path)
@@ -334,20 +335,18 @@ function Adore:config(path)
 			error(("Failed to read contents at '%s':\n%s"):format(path, err))
 		end
 
-		config = reader(contents)
+		projectConfig = reader(contents)
 	else
 		-- Create the default config (and write it to disk later)
-		---@type AdoreInit.Config
-		local Config = require(PKG_NAME..".data.config")
-		config = Config()
+		---@type Adore.ProjectConfig
+		local ProjectConfig = require(PKG_NAME..".data.projectconfig")
+		projectConfig = ProjectConfig()
 		shouldWrite = true
 	end
-	config.path = path
-	config.extension = extension
+	projectConfig.path = path
+	projectConfig.extension = extension
 
-	self.configObj = config
-	self.configPath = path
-	self.configExtension = extension
+	self.projectConfig = projectConfig
 	self.shouldWriteConfig = shouldWrite
 
 	return self
@@ -390,7 +389,7 @@ end
 function Adore:build(rootOptions, defaultTheme)
 	local root
 
-	local config = self.configObj
+	local config = self.projectConfig
 	if config then
 		-- The configuration exists
 		if config.userPaths then
@@ -410,7 +409,7 @@ function Adore:build(rootOptions, defaultTheme)
 		end
 
 		root = Adore.Nodes("RootNode")(rootOptions, defaultTheme)
-		root._adoreConfig = config
+		root._projectConfig = config
 		if self.shouldWriteConfig and config then
 			root:writeConfiguration()
 		end
