@@ -109,7 +109,7 @@ function FileBrowser:openDirectory(dir)
 	local items = filesystem.getDirectoryItems(dir)
 	for _, itemPath in ipairs(items) do
 		-- Make a button for directories first
-		local button = Button(itemPath)
+		local button = Button(itemPath.."/")
 		local info = filesystem.getInfo(dir..itemPath, "directory")
 		if info then
 			button.clicked:connect(self, "_onDirButtonPressed")
