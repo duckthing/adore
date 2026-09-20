@@ -256,10 +256,21 @@ end
 
 ---Returns the directory name of a path
 ---`"/some/more/folders/file.txt"` => `"/some/more/folders"`
+---`"/some/more/folders/"` => `"/some/more/folders"`
 ---@param P string
 ---@return string dirName
 function PATH:dir_name(P)
 	return (self:split_path(P))
+end
+
+---Returns the parent directory name of a path
+---`"/some/more/folders/file.txt"` => `"/some/more/folders"`
+---`"/some/more/folders/"` => `"/some/more"`
+---`"/some/more/folders"` => `"/some/more"`
+---@param P string
+---@return string dirName
+function PATH:parent_dir(P)
+	return (self:split_path(self:remove_dir_end(P)))
 end
 
 ---Returns the extension of a path
