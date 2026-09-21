@@ -227,15 +227,17 @@ function ObjectP:showConstructPopup()
 		local toolbox = Previewer.Toolbox
 		local srContainer = toolbox:getSubrootContainer()
 		if not srContainer then return end
-		srContainer:pushSubroot()
 
+		srContainer:pushSubroot()
 		local result = item.submit(otherSheet)
 		if result then
 			self:attemptSet(result)
+		end
+		srContainer:popSubroot()
+
+		if result then
 			window:close()
 		end
-
-		srContainer:popSubroot()
 	end
 
 	window:addChild(vbox)

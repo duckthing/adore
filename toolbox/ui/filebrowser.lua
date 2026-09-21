@@ -101,6 +101,8 @@ function FileBrowser:openDirectory(dir)
 	self.itemVBox._offsetY = 0
 	do
 		local goUpButton = Button("[Go up]")
+			:setAnchors(0, 0, 1, 0)
+			:setTextAlign("left")
 		goUpButton.clicked:connect(self, "goUp")
 		self.itemVBox:addChild(goUpButton)
 	end
@@ -110,6 +112,8 @@ function FileBrowser:openDirectory(dir)
 	for _, itemPath in ipairs(items) do
 		-- Make a button for directories first
 		local button = Button(itemPath.."/")
+			:setAnchors(0, 0, 1, 0)
+			:setTextAlign("left")
 		local info = filesystem.getInfo(dir..itemPath, "directory")
 		if info then
 			button.clicked:connect(self, "_onDirButtonPressed")
@@ -122,6 +126,8 @@ function FileBrowser:openDirectory(dir)
 	for _, itemPath in ipairs(items) do
 		-- Make a button for files second
 		local button = Button(itemPath)
+			:setAnchors(0, 0, 1, 0)
+			:setTextAlign("left")
 		local info = filesystem.getInfo(dir..itemPath, "file")
 		if info then
 			self.itemVBox:addChild(

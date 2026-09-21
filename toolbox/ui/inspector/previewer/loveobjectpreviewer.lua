@@ -330,15 +330,17 @@ function LObjectP:showConstructPopup()
 		local toolbox = Previewer.Toolbox
 		local srContainer = toolbox:getSubrootContainer()
 		if not srContainer then return end
-		srContainer:pushSubroot()
 
+		srContainer:pushSubroot()
 		local result = item.submit(otherSheet)
 		if result then
 			self:attemptSet(result)
+		end
+		srContainer:popSubroot()
+
+		if result then
 			window:close()
 		end
-
-		srContainer:popSubroot()
 	end
 
 	window:addChild(vbox)
@@ -516,9 +518,19 @@ function LObjectP:showEditPopup(val)
 		---@type Previewer.LoveObject.EditForm?
 		local item = dropdown:getSelectedItem()
 		if not item or not otherSheet then return end
+
+		local toolbox = Previewer.Toolbox
+		local srContainer = toolbox:getSubrootContainer()
+		if not srContainer then return end
+
+		srContainer:pushSubroot()
 		local result = item.submit(otherSheet, val)
 		if result then
 			property:poke(object, propertyName)
+		end
+		srContainer:popSubroot()
+
+		if result then
 			window:close()
 		end
 	end
