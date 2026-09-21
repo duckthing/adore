@@ -139,7 +139,7 @@ return setmetatable(Toolbox, {
 		godRoot._projectConfig = projectConfig
 		Toolbox.projectConfig = projectConfig
 
-		Toolbox.mainWindow = MainWindow(self, rootParam)
+		Toolbox.mainWindow = MainWindow(self, originalRoot)
 		godRoot:addChild(Toolbox.mainWindow)
 
 		-- So it shows up as "internal" in the inspector
@@ -211,6 +211,7 @@ return setmetatable(Toolbox, {
 		local originalChangeScene = originalRoot.changeSceneTo
 		originalRoot.changeSceneTo = function(s, constructor)
 			local srContainer = self:getSubrootContainer()
+			if not srContainer then return end
 			local isPushed = srContainer:isPushed()
 			if not isPushed then
 				srContainer:pushSubroot()

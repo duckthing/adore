@@ -98,6 +98,7 @@ local menuActions = {
 }
 
 ---@param toolbox Toolbox
+---@param subroot RootNode
 function MainWindow:new(toolbox, subroot)
 	MainWindow.super.new(self)
 	self:setAnchors(0, 0, 1, 1)
