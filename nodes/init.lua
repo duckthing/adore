@@ -76,6 +76,8 @@ local nodePaths = {
 			VBox = "nodes.control.vbox",
 			---@type HBox
 			HBox = "nodes.control.hbox",
+			---@type GridBox
+			GridBox = "nodes.control.gridbox",
 			---@type MarginBox
 			MarginBox = "nodes.control.marginbox",
 			---@type Label
