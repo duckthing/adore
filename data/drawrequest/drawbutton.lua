@@ -34,18 +34,25 @@ end
 function DrawButton:themeUpdate(button)
 	DrawButton.super.themeUpdate(self, button)
 	local lcr = button._localContentRect
-	local buttonW, buttonH = lcr.w, lcr.h
+	---@type number, number # The button dimensions with the content margins applied
+	local trueButtonW, trueButtonH = lcr.w, lcr.h
 
 	local textBatch = button._textBatch
 	local tbOldWidth, tbOldHeight = textBatch:getDimensions()
 
 	textBatch:setFont((button._font or DEFAULT_FONT)[button._fontSize or DEFAULT_FONT_SIZE])
 
+	---@type number, number # The content margins
+	local marginW, marginH = self.minOffsetW, self.minOffsetH
+	---@type number, number # The button dimensions without the content margins
+	local buttonW, buttonH = trueButtonW - marginW, trueButtonH - marginH
+
 	-- Do the text first
 	local wrapMode = button._autowrap
 	AutoWrap[wrapMode](textBatch, button._text, buttonW, "left")
 
 	local offsetX, offsetY = 0, 0
+	---@type number, number # The space an element can take up
 	local availableW, availableH = buttonW, buttonH
 
 	local iconSource = button._icon
@@ -114,7 +121,7 @@ function DrawButton:themeUpdate(button)
 	local tbWidth, tbHeight = textBatch:getDimensions()
 	if buttonH < tbHeight then
 		-- TextBatch is wider than the Button
-		button:_setCanonRect(lcr.x, lcr.y, buttonW, tbHeight)
+		button:_setCanonRect(lcr.x, lcr.y, trueButtonW, tbHeight + marginH)
 		availableH = tbHeight
 	elseif tbHeight < tbOldHeight then
 		-- TextBatch is smaller now
@@ -137,9 +144,18 @@ function DrawButton:themeUpdate(button)
 		offsetX = offsetX + (availableW - tbWidth) * 0.5
 	end
 
+	-- Add the content margins
+	local halfMarginW, halfMarginH =
+		marginW * 0.5,
+		marginH * 0.5
+
 	button._textBatchX, button._textBatchY =
-		offsetX,
-		offsetY + (availableH - tbHeight) * 0.5
+		offsetX + halfMarginW,
+		offsetY + halfMarginH + (availableH - tbHeight) * 0.5
+
+	button._iconX, button._iconY =
+		button._iconX * halfMarginW,
+		button._iconY * halfMarginH
 end
 
 ---@param button Button
