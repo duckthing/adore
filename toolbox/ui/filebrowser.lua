@@ -62,6 +62,7 @@ function FileBrowser:new(toolbox)
 			:setOffsets(0, 0, ICON_SIZE, ICON_SIZE)
 			:setIcon(Assets.Reload)
 			:setIconExpand(true)
+			:setVariant("flat")
 
 		hbox:addChild(pathLE)
 		hbox:addChild(reloadButton)
