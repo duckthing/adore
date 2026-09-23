@@ -7,6 +7,8 @@ local tnew = Structures.tableNew
 local Loader = require(ADORE_PATH..".loader")
 ---@type Adore.AssetCollection
 local AssetCollection = require(ADORE_PATH..".loader.assetcollection")
+---@type LuaPath
+local LuaPath = require(ADORE_PATH..".lib.luapath")
 
 local TextureLoader = Loader.getCollection("TextureLoader")
 
@@ -210,7 +212,7 @@ end
 ---@param assetPath string
 ---@return AssetID id
 function SheetLoader:register(sheetSource, assetPath)
-	local extension = assetPath:match("%.(.*)$")
+	local extension = LuaPath:extension_name(assetPath)
 	local path = assetPath
 
 	if extension == "lua" then

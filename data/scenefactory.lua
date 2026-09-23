@@ -3,6 +3,7 @@ local Adore = require ""
 local Object = Adore.Resources("Object")
 local Node = Adore.Nodes("Node")
 local tclear = Adore.Common("Structures").tableClear
+local LuaPath = Adore.Libraries("LuaPath")
 
 ---A convenient wrapper for building scenes with scripts
 ---@class SceneFactory: Object
@@ -36,8 +37,8 @@ function SceneFactory:new(func, source)
 
 	if source then
 		-- Try to get the extension
-		local extension = source:match("^.*%.(.*)")
-		if extension and extension == "lua" then
+		local extension = LuaPath:extension_name(source)
+		if extension == "lua" then
 			-- It's a Lua filepath, leave as is
 			self.source = source
 		else

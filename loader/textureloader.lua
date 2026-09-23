@@ -5,6 +5,8 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.loader%.textureloader")
 local Loader = require(ADORE_PATH..".loader")
 ---@type Adore.AssetCollection
 local AssetCollection = require(ADORE_PATH..".loader.assetcollection")
+---@type LuaPath
+local LuaPath = require(ADORE_PATH..".lib.luapath")
 local Internal = require(ADORE_PATH..".data.internal")
 
 ---@class TextureSource
@@ -41,10 +43,9 @@ local function genericHandle(self, method, path, ...)
 	-- It points to the relevant resource loader or 'ImageLoader' when the asset is not loaded.
 	-- Load your atlases and sheets before using TextureLoader.
 
-	---@type string?
-	local extension = path:match("%.(.*)$")
+	local extension = LuaPath:extension_name(path)
 	local parentPath = path
-	if extension and extension:find("@") then
+	if extension:find("@") then
 		-- Remove the @ part after the @ sign
 		extension = extension:match("(.*)@")
 		parentPath = path:match("(.*)@")

@@ -22,6 +22,7 @@ local MenuButton = Nodes("MenuButton")
 local PopupMenu = Nodes("PopupMenu")
 local FormBuilder = Common("FormBuilder")
 local fzy = Adore.Libraries("fzy")
+local LuaPath = Adore.Libraries("LuaPath")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -407,11 +408,11 @@ function MainWindow:togglePause()
 				local path = srContainer._lastFilepath
 				local requirePath = path:match("(.*)%.lua"):gsub("/", ".")
 				gScene:changeSceneTo(requirePath)
-				gScene.name = ("Game (%s)"):format(path:match(".*[/\\](.*)$"))
+				gScene.name = ("Game (%s)"):format(LuaPath:file_name(path))
 			end
 
 			-- Insert this tab
-			gScene.name = ("Game (%s)"):format(srContainer._lastFilepath:match(".*[/\\](.*)$"))
+			gScene.name = ("Game (%s)"):format(LuaPath:file_name(srContainer._lastFilepath))
 			local tabContainer = self.gameTabContainer
 			local index = (tabContainer:getIndexOfChild(self:getSubrootContainer()) or #tabContainer.children) + 1
 			tabContainer:insertChild(gScene, index)
@@ -496,7 +497,7 @@ function MainWindow:saveScene()
 
 	-- Create the directories, and error early if we can't open that file
 	local NativeFS = Adore.Libraries("NativeFS")
-	NativeFS.createDirectory(savePath:match("(.*)[/\\].*$"))
+	NativeFS.createDirectory(LuaPath:dir_name(savePath))
 	local file = NativeFS.newFile(savePath)
 	if not (file:isOpen() or file:open("w") or file:getMode() == "w") then
 		print("Can't open file")
@@ -589,7 +590,7 @@ function MainWindow:saveSceneAs()
 			self.toolbox.addFilePath(path)
 		end
 		srContainer._lastFilepath = path
-		srContainer.name = path:match(".*[/\\](.*)$")
+		srContainer.name = LuaPath:file_name(path)
 		local item = sheet:getValue("format")
 		---@cast item PopupMenu.Item
 		srContainer._lastFormat = item.label
@@ -671,14 +672,14 @@ function MainWindow:loadScene()
 			eScene:changeSceneTo(sceneOrErr)
 			eScene._lastFilepath = path
 
-			local extension = path:match("^.*%.(.*)")
+			local extension = LuaPath:extension_name(path)
 			local format = extension
 			if not (extension == "json" or extension == "lua") then
 				format = "binary"
 			end
 			eScene._lastFormat = format
 
-			local fileName = path:match(".*[/\\](.*)$")
+			local fileName = LuaPath:file_name(path)
 			eScene.name = fileName
 
 			self.gameTabContainer:addChild(eScene)
@@ -863,7 +864,7 @@ function MainWindow:extendNode()
 			return
 		end
 
-		NativeFS.createDirectory(savePath:match("(.*)[/\\].*$"))
+		NativeFS.createDirectory(LuaPath:dir_name(savePath))
 		local file = NativeFS.newFile(savePath)
 		if not (file:isOpen() or file:open("w") or file:getMode() == "w") then
 			print("Can't open file")

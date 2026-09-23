@@ -6,6 +6,8 @@ local ObjectSaver = require "common.objectsaver"
 local AssetCollection = require "loader.assetcollection"
 ---@type ClassDB
 local ClassDB = require "common.classdb"
+---@type LuaPath
+local LuaPath = require "lib.luapath"
 
 ---ObjectLoader returns an Object that is found at a certain file path.
 ---It's a wrapper around ObjectSaver for loading specifically.
@@ -133,7 +135,7 @@ end
 function ObjectLoader:handler(path, requestedClassName)
 	if not requestedClassName then requestedClassName = "Object" end
 
-	local extension = path:match("^.*%.(.*)")
+	local extension = LuaPath:extension_name(path)
 	if specialHandlers[extension] then
 		-- Use the special handler
 		local success, obj = pcall(specialHandlers[extension], path, requestedClassName)

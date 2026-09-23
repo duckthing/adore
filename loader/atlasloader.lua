@@ -120,7 +120,7 @@ local function collectPathsFromPatterns(manifest)
 			-- Pattern returns:
 			-- "assets/stuff/aaa.png" => "assets/stuff/", "aaa.png"
 			-- "aaa.png" => nil
-			local start, pattern = fullPattern:match("^(.*/)(.*)")
+			local start, pattern = fullPattern:match("^(.*[/\\])(.*)")
 			if not start then start, pattern = "", fullPattern end
 			pattern = "^"..pattern
 

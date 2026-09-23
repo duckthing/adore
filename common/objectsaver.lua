@@ -1,14 +1,17 @@
 ---@type AdoreInit
 local Adore = require ""
+local Common = Adore.Common
+local Libraries = Adore.Libraries
 
 local StringBuffer
-local ffi = Adore.Common("ffilib")
+local ffi = Common("ffilib")
 
-local ClassDB = Adore.Common("ClassDB")
-local Serpent = Adore.Libraries("Serpent")
-local JSON = Adore.Libraries("JSON")
-local Properties = require "data.properties"
+local ClassDB = Common("ClassDB")
+local Serpent = Libraries("Serpent")
+local JSON = Libraries("JSON")
+local LuaPath = Libraries("LuaPath")
 local SceneFactory = Adore.Resources("SceneFactory")
+local Properties = require "data.properties"
 
 ---@class ObjectSaver
 local ObjectSaver = {}
@@ -39,7 +42,7 @@ end
 ---@param path string
 ---@return ObjectSaver.Format? format
 local function guessFormatFromPath(path)
-	local extension = path:match("^.+(%..+)$")
+	local extension = LuaPath:extension_name(path)
 	if extension == "json" or extension == "lua" then
 		return extension
 	end
