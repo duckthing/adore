@@ -517,6 +517,14 @@ end
 ---@return {[string]: any}? deferredProperties # A map of property names to their values; keep this for later
 ---@overload fun(header: table, body: table): string?, Object?
 function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName, canInherit, canInstance)
+	do
+		-- Check the types of these parameters
+		local headerType = type(header)
+		if headerType ~= "table" then return ("Expected header of type 'table', got %s"):format(headerType), nil end
+		local bodyType = type(body)
+		if bodyType ~= "table" then return ("Expected body of type 'table', got %s"):format(bodyType), nil end
+	end
+
 	local RequestedClass
 	if not requestedClassName then
 		-- No class name, allow converting into any Object
@@ -816,7 +824,7 @@ local loadFormatHandler = {
 			if contents ~= STRING_MAGIC_NUMBER then
 				-- Magic number doesn't match, exit
 				file:close()
-				return nil, ("Invalid Adore Object (magic number does not match) (%s ~= %s)"):format(contents, STRING_MAGIC_NUMBER)
+				return nil, ("Invalid Adore Object (magic number does not match) (%s ~= %s)"):format(tohex(contents), tohex(STRING_MAGIC_NUMBER))
 			end
 		end
 
@@ -1017,7 +1025,7 @@ function ObjectSaver.loadFromFilePath(path, format, requestedClassName, canInher
 	-- If it's a SceneFactory, mark the source
 	if obj then
 		---@cast obj Object
-		if obj:is(SceneFactory) then
+		if type(obj) == "table" and type(obj.is) == "function" and obj:is(SceneFactory) then
 			---@cast obj SceneFactory
 			obj.source = path
 		end
