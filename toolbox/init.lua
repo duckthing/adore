@@ -8,6 +8,7 @@ local Toolbox = {}
 ---@field keybinds ShortcutContext.Keybinds? # Any keybinds for Toolbox's ShortcutContext; default is backtick (`) for full view
 ---@field openEditor boolean? # [Default: `false`] Should Toolbox start with the editor opened?
 ---@field skipRoot boolean? # [Default: `false`] Don't show the original root in the tabs
+---@field suspendWhenUnfocused boolean? # [Default: `true`] Same as RootNode's `suspendWhenUnfocused`
 
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
@@ -132,7 +133,20 @@ return setmetatable(Toolbox, {
 		Node = Adore.Nodes("Node")
 		Node._root = nil
 
-		local godRoot = Adore:build({hideSceneWarning = true, allowTabFocus = "withModal"}, require(PKG_NAME..".themes.dark")())
+		---@type boolean # If Toolbox can suspend
+		local suspendWhenUnfocused = true
+		if originalRoot._suspendWhenUnfocused then
+			-- Disable suspending in an embedded Root
+			originalRoot._suspendWhenUnfocused = false
+		end
+		if options and options.suspendWhenUnfocused == false then
+			-- Disable suspending in general
+			suspendWhenUnfocused = false
+		end
+
+		local godRoot = Adore:build({
+			hideSceneWarning = true, allowTabFocus = "withModal", suspendWhenUnfocused = suspendWhenUnfocused,
+		}, require(PKG_NAME..".themes.dark")())
 		Toolbox.godRoot = godRoot
 
 		local projectConfig = originalRoot._projectConfig
