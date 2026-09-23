@@ -3,6 +3,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
+local Common = Adore.Common
 local Libraries = Adore.Libraries
 
 local Assets = require(ADORE_PATH..".toolbox.assets")
@@ -13,9 +14,11 @@ local Button = Nodes("Button")
 local HBox = Nodes("HBox")
 local VBox = Nodes("VBox")
 
-local usingFFI = not not Adore.Common("ffilib")
+local usingFFI = not not Common("ffilib")
 -- Use the best filesystem
 local filesystem = love.filesystem
+local ObjectSaver = Common("ObjectSaver")
+local SceneFactory = Adore.Resources("SceneFactory")
 local LuaPath = Libraries("LuaPath")
 
 ---@class Toolbox.FileBrowser: Control
@@ -28,6 +31,7 @@ function FileBrowser:new(toolbox)
 	FileBrowser.super.new(self)
 	self:setVariant("panel")
 	self.name = "Files"
+	self.toolbox = toolbox
 
 	if not usingFFI then
 		-- TODO: Support non-FFI filesystem
@@ -87,6 +91,20 @@ function FileBrowser:_onDirButtonPressed(button)
 	self:openDirectory(self.pathLE._submittedText..button._text)
 end
 
+---@param button Button
+function FileBrowser:_onItemButtonPressed(button)
+	local path = self.pathLE._submittedText..button._text
+	local extension = LuaPath:extension_name(path)
+	local obj, err = ObjectSaver.loadFromFilePath(path)
+	if err then print(err) return end
+	---@cast obj Object
+	if obj:is(SceneFactory) then
+		self.toolbox.mainWindow:loadSceneFromFactory(obj, path)
+	else
+		self.toolbox.mainWindow.inspector:onNodeFocusChanged(nil, obj, false)
+	end
+end
+
 function FileBrowser:goUp()
 	self:openDirectory(LuaPath:parent_dir(self.pathLE._submittedText))
 end
@@ -131,6 +149,7 @@ function FileBrowser:openDirectory(dir)
 			:setTextAlign("left")
 		local info = filesystem.getInfo(dir..itemPath, "file")
 		if info then
+			button.clicked:connect(self, "_onItemButtonPressed")
 			self.itemVBox:addChild(
 				button
 			)

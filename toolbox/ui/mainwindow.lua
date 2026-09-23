@@ -606,6 +606,30 @@ function MainWindow:saveSceneAs()
 	pathField:grabFocus(false)
 end
 
+---Creates the subroot and instances the EditableScene
+---@param scene SceneFactory
+---@param path string
+function MainWindow:loadSceneFromFactory(scene, path)
+	-- Create the scene and add the tab
+	local eScene = EditableScene()
+	eScene:createSubroot()
+	eScene:changeSceneTo(scene)
+	eScene._lastFilepath = path
+
+	local extension = LuaPath:extension_name(path)
+	local format = extension
+	if not (extension == "json" or extension == "lua") then
+		format = "binary"
+	end
+	eScene._lastFormat = format
+
+	local fileName = LuaPath:file_name(path)
+	eScene.name = fileName
+
+	self.gameTabContainer:addChild(eScene)
+	self.gameTabContainer:selectTab(eScene)
+end
+
 ---Loads the scene and opens it
 function MainWindow:loadScene()
 	local srContainer = self:getSubrootContainer()
@@ -664,26 +688,8 @@ function MainWindow:loadScene()
 		end
 
 		local success, sceneOrErr = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
-		if success then
-			-- Create the scene and add the tab
-			---@cast scene SceneFactory
-			local eScene = EditableScene()
-			eScene:createSubroot()
-			eScene:changeSceneTo(sceneOrErr)
-			eScene._lastFilepath = path
-
-			local extension = LuaPath:extension_name(path)
-			local format = extension
-			if not (extension == "json" or extension == "lua") then
-				format = "binary"
-			end
-			eScene._lastFormat = format
-
-			local fileName = LuaPath:file_name(path)
-			eScene.name = fileName
-
-			self.gameTabContainer:addChild(eScene)
-			self.gameTabContainer:selectTab(eScene)
+		if sceneOrErr then
+			self:loadSceneFromFactory(sceneOrErr, path)
 			window:close()
 		else
 			print(sceneOrErr)
