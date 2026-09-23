@@ -97,14 +97,14 @@ function Popup:onRefreshed()
 		-- Clamp to the safe area
 		local viewport = getTargetViewport(self)
 		local safeX, safeY, safeW, safeH = viewport:getSafeArea()
-		local x, y, w, h = self._localContentRect:unpack()
+		local x, y, w, h = self._globalContentRect:unpack()
 		local clampedX, clampedY =
 			max(safeX, min(x, safeW - w)),
 			max(safeY, min(y, safeH - h))
 
 		if clampedX ~= x or clampedY ~= y then
 			-- Move to clamped position
-			self:setPosition(clampedX, clampedY)
+			self:setPosition(self:toLocal(clampedX, clampedY))
 			updateDimensions(self)
 		end
 	end

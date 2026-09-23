@@ -188,12 +188,12 @@ function Button._addDefinition(entry)
 		center = true,
 		bottom = true,
 	}
-	local wrapMap = {
+	local wrapModes = {
 		none = true,
 		basic = true,
 	}
 	entry:newEnum("_textAlign", alignModes, "center", "setTextAlign")
-	entry:newEnum("_autowrap", wrapMap, "none", "setTextAutoWrap")
+	entry:newEnum("_autowrap", wrapModes, "none", "setTextAutoWrap")
 	entry:newAssetPath("_icon", "TextureLoader", nil, "setIcon")
 	entry:newEnum("_iconAlign", alignModes, "center", "setIconAlign")
 	entry:newEnum("_iconJustify", justifyModes, "center", "setIconJustify")
