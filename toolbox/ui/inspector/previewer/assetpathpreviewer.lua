@@ -46,6 +46,7 @@ function AssetP:newValueLabel(object, property, propertyName)
 		:setIconAlign("center")
 		:setIconJustify("top")
 		:setIconExpand(true)
+		:setClipText(true)
 	button.clicked:connect(self, "showPopup")
 
 	if collectionName == "TextureLoader" then
