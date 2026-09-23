@@ -154,8 +154,8 @@ function DrawButton:themeUpdate(button)
 		offsetY + halfMarginH + (availableH - tbHeight) * 0.5
 
 	button._iconX, button._iconY =
-		button._iconX * halfMarginW,
-		button._iconY * halfMarginH
+		button._iconX + halfMarginW,
+		button._iconY + halfMarginH
 end
 
 ---@param button Button
