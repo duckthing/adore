@@ -54,10 +54,10 @@ function Color2P:newValueLabel(object, property, propertyName, component)
 	return edit
 end
 
-function Color2P:onRInput(text) self:onInput(text, 1) end
-function Color2P:onGInput(text) self:onInput(text, 2) end
-function Color2P:onBInput(text) self:onInput(text, 3) end
-function Color2P:onAInput(text) self:onInput(text, 4) end
+function Color2P:onRInput(_, text) self:onInput(text, 1) end
+function Color2P:onGInput(_, text) self:onInput(text, 2) end
+function Color2P:onBInput(_, text) self:onInput(text, 3) end
+function Color2P:onAInput(_, text) self:onInput(text, 4) end
 
 local symbols = {self = 0}
 local tempColor = {1, 1, 1, 1}

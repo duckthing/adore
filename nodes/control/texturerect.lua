@@ -56,4 +56,17 @@ function TextureRect:forceDestroy(recursive)
 	TextureRect.super.forceDestroy(self, recursive)
 end
 
+function TextureRect._addDefinition(entry)
+	entry:newAssetPath("_texture", "TextureLoader", nil, "setTexture")
+	local stretchModes = {
+		scale = true,
+		tile = true,
+		keep = true,
+		keepCentered = true,
+		keepAspect = true,
+		keepAspectCentered = true,
+	}
+	entry:newEnum("_stretchMode", stretchModes, "keepCentered", "setStretchMode")
+end
+
 return TextureRect

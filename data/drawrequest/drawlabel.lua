@@ -20,29 +20,32 @@ function DrawLabel:themeUpdate(label)
 	local textBatch = label._textBatch
 	local wrapMode= label._autowrap
 	local tbOldWidth, tbOldHeight = textBatch:getDimensions()
+	local labelWidth, labelHeight = lcr.w, lcr.h
 
 	textBatch:setFont((label._font or DEFAULT_FONT)[label._fontSize or DEFAULT_FONT_SIZE])
-	AutoWrap[wrapMode](textBatch, text, lcr.w, label._align)
+	AutoWrap[wrapMode](textBatch, text, labelWidth, label._align)
 
 	local tbWidth, tbHeight = textBatch:getDimensions()
-	local labelHeight = lcr.h
 
-	if labelHeight < tbHeight then
-		-- If too small, resize the Label
-		label:_setCanonRect(lcr.x, lcr.y, lcr.w, tbHeight)
-		label._textBatchY = 0
-		return
-	elseif tbHeight < tbOldHeight then
-		-- TextBatch height is smaller now
-		-- Refresh again, as the Label might have refreshed with the wrong minimum height
-		label:deferRefreshSelf()
-		return
-	elseif wrapMode == "none" and tbWidth ~= tbOldWidth then
-		-- TextBatch width is different now
-		-- Refresh again, as the Label might have refreshed with the wrong minimum width
-		-- (Which matters more when wrapping is disabled)
-		label:deferRefreshSelf()
-		return
+	if not label._clipText then
+		-- If we're not clipping, we might have to resize the Label
+		if labelHeight < tbHeight then
+			-- If too small, resize the Label
+			label:_setCanonRect(lcr.x, lcr.y, labelWidth, tbHeight)
+			label._textBatchY = 0
+			return
+		elseif tbHeight < tbOldHeight then
+			-- TextBatch height is smaller now
+			-- Refresh again, as the Label might have refreshed with the wrong minimum height
+			label:deferRefreshSelf()
+			return
+		elseif wrapMode == "none" and tbWidth ~= tbOldWidth then
+			-- TextBatch width is different now
+			-- Refresh again, as the Label might have refreshed with the wrong minimum width
+			-- (Which matters more when wrapping is disabled)
+			label:deferRefreshSelf()
+			return
+		end
 	end
 
 	local justify = label._justify
@@ -51,15 +54,19 @@ function DrawLabel:themeUpdate(label)
 		label._textBatchY = 0
 	elseif justify == "center" then
 		-- Center
-		label._textBatchY = (lcr.h - tbHeight) * 0.5
+		label._textBatchY = (labelHeight - tbHeight) * 0.5
 	else
 		-- Bottom
-		label._textBatchY = (lcr.h - tbHeight)
+		label._textBatchY = (labelHeight - tbHeight)
 	end
 end
 
 ---@param label Label
 function DrawLabel:draw(label)
+	if label._clipText then
+		local gcr = label._globalContentRect
+		love.graphics.intersectScissor(gcr.x, gcr.y, gcr.w, gcr.h)
+	end
 	local lcr = label._localContentRect
 	love.graphics.draw(label._textBatch, lcr.x, lcr.y + label._textBatchY)
 end

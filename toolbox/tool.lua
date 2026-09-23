@@ -214,6 +214,13 @@ function Tool:drawControlBoundingBox(selected, baseThickness)
 	love.graphics.setLineWidth(3 * baseThickness)
 	love.graphics.setColor(0.8, 0.5, 0.5)
 	love.graphics.rectangle("line", selected._globalContentRect:unpack())
+
+	-- Draw the pivot
+	local pivotX, pivotY = selected:getWorldPosition()
+	love.graphics.setColor(0.2, 0.9, 0.2)
+	love.graphics.circle("line", pivotX, pivotY, 5 * baseThickness)
+	love.graphics.setColor(0.5, 0.8, 0.5, 0.8)
+	love.graphics.circle("fill", pivotX, pivotY, 5 * baseThickness)
 end
 
 ---Draws anything editor related

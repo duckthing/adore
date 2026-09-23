@@ -37,6 +37,8 @@ function Label:new(text)
 	self._text = text or ""
 	---@type love.Text # The drawn part
 	self._textBatch = love.graphics.newText(self._font[self._fontSize], self._text)
+	---@type boolean # Clip text outside of bounds of this Label
+	self._clipText = false
 
 	---@type number # Y offset where the text batch is drawn
 	self._textBatchY = 0
@@ -45,8 +47,8 @@ end
 function Label:getMinimumSize()
 	local minW, minH = Label.super.getMinimumSize(self)
 	local textBatch = self._textBatch
-	if self._autowrap == "none" then
-		-- Minimum width with no wrapping is always the width of the text
+	if self._autowrap == "none" and not self._clipText then
+		-- Minimum width with no wrapping or clipping is always the width of the text
 		minW = max(minW, textBatch:getWidth())
 	end
 	return minW, max(minH, textBatch:getHeight())
@@ -119,6 +121,17 @@ function Label:setAutoWrap(autowrap)
 	return self
 end
 
+---Sets whether text gets clipped out of bounds
+---@param clip boolean
+---@return self
+function Label:setClipText(clip)
+	if self._clipText ~= clip then
+		self._clipText = clip
+		self:deferRefreshSelf()
+	end
+	return self
+end
+
 function Label:forceDestroy(recursive)
 	Label.super.forceDestroy(self, recursive)
 	self._textBatch:release()
@@ -146,6 +159,7 @@ function Label._addDefinition(entry)
 		basic = true,
 	}
 	entry:newEnum("_autowrap", wrapMap, "none", "setAutoWrap")
+	entry:newBoolean("_clipText", true, "setClipText")
 end
 
 return Label
