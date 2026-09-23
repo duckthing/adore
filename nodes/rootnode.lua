@@ -28,6 +28,7 @@ local _, shaderAssets = Adore.Loader.getCollection("ShaderLoader")
 ---@field drawControlDebug boolean? # Draw an outline around Controls without a DrawRequest
 ---@field allowUnfocus boolean? # Does pressing Escape unfocus the UI?
 ---@field allowTabFocus CoreUIContext.GrabFocusMode? # Does pressing (Shift+)Tab focus the UI when there is no focus currently?
+---@field suspendWhenUnfocused boolean? # [Default: `false`] # Does unfocusing pause the entire window? Override `:drawSuspended` to draw something.
 
 ---@class RootNode: Node
 ---@field super Node
@@ -102,6 +103,8 @@ function Root:new(rootOptions, defaultTheme)
 	self.gameSpeed = 1
 	---@type boolean # If :update() is called at all (see Node._pauseMode)
 	self._paused = false
+	---@type boolean # Should the RootNode suspend the game when unfocused?
+	self._suspendWhenUnfocused = (rootOptions and rootOptions.suspendWhenUnfocused) or false
 
 
 	---======== VIEWPORT
@@ -1419,6 +1422,27 @@ end
 -- local appleCakeProfileDraw
 -- local appleCakeProfileDrawFitted
 
+local suspendUntilFocused
+
+---Sleep until we get focus again
+do
+local waitStep = 0.1
+function suspendUntilFocused()
+	while not love.window.hasFocus() do
+		love.timer.sleep(waitStep)
+		love.event.pump()
+		for name,a,b,c,d,e,f in love.event.poll() do
+			if name == "quit" then
+				love.event.quit()
+				return
+			end
+			---@diagnostic disable-next-line: undefined-field
+			love.handlers[name](a,b,c,d,e,f)
+		end
+	end
+end
+end
+
 ---This method draws all CanvasLayers and the RootNode.
 ---If you're looking for how the RootNode draws, look at `:drawLayer()`
 function Root:draw()
@@ -1429,14 +1453,30 @@ function Root:draw()
 	-- appleCakeProfileDraw:stop()
 
 	-- appleCakeProfileDrawFitted = AppleCake.profile("Root:draw(Fitted)", nil, appleCakeProfileDrawFitted)
-	love.graphics.setColor(self.albedo)
-	self._viewport:drawFittedContents(0, 0)
+	if not (self._suspendWhenUnfocused and not love.window.hasFocus()) then
+		-- Draw like normal
+		love.graphics.setColor(self.albedo)
+		self._viewport:drawFittedContents(0, 0)
+	else
+		-- Pause the game
+		self:drawSuspended()
+		suspendUntilFocused()
+	end
 	-- appleCakeProfileDrawFitted:stop()
 	-- AppleCake.flush()
 end
 
 ---This method should be overridden; it draws the background when the viewport doesn't fit the window
 function Root:drawBackground()
+end
+
+---This method should be overridden; it draws only 1 frame when the window is unfocused.
+function Root:drawSuspended()
+	love.graphics.setColor(self.albedo)
+	self._viewport:drawFittedContents(0, 0)
+	love.graphics.setColor(0, 0, 0, 0.4)
+	love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
+	love.graphics.present()
 end
 
 ---The handler for love.mousemoved
