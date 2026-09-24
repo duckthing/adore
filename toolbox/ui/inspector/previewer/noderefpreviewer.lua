@@ -32,26 +32,26 @@ function NodeRefP:construct(object, property, propertyName)
 end
 
 ---@param self Button
-local function _canDropData(self, posX, posY, data)
+local function buttonCanDropData(self, posX, posY, data)
 	if type(data) == "table" and data.type == "node" and data.node then
 		return true
 	end
 end
 
 ---@param self Button
-local function _getDragData(self)
+local function buttonGetDragData(self)
 	-- Return the contained Node
 	---@type Previewer.NodeRef
 	local previewer = self.previewer
-	local gottenNode = previewer.property:get(previewer.object, previewer.propertyName)
-	if not gottenNode then return end
+	local node = previewer.property:get(previewer.object, previewer.propertyName)
+	if not node then return end
 	return
-		{type = "node", node = gottenNode},
-		Label(tostring(gottenNode))
+		{type = "node", node = node},
+		Label(tostring(node))
 end
 
 ---@param self Button
-local function _dropData(self, posX, posY, data)
+local function buttonDropData(self, posX, posY, data)
 	if type(data) == "table" and data.type == "node" and data.node then
 		---@type Node
 		local node = data.node
@@ -74,9 +74,9 @@ function NodeRefP:newValueLabel(object, property, propertyName, inspector)
 	button.clicked:connect(self, "focusNode")
 	button:setDisabled(not selectable)
 
-	button._canDropData = _canDropData
-	button._getDragData = _getDragData
-	button._dropData = _dropData
+	button._canDropData = buttonCanDropData
+	button._getDragData = buttonGetDragData
+	button._dropData = buttonDropData
 	button.previewer = self
 
 	return button

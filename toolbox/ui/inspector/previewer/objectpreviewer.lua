@@ -4,9 +4,11 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local FormBuilder = Adore.Common("FormBuilder")
+local ClassDB = Adore.Common("ClassDB")
 
 local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
 local Button = Nodes("Button")
+local Label = Nodes("Label")
 local WindowPopup = Nodes("WindowPopup")
 
 local BASIC_WARNING = {
@@ -43,6 +45,48 @@ function ObjectP:construct(object, property, propertyName)
 	self:addChild(nilButton)
 end
 
+---@param self Button
+local function buttonCanDropData(self, posX, posY, data)
+	if type(data) == "table" and data.type == "object" then
+		---@type Previewer.Object
+		local previewer = self.previewer
+
+		---@type Object?
+		local object = data.object
+		if object and ClassDB.doesClassInherit(previewer.property.baseClass, object) then
+			return true
+		end
+	end
+end
+
+---@param self Button
+local function buttonGetDragData(self)
+	-- Return the contained Node
+	---@type Previewer.Object
+	local previewer = self.previewer
+	local object = previewer.property:get(previewer.object, previewer.propertyName)
+	if not object then return end
+	return
+		{type = "object", object = object},
+		Label(tostring(object))
+end
+
+---@param self Button
+local function buttonDropData(self, posX, posY, data)
+	if type(data) == "table" and data.type == "object" then
+		---@type Object?
+		local object = data.object
+		if not object then return end
+		---@type Previewer.Object
+		local previewer = self.previewer
+		if object and ClassDB.doesClassInherit(previewer.property.baseClass, object) then
+			previewer:attemptSet(object)
+			return true
+		end
+	end
+end
+
+
 function ObjectP:newValueLabel(object, property, propertyName, inspector)
 	---@type Object
 	local val = property:get(object, propertyName)
@@ -57,6 +101,9 @@ function ObjectP:newValueLabel(object, property, propertyName, inspector)
 	button:setDisabled(not selectable)
 
 	button.previewer = self
+	button._canDropData = buttonCanDropData
+	button._getDragData = buttonGetDragData
+	button._dropData = buttonDropData
 
 	return button
 end
