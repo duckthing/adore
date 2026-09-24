@@ -458,6 +458,7 @@ end
 ---@param atlas Atlas
 ---@param path string
 function AtlasLoader:register(atlas, path)
+	path = self:simplifyPath(path)
 	AtlasLoader.super.register(self, atlas, path)
 
 	-- Add each frame into TextureSource

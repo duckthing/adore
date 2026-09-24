@@ -106,6 +106,7 @@ end
 ---@return AssetID
 function TextureLoader:get(path, ...)
 	-- If it's a sub-asset, make sure to load the parent first
+	path = self:simplifyPath(path)
 	local parentPath = path
 	if parentPath:find("@") then
 		parentPath = parentPath:match("(.*)@")
@@ -123,6 +124,7 @@ end
 ---@param path string
 ---@param ... unknown
 function TextureLoader:reloader(collection, path, ...)
+	path = self:simplifyPath(path)
 	local assetId = collection.pathToId(path)
 	if not assetId then
 		error(("AssetID at path '%s' not found"):format(path))

@@ -31,11 +31,13 @@ end
 
 function ImageLoader:register(asset, path)
 	-- Handler should not register assets into the TextureLoader
+	path = self:simplifyPath(path)
 	ImageLoader.super.register(self, asset, path)
 	asset.fromId = Loader.getCollection("TextureLoader"):register(asset, path)
 end
 
 function ImageLoader:reloader(path, ...)
+	path = self:simplifyPath(path)
 	local id = self.pathToId[path]
 	---@type TextureSource
 	local tSource = self.assets[id]

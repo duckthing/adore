@@ -65,11 +65,13 @@ local builders = {
 			:setAnchors(0, 0, 1, 0)
 			:setFontSize(24)
 			:setJustify("center")
+			:setAutoWrap("basic")
 		return label
 	end,
 	body = function(item)
 		local label = Label(item.text)
 			:setAnchors(0, 0, 1, 0)
+			:setAutoWrap("basic")
 		return label
 	end,
 	separator = function(item)

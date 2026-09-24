@@ -31,6 +31,7 @@ function ShaderLoader:handler(path)
 end
 
 function ShaderLoader:reloader(path)
+	path = self:simplifyPath(path)
 	local id = self.pathToId[path]
 	local newShader = self:handler(path)
 	self.assets[id] = newShader

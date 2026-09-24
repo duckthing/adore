@@ -3,11 +3,13 @@
 -- local ADORE_PATH = PKG_NAME:match("(.*)%.loader%.assetcollection")
 
 ---@type TinyTOML
-local TinyTOML = require("lib.tinytoml")
+local TinyTOML = require "lib.tinytoml"
 ---@type SimpleObject
-local SimpleObject = require("lib.classic")
+local SimpleObject = require "lib.classic"
 ---@type Structures
-local Structures = require("common.structures")
+local Structures = require "common.structures"
+---@type LuaPath
+local LuaPath = require "lib.luapath"
 local tclear = Structures.tableClear
 
 ---@alias AssetID integer
@@ -58,6 +60,14 @@ function AssetCollection:new(type, handler, destructor, reloader)
 	end
 end
 
+---Standardizes the paths so only 1 path can refer to 1 asset
+---* Collapse all paths and removes any starting slashes
+---@param path string
+---@return string cleanedPath
+function AssetCollection:simplifyPath(path)
+	return LuaPath:normalize(path):match("[/\\]*(.*)")
+end
+
 ---Loads a new asset from a path, without registering it
 ---@param path string
 ---@param ... unknown
@@ -79,10 +89,12 @@ end
 ---@param newAsset (table | userdata)
 function AssetCollection:destructor(toDestroy, newAsset)
 	local toDestroyPath, toDestroyId = self:getAssetPath(toDestroy)
+	print(toDestroyPath, toDestroyId)
 	if toDestroyPath then
 		-- Replace with the new asset (or nil)
 		---@cast toDestroyId integer
 		self.assets[toDestroyId] = newAsset or false
+		print("replaced with", newAsset)
 		if not newAsset then
 			-- Remove it
 			self.pathToId[toDestroyPath] = nil
@@ -155,6 +167,7 @@ function AssetCollection:areSourceFilesChanged(files, cacheInfo, invalidateCallb
 	local modifiedTimes = cacheInfo.modifiedTimes
 	for i = 1, #files do
 		local filepath = files[i]
+		filepath = self:simplifyPath(filepath)
 
 		local oldModifiedTime = modifiedTimes[filepath]
 		if not oldModifiedTime and invalidateCallback(filepath, "added") then
@@ -218,10 +231,11 @@ end
 local TINYTOML_PARSE_ARGS = {load_from_string = true}
 
 ---Returns the cache info for the filepath
----@param filepath string
+---@param path string
 ---@return Adore.Loader.CacheInfo?
-function AssetCollection:getCacheInfo(filepath)
-	local cacheFilePath = self:getCachePath(filepath, "_cacheinfo.toml")
+function AssetCollection:getCacheInfo(path)
+	path = self:simplifyPath(path)
+	local cacheFilePath = self:getCachePath(path, "_cacheinfo.toml")
 	if love.filesystem.getInfo(cacheFilePath) then
 		local contents = love.filesystem.read("string", cacheFilePath)
 		---@type Adore.Loader.CacheInfo
@@ -236,10 +250,11 @@ function AssetCollection:getCacheInfo(filepath)
 end
 
 ---Sets the cache info for the filepath
----@param filepath string
+---@param path string
 ---@param info Adore.Loader.CacheInfo?
-function AssetCollection:setCacheInfo(filepath, info)
-	local cacheFilePath = self:getCachePath(filepath, "_cacheinfo.toml")
+function AssetCollection:setCacheInfo(path, info)
+	path = self:simplifyPath(path)
+	local cacheFilePath = self:getCachePath(path, "_cacheinfo.toml")
 	if info then
 		-- Write the cache info
 		AssetCollection:ensureCacheDir()
@@ -262,6 +277,7 @@ end
 ---@return AssetID id
 function AssetCollection:register(asset, path)
 	assert(asset ~= nil, "Asset must not be nil")
+	path = self:simplifyPath(path)
 	local id = self.nextId
 	self.nextId = id + 1
 	self.assets[id] = asset
@@ -278,6 +294,7 @@ end
 ---@return any asset
 ---@return AssetID id
 function AssetCollection:get(path, ...)
+	path = self:simplifyPath(path)
 	-- Check for existing path
 	local id = self.pathToId[path]
 	if not id then
@@ -312,6 +329,7 @@ end
 ---@return any? asset
 ---@return AssetID? id
 function AssetCollection:has(path)
+	path = self:simplifyPath(path)
 	-- Check for existing path
 	local id = self.pathToId[path]
 	if id then
@@ -327,6 +345,7 @@ end
 ---@return boolean success
 ---@return string? err
 function AssetCollection:reload(path, ...)
+	path = self:simplifyPath(path)
 	-- Check for existing path
 	local id = self.pathToId[path]
 	if not id then
@@ -358,6 +377,7 @@ end
 ---@return any asset
 ---@return AssetID id
 function AssetCollection:getFresh(path, ...)
+	path = self:simplifyPath(path)
 	if self:has(path) then
 		assert(self:reload(path, ...))
 	end

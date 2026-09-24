@@ -66,6 +66,7 @@ do
 	local submoduleNames = {
 		"Expression",
 		"InputField",
+		"LuaPath",
 		-- RTA is excluded due to issues on web
 	}
 

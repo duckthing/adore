@@ -737,6 +737,8 @@ end
 ---@return boolean success
 ---@return string? error
 function ObjectSaver.saveToFilePath(path, object, format)
+	local dir = LuaPath:dir_name(path)
+	if dir ~= "" then love.filesystem.createDirectory(dir) end
 	local file, err = love.filesystem.newFile(path, "w")
 	if not file then
 		return false, err

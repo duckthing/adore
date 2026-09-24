@@ -63,6 +63,7 @@ end
 ---@overload fun(self: ObjectLoader, path: string): Object, AssetID
 function ObjectLoader:get(path, requestedClassName)
 	-- Check for existing path
+	path = self:simplifyPath(path)
 	local id = self.pathToId[path]
 	if not id then
 		-- Doesn't exist; create it
@@ -83,12 +84,14 @@ end
 ---@param path string
 ---@return {[string]: any}?
 function ObjectLoader:getModifiedSceneProperties(path)
+	path = self:simplifyPath(path)
 	return self.pathToDefaultValues[path]
 end
 
 ---Removes the modified properties for the scene; usually called after saving a scene
 ---@param path string
 function ObjectLoader:removeModifiedSceneProperties(path)
+	path = self:simplifyPath(path)
 	self.pathToDefaultValues[path] = nil
 end
 
@@ -114,6 +117,7 @@ end
 ---@param path string
 function ObjectLoader:updateModifiedSceneProperties(node, path)
 	-- Get the old modified values, or use a new empty table
+	path = self:simplifyPath(path)
 	local modified = self.pathToDefaultValues[path]
 	if not modified then
 		modified = {}

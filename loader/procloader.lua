@@ -193,6 +193,7 @@ end
 
 function ProcLoader:register(asset, path)
 	-- Handler should not register assets into the TextureLoader
+	path = self:simplifyPath(path)
 	ProcLoader.super.register(self, asset, path)
 	asset.fromId = TextureLoader:register(asset, path)
 end

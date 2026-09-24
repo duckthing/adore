@@ -94,8 +94,9 @@ end
 
 ---@param asset FontSource
 ---@param path string
----@ret
+---@return AssetID
 function FontLoader:register(asset, path)
+	path = self:simplifyPath(path)
 	local realPath, hinting = path:match("(.*)@?(.*)")
 	if asset.hinting == "normal" then
 		if hinting and hinting ~= "" then
@@ -114,7 +115,8 @@ end
 ---@param path string
 ---@param ... unknown
 function FontLoader:reloader(collection, path, ...)
-	local assetId = collection.pathToId(path)
+	path = self:simplifyPath(path)
+	local assetId = collection.pathToId[path]
 	if not assetId then
 		error(("AssetID at path '%s' not found"):format(path))
 	end

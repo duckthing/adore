@@ -212,6 +212,7 @@ end
 ---@param assetPath string
 ---@return AssetID id
 function SheetLoader:register(sheetSource, assetPath)
+	assetPath = self:simplifyPath(assetPath)
 	local extension = LuaPath:extension_name(assetPath)
 	local path = assetPath
 
@@ -257,6 +258,7 @@ end
 ---@param path string
 ---@param ... unknown
 function SheetLoader:reloader(collection, path, ...)
+	path = self:simplifyPath(path)
 	local id = collection.pathToId[path]
 	---@type TextureSource
 	local tSource = collection.assets[id]
