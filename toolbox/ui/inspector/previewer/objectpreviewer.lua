@@ -9,6 +9,10 @@ local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
 local Button = Nodes("Button")
 local WindowPopup = Nodes("WindowPopup")
 
+local BASIC_WARNING = {
+	{type = "body", text = "Equivalent to calling 'Class()' with no parameters.\n\nUse a dedicated constructor instead."}
+}
+
 ---@class Previewer.Object: Previewer
 ---@field property Property.Object
 local ObjectP = Previewer:extend()
@@ -137,11 +141,26 @@ local function getConstructorList(classes)
 	local included = {}
 	for i = 1, #classes do included[classes[i]] = true end
 
+	-- Add the special constructors first
 	for i = 1, #constructors do
 		local constructor = constructors[i]
 		if included[constructor.class] then
 			forms[#forms+1] = constructor
 		end
+	end
+
+	-- Add the "plain" constructors second
+	-- These just do a basic `ClassName()` with no parameters
+	for i = 1, #classes do
+		local className = classes[i]
+		forms[#forms+1] = {
+			label = ("%s [Basic]"):format(className),
+			form = BASIC_WARNING,
+			submit = function()
+				local Class = Adore.Any(className)
+				if Class then return Class() end
+			end
+		}
 	end
 
 	return forms

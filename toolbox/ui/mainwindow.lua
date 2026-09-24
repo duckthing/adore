@@ -556,7 +556,7 @@ function MainWindow:saveSceneAs()
 		{id = "path", type = "textfield",
 				value = srContainer._lastFilepath
 			or ("scenes/%s.json"):format(tostring(sceneRoot):lower())},
-		{type = "body", text = "File Path"},
+		{type = "body", text = "Format"},
 		{id = "format", type = "dropdown", items = FORMAT_OPTIONS,
 				value = srContainer and srContainer._lastFormat == "binary" and 2 or 1},
 	}

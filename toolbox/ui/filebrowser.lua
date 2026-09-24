@@ -13,12 +13,12 @@ local LineEdit = Nodes("LineEdit")
 local Button = Nodes("Button")
 local HBox = Nodes("HBox")
 local VBox = Nodes("VBox")
+local SceneFactory = Adore.Resources("SceneFactory")
 
 local usingFFI = not not Common("ffilib")
 -- Use the best filesystem
 local filesystem = love.filesystem
-local ObjectSaver = Common("ObjectSaver")
-local SceneFactory = Adore.Resources("SceneFactory")
+local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
 local LuaPath = Libraries("LuaPath")
 
 ---@class Toolbox.FileBrowser: Control
@@ -94,11 +94,12 @@ end
 ---@param button Button
 function FileBrowser:_onItemButtonPressed(button)
 	local path = self.pathLE._submittedText..button._text
-	local extension = LuaPath:extension_name(path)
-	local obj, err = ObjectSaver.loadFromFilePath(path)
-	if err then print(err) return end
+
+	local success, obj = pcall(ObjectLoader.get, ObjectLoader, path)
+	if not success then print(obj) return end
 	---@cast obj Object
 	if obj:is(SceneFactory) then
+		---@cast obj SceneFactory
 		self.toolbox.mainWindow:loadSceneFromFactory(obj, path)
 	else
 		self.toolbox.mainWindow.inspector:onNodeFocusChanged(nil, obj, false)
