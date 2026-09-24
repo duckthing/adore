@@ -90,6 +90,32 @@ function Object:deserialize(obj, propertyName, resourceId, resources)
 	local reference = resources[resourceId]
 	if reference then
 		local parsedObject = reference._deserializedObject
+		if parsedObject then
+			-- Already parsed by another property
+			self:set(obj, propertyName, parsedObject)
+			return
+		end
+
+		local path = reference.path
+		if path then
+			-- Comes from an asset path
+			local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+			local success, assetOrErr = pcall(ObjectLoader.get, ObjectLoader, path, self.baseClass)
+			if success then
+				-- Loaded the asset
+				reference._deserializedObject = assetOrErr
+				self:set(obj, propertyName, assetOrErr)
+			else
+				-- Errored, print it out
+				print(
+					("[Property.Object] Errored in %s['%s'] trying to load an asset at '%s':\n%s")
+					:format(tostring(obj), propertyName, path, assetOrErr)
+				)
+			end
+			return
+		end
+
+		-- Load from the given header and body values
 		local deferred
 		if not parsedObject then
 			local err
@@ -104,7 +130,6 @@ function Object:deserialize(obj, propertyName, resourceId, resources)
 			-- Set any deferred properties, and remove it so later `:deserialize()` calls don't do it again
 			Property.ObjectSaver.setDeferredProperties(parsedObject, deferred, resources)
 		end
-
 		self:set(obj, propertyName, parsedObject)
 	else
 		print(
@@ -129,12 +154,25 @@ function Object:getSharedMatch(obj, propertyName, value, resources)
 end
 
 function Object:getReference(obj, propertyName, value, resources)
-	local header, body = Property.ObjectSaver.getPropertyPairs(value, resources, true)
-	return setmetatable({
-		TYPE = self.TYPE,
-		header = header,
-		body = body,
-	}, {__index = {value = value}})
+	-- The reference has this property type and a reference to the original value (that won't get saved)
+	local ref = setmetatable(
+		{TYPE = self.TYPE},
+		{__index = {value = value}}
+	)
+
+	local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+	local objectPath = ObjectLoader:getAssetPath(value)
+	if objectPath then
+		-- Serialize the asset path
+		ref.path = objectPath
+	else
+		-- Serialize the properties
+		local header, body = Property.ObjectSaver.getPropertyPairs(value, resources, true)
+		ref.header = header
+		ref.body = body
+	end
+
+	return ref
 end
 
 return Object

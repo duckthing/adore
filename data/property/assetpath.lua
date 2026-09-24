@@ -35,12 +35,20 @@ function AssetP:serialize(obj, propertyName, value, resources)
 	end
 end
 
-function AssetP:deserialize(obj, propertyName, deserializedValue, resources)
-	if deserializedValue ~= "" then
+function AssetP:deserialize(obj, propertyName, path, resources)
+	if path ~= "" then
 		local collection = Loader.getCollection(self.collectionName)
-		local asset = collection:get(deserializedValue)
-		if asset then
-			self:set(obj, propertyName, asset)
+
+		local success, assetOrErr = pcall(collection.get, collection, path)
+		if success then
+			-- Loaded the asset
+			self:set(obj, propertyName, assetOrErr)
+		else
+			-- Errored, print it out
+			print(
+				("[Property.AssetPath] Errored in %s['%s'] trying to load an asset at '%s':\n%s")
+				:format(tostring(obj), propertyName, path, assetOrErr)
+			)
 		end
 	end
 end
