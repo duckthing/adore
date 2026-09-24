@@ -253,7 +253,7 @@ function MainWindow:new(toolbox, subroot)
 			-- Create the buttons for the scene tree
 			local treeActions = {
 				"Add", "addNode",
-				"Link", "linkScene",
+				"Link", "showLinkScenePopup",
 				"Extend", "extendNode",
 			}
 			for i = 1, 5, 2 do
@@ -272,7 +272,7 @@ function MainWindow:new(toolbox, subroot)
 				self:addNode()
 			end},
 			{label = "Link Scene...", func = function()
-				self:linkScene()
+				self:showLinkScenePopup()
 			end},
 			{separator = true},
 			{label = "Cut", func = function()
@@ -976,8 +976,41 @@ function MainWindow:duplicateSelectedNode()
 end
 end
 
----Instances a scene link
-function MainWindow:linkScene()
+---Links a scene under a Node, with an optional index
+---@param scene SceneFactory
+---@param instanceUnder Node
+---@param index integer?
+function MainWindow:linkScene(scene, instanceUnder, index)
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local sceneRoot = srContainer:getSceneRoot()
+	if not sceneRoot then return end
+
+	local shouldPush = not srContainer:isPushed()
+	if shouldPush then
+		srContainer:pushSubroot()
+	end
+
+	local instanced = scene:instantiate(instanceUnder)
+	if instanced then
+		instanced._owner = sceneRoot
+		if index then
+			instanceUnder:insertChild(instanced, index)
+		end
+	end
+
+	self.sceneTree:updateNodes()
+	if instanced then
+		self.sceneTree:focusNode(instanced)
+	end
+
+	if shouldPush then
+		srContainer:popSubroot()
+	end
+end
+
+---Shows the scene link popup
+function MainWindow:showLinkScenePopup()
 	local srContainer = self:getSubrootContainer()
 	if not srContainer then return end
 	local sceneRoot = srContainer:getSceneRoot()
@@ -1038,22 +1071,11 @@ function MainWindow:linkScene()
 			return
 		end
 
-		local scene, err = ObjectLoader:getFresh(path, "SceneFactory")
+		local scene, err = ObjectLoader:get(path, "SceneFactory")
 		if scene then
 			---@cast scene SceneFactory
 			-- Add it
-			srContainer:pushSubroot()
-
-			local instanced = scene:instantiate(instanceUnder)
-			if instanced then
-				instanced._owner = sceneRoot
-			end
-
-			srContainer:popSubroot()
-			self.sceneTree:updateNodes()
-			if instanced then
-				self.sceneTree:focusNode(instanced)
-			end
+			self:linkScene(scene, instanceUnder)
 			window:close()
 		else
 			print(err)

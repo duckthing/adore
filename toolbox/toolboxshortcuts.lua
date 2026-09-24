@@ -81,9 +81,9 @@ local actions = {
 		mainWindow:extendNode()
 		return true
 	end,
-	linkScene = function(context, isRepeat)
+	showLinkScenePopup = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:linkScene()
+		mainWindow:showLinkScenePopup()
 		return true
 	end,
 
@@ -135,7 +135,7 @@ local pressedKeybinds = {
 		s = "saveScene",
 		d = "duplicateSelectedNode",
 		e = "extendNode",
-		i = "linkScene",
+		i = "showLinkScenePopup",
 		o = "loadScene",
 		n = "newScene",
 		r = "reloadScene",

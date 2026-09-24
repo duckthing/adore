@@ -4,6 +4,7 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Label = Nodes("Label")
+local SceneFactory = Adore.Resources("SceneFactory")
 local tclear = Adore.Common("Structures").tableClear
 local floor, ceil = math.floor, math.ceil
 local min, max = math.min, math.max
@@ -313,8 +314,9 @@ local function getInsertRequestAtPoint(self, mx, my, droppingNode)
 			-- In case we just missed the next Node...
 			-- ...insert adjacent to that one
 			local correctedNode = self:getNodeFromTreeIndex(index - 1)
+			local droppingNodeParent = droppingNode and droppingNode.parent
 
-			if correctedNode == droppingNode.parent then
+			if correctedNode == droppingNodeParent then
 				-- Move the Node we're dropping to be first in the children list
 				return correctedNode, 1
 			end
@@ -322,7 +324,7 @@ local function getInsertRequestAtPoint(self, mx, my, droppingNode)
 			local parent = correctedNode.parent
 			if correctedNode == droppingNode then
 				-- The Node we're dropping is directly "above" what we just dropped on
-				if droppingNode.parent ~= node.parent then
+				if droppingNodeParent ~= node.parent then
 					-- Move it after its parent
 					local higherParent = parent.parent
 					return higherParent, higherParent:getIndexOfChild(parent) + 1
@@ -399,9 +401,12 @@ function SceneTreeViewer:mousereleased(mx, my, button)
 end
 
 function SceneTreeViewer:_canDropData(posX, posY, data)
-	if type(data) == "table" and data.type == "node" and data.node then
-		---@type Node
+	if type(data) ~= "table" then return false end
+
+	if data.type == "node" then
+		---@type Node?
 		local node = data.node
+		if not node then return false end
 		local hoveredIndex = self.hoveredIndex
 		if not hoveredIndex then return false end
 		local hoveredNode = self:getNodeFromTreeIndex(hoveredIndex)
@@ -429,7 +434,30 @@ function SceneTreeViewer:_canDropData(posX, posY, data)
 			self.insertIndex = insertIndex or 0
 			return true
 		end
+	elseif data.type == "object" then
+		---@type Object?
+		local object = data.object
+		if not object then return false end
+		if object:is(SceneFactory) then
+			-- We can drop scenes here
+			local insertInto, childIndex = getInsertRequestAtPoint(self, posX, posY, node)
+			if insertInto then
+				local insertIndex = self:getTreeIndexOfNode(insertInto) or 0
+				local children = insertInto.children
+				self.insertUnderIndex = insertIndex
+				self.insertIndex =
+					(next(children) and self:getTreeIndexOfNode(children[childIndex]))
+					or insertIndex
+				self.insertAsChild = true
+			else
+				self.insertIndex = 0
+				self.insertUnderIndex = 0
+				self.insertUnderAsChild = false
+			end
+			return true
+		end
 	end
+	return false
 end
 
 function SceneTreeViewer:_getDragData()
@@ -445,9 +473,11 @@ function SceneTreeViewer:_getDragData()
 end
 
 function SceneTreeViewer:_dropData(posX, posY, data)
-	if type(data) == "table" and data.type == "node" and data.node then
-		---@type Node
+	if type(data) ~= "table" then return false end
+	if data.type == "node" then
+		---@type Node?
 		local node = data.node
+		if not node then return false end
 		local insertInto, index = getInsertRequestAtPoint(self, posX, posY, node)
 		self.insertIndex = 0
 		if insertInto and insertInto ~= node and not insertInto:hasAncestor(node) then
@@ -468,6 +498,37 @@ function SceneTreeViewer:_dropData(posX, posY, data)
 			eScene:handleInsideSubroot(insertInto.insertChild, insertInto, node, index)
 			self:updateNodes()
 			self:focusNode(node)
+		end
+	elseif data.type == "object" then
+		---@type Object?
+		local object = data.object
+		if not object then return false end
+		if object:is(SceneFactory) then
+			---@cast object SceneFactory
+			-- Instance the scene
+			local eScene = self.subrootContainer
+			if not eScene then return false end
+
+			local shouldPush = not eScene:isPushed()
+			if shouldPush then
+				eScene:pushSubroot()
+			end
+
+			local insertInto, index = getInsertRequestAtPoint(self, posX, posY)
+			local instanced
+			if insertInto then
+				self.toolbox.mainWindow:linkScene(object, insertInto, index)
+			end
+
+			if shouldPush then
+				eScene:popSubroot()
+			end
+
+			self:updateNodes()
+			if instanced then
+				self:focusNode(instanced)
+			end
+			return true
 		end
 	end
 end

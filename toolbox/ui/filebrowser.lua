@@ -25,12 +25,15 @@ local LuaPath = Libraries("LuaPath")
 ---@overload fun(toolbox: Toolbox): Toolbox.FileBrowser
 local FileBrowser = Control:extend()
 FileBrowser.CLASS_NAME = "FileBrowser"
+---@type Toolbox
+local Toolbox
 
 ---@param toolbox Toolbox
 function FileBrowser:new(toolbox)
 	FileBrowser.super.new(self)
 	self:setVariant("panel")
 	self.name = "Files"
+	Toolbox = toolbox
 	self.toolbox = toolbox
 
 	if not usingFFI then
@@ -106,6 +109,43 @@ function FileBrowser:_onItemButtonPressed(button)
 	end
 end
 
+---File extensions that are used for objects
+local OBJECT_EXTENSIONS = {
+	lua = true,
+	json = true,
+	toml = true,
+	agf = true,
+}
+
+---Returns the drag data for an item
+---@param button Button
+---@return any
+---@return Control?
+local function getItemDragData(button)
+	---@type string # The path, minus the starting slash
+	local itemPath = (Toolbox.mainWindow.fileBrowser.pathLE._submittedText:sub(2))..button._text
+	local label = Label(itemPath)
+	local extension = LuaPath:extension_name(itemPath)
+
+	if OBJECT_EXTENSIONS[extension] then
+		local success, obj = pcall(ObjectLoader.get, ObjectLoader, itemPath)
+		if not success then
+			print("[Toolbox.FileBrowser.getItemDragData]", obj)
+		else
+			return {
+				type = "object",
+				path = itemPath,
+				object = obj,
+			}, label
+		end
+	end
+
+	return {
+		type = "path",
+		path = itemPath,
+	}, label
+end
+
 function FileBrowser:goUp()
 	self:openDirectory(LuaPath:parent_dir(self.pathLE._submittedText))
 end
@@ -131,11 +171,11 @@ function FileBrowser:openDirectory(dir)
 	local items = filesystem.getDirectoryItems(dir)
 	for _, itemPath in ipairs(items) do
 		-- Make a button for directories first
-		local button = Button(itemPath.."/")
-			:setAnchors(0, 0, 1, 0)
-			:setTextAlign("left")
 		local info = filesystem.getInfo(dir..itemPath, "directory")
 		if info then
+			local button = Button(itemPath.."/")
+				:setAnchors(0, 0, 1, 0)
+				:setTextAlign("left")
 			button.clicked:connect(self, "_onDirButtonPressed")
 			self.itemVBox:addChild(
 				button
@@ -145,12 +185,13 @@ function FileBrowser:openDirectory(dir)
 
 	for _, itemPath in ipairs(items) do
 		-- Make a button for files second
-		local button = Button(itemPath)
-			:setAnchors(0, 0, 1, 0)
-			:setTextAlign("left")
 		local info = filesystem.getInfo(dir..itemPath, "file")
 		if info then
+			local button = Button(itemPath)
+				:setAnchors(0, 0, 1, 0)
+				:setTextAlign("left")
 			button.clicked:connect(self, "_onItemButtonPressed")
+			button._getDragData = getItemDragData
 			self.itemVBox:addChild(
 				button
 			)
