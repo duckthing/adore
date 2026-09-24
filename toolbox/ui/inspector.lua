@@ -3,13 +3,14 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
+local Node = Nodes("Node")
 local Label = Nodes("Label")
 local MenuButton = Nodes("MenuButton")
 local WindowPopup = Nodes("WindowPopup")
 local FormBuilder = Adore.Common("FormBuilder")
-local LuaPath = Adore.Libraries("LuaPath")
 local ObjectSaver = Adore.Common("ObjectSaver")
 local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
+local fzy = Adore.Libraries("fzy")
 
 local Previewers = require(ADORE_PATH..".toolbox.ui.inspector.previewers")
 
@@ -134,6 +135,96 @@ function Inspector:onNodeFocusChanged(viewer, node, inTree)
 end
 
 function Inspector:reload()
+	local selected = self.selected
+	if not selected then return end
+	self.selected = nil
+	self:onNodeFocusChanged(nil, selected, nil)
+end
+
+function Inspector:newResource()
+	local srContainer = self.toolbox.mainWindow:getSubrootContainer()
+	if not srContainer then return end
+
+	-- Create the popup
+	local window = WindowPopup()
+	window:setAnchorsAndOffsets(
+		0.5, 0.5, 0.5, 0.5,
+		-90, -71, 90, 56
+	)
+
+	window:getTitleLabel():setText("Add node...")
+
+	---@type Form
+	local form = {
+		{type = "body", text = "Class Name"},
+		{id = "class", type = "textfield", value = ""},
+		{id = "searchMatch", type = "body", text = "Search result..."},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
+	vbox:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 10, -10, 0
+		)
+		:setResizeToContent(true)
+		:setMargin(4)
+
+	local classField = sheet:getElement("class")
+	---@cast classField LineEdit
+	classField:setUnfocusedPosition("right")
+		:setSubmitOnFocusLost(false)
+	classField.textSubmitted:connect(window, "submit", false, false)
+	window:addChild(vbox)
+
+	-- Search result label
+	---@type Label
+	local matchLabel = sheet:getElement("searchMatch")
+	classField.textChanged:connectCallable(function(_, text)
+		local match = fzy.get_best_match(text, Adore.getClassNames())
+		if match then
+			matchLabel:setText(match)
+		else
+			matchLabel:setText("(no match)")
+		end
+	end)
+
+	-- Connect events
+	window:addAction("Cancel", "close")
+	window:addAction("Add", "submit")
+	window.submit = function(...)
+		local enteredClassName = classField._submittedText
+		local className = fzy.get_best_match(enteredClassName, Adore.getClassNames())
+		if not className then
+			return
+		end
+
+		local success, ClassOrErr = pcall(Adore.Any, className)
+		if success then
+			if not (type(ClassOrErr) == "table" or ClassOrErr.is) then
+				print(("'%s' is not an Object"):format(className))
+				return
+			end
+
+			-- Create the resource and focus on it
+			srContainer:pushSubroot()
+			---@type Object?
+			local newObject
+			srContainer:handleInsideSubroot(function() newObject = ClassOrErr() end)
+			srContainer:popSubroot()
+			if newObject then
+				self:onNodeFocusChanged(nil, newObject, nil)
+				window:close()
+			end
+		else
+			print(ClassOrErr)
+		end
+	end
+
+	-- Show the popup
+	self:addChild(window)
+	window:popup()
+	classField:grabFocus(false)
 end
 
 ---Shows a popup for saving this resource
@@ -190,13 +281,11 @@ function Inspector:saveResourceAs()
 			print(err)
 		else
 			if ObjectLoader:has(path) then
-				print("we have", path)
 				ObjectLoader:destructor(ObjectLoader:get(path), selected)
 			else
-				print("registering", path)
 				ObjectLoader:register(selected, path)
 			end
-			print(("Saved resource to: %s"):format(path))
+			print(("Wrote resource to: %s"):format(path))
 			window:close()
 		end
 	end
