@@ -81,4 +81,4 @@ function Object._addDefinition(entry)
 	entry:setSerialization(true, true)
 end
 
-return Object
+return setmetatable(Object, {__call = Object.__call, __tostring = Object.__tostring})
