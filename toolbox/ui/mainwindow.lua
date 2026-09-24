@@ -333,6 +333,7 @@ function MainWindow:new(toolbox, subroot)
 	self.inspector = inspector
 
 	--======== FILE BROWSER
+	---@type Toolbox.FileBrowser
 	local fileBrowser = FileBrowser(toolbox)
 		:setAnchors(0, 0, 1, 1)
 	self.fileBrowser = fileBrowser

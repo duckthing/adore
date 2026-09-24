@@ -5,6 +5,7 @@ local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
 
+local Label = Nodes("Label")
 local Button = Nodes("Button")
 
 ---@class Previewer.NodeRef: Previewer
@@ -32,7 +33,7 @@ end
 
 ---@param self Button
 local function _canDropData(self, posX, posY, data)
-	if data and type(data) == "table" and data.IS_NODE then
+	if type(data) == "table" and data.type == "node" and data.node then
 		return true
 	end
 end
@@ -42,15 +43,21 @@ local function _getDragData(self)
 	-- Return the contained Node
 	---@type Previewer.NodeRef
 	local previewer = self.previewer
-	return previewer.property:get(previewer.object, previewer.propertyName)
+	local gottenNode = previewer.property:get(previewer.object, previewer.propertyName)
+	if not gottenNode then return end
+	return
+		{type = "node", node = gottenNode},
+		Label(tostring(gottenNode))
 end
 
 ---@param self Button
 local function _dropData(self, posX, posY, data)
-	if data and type(data) == "table" and data.IS_NODE then
+	if type(data) == "table" and data.type == "node" and data.node then
+		---@type Node
+		local node = data.node
 		---@type Previewer.NodeRef
 		local previewer = self.previewer
-		previewer:attemptSet(data)
+		previewer:attemptSet(node)
 	end
 end
 

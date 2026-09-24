@@ -399,16 +399,17 @@ function SceneTreeViewer:mousereleased(mx, my, button)
 end
 
 function SceneTreeViewer:_canDropData(posX, posY, data)
-	if data and type(data) == "table" and data.IS_NODE then
-		---@cast data Node
+	if type(data) == "table" and data.type == "node" and data.node then
+		---@type Node
+		local node = data.node
 		local hoveredIndex = self.hoveredIndex
 		if not hoveredIndex then return false end
 		local hoveredNode = self:getNodeFromTreeIndex(hoveredIndex)
 		if not hoveredNode then return false end
 		-- It exists, but don't allow the parent to have a descendant as its parent
-		if hoveredNode:hasAncestor(data) then return false end
+		if hoveredNode:hasAncestor(node) then return false end
 		-- Valid
-		local insertInto, childIndex = getInsertRequestAtPoint(self, posX, posY, data)
+		local insertInto, childIndex = getInsertRequestAtPoint(self, posX, posY, node)
 		if insertInto then
 			local child = insertInto.children[childIndex]
 			local insertIndex
@@ -438,23 +439,24 @@ function SceneTreeViewer:_getDragData()
 		local node = self:getNodeFromTreeIndex(pressedIndex)
 		if node then
 			local label = Label(node.name)
-			return node, label
+			return {type = "node", node = node}, label
 		end
 	end
 end
 
 function SceneTreeViewer:_dropData(posX, posY, data)
-	if data and type(data) == "table" and data.IS_NODE then
-		---@cast data Node
-		local insertInto, index = getInsertRequestAtPoint(self, posX, posY, data)
+	if type(data) == "table" and data.type == "node" and data.node then
+		---@type Node
+		local node = data.node
+		local insertInto, index = getInsertRequestAtPoint(self, posX, posY, node)
 		self.insertIndex = 0
-		if insertInto and insertInto ~= data and not insertInto:hasAncestor(data) then
-			if insertInto == data.parent then
+		if insertInto and insertInto ~= node and not insertInto:hasAncestor(node) then
+			if insertInto == node.parent then
 				-- If we're moving this Node inside of its parent, the insert index will be off by one
-				local childIndex = insertInto:getIndexOfChild(data)
+				local childIndex = insertInto:getIndexOfChild(node)
 				if childIndex then
 					-- This fixes both directions
-					data:unparent()
+					node:unparent()
 					if childIndex < index then
 						-- ...if it's moving up, go down by 1
 						index = index - 1
@@ -463,9 +465,9 @@ function SceneTreeViewer:_dropData(posX, posY, data)
 			end
 
 			local eScene = self.subrootContainer
-			eScene:handleInsideSubroot(insertInto.insertChild, insertInto, data, index)
+			eScene:handleInsideSubroot(insertInto.insertChild, insertInto, node, index)
 			self:updateNodes()
-			self:focusNode(data)
+			self:focusNode(node)
 		end
 	end
 end
