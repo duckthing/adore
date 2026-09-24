@@ -267,7 +267,7 @@ end
 ---@generic T: Node
 ---@param self T
 ---@param child Node
----@param index integer
+---@param index integer?
 ---@return T
 function Node:insertChild(child, index)
 	-- It's very hacky, as `:addChild` always adds at the end
@@ -276,7 +276,9 @@ function Node:insertChild(child, index)
 	end
 
 	local children = self.children
-	if index > #children + 1 then
+	local numChildren = #children
+	index = index or numChildren + 1
+	if index > numChildren + 1 then
 		-- `:addChild` adds to the end by default
 		return self:addChild(child)
 	end
