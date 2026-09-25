@@ -1025,12 +1025,9 @@ function ObjectSaver.loadFromFilePath(path, format, requestedClassName, canInher
 	file:release()
 
 	-- If it's a SceneFactory, mark the source
-	if obj then
-		---@cast obj Object
-		if type(obj) == "table" and type(obj.is) == "function" and obj:is(SceneFactory) then
-			---@cast obj SceneFactory
-			obj.source = path
-		end
+	if type(obj) == "table" and type(obj.is) == "function" and obj:is(SceneFactory) then
+		---@cast obj SceneFactory
+		obj.source = path
 	end
 
 	return obj, err
