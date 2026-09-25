@@ -86,7 +86,6 @@ local function buttonDropData(self, posX, posY, data)
 	end
 end
 
-
 function ObjectP:newValueLabel(object, property, propertyName, inspector)
 	---@type Object
 	local val = property:get(object, propertyName)
@@ -96,9 +95,9 @@ function ObjectP:newValueLabel(object, property, propertyName, inspector)
 	local button = Button(name)
 		:setAnchors(1, 0, 1, 1)
 		:setOffsets(-150, 0, -40, 0)
+		:setDisabled(not selectable)
 		:setClipText(true)
 	button.clicked:connect(self, "focusNode")
-	button:setDisabled(not selectable)
 
 	button.previewer = self
 	button._canDropData = buttonCanDropData

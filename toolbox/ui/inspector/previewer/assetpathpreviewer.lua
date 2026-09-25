@@ -10,6 +10,7 @@ local fzy = Adore.Libraries("fzy")
 ---@type Previewer
 local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
 local WindowPopup = Nodes("WindowPopup")
+local Label = Nodes("Label")
 local Button = Nodes("Button")
 
 ---@class Previewer.AssetPath: Previewer
@@ -34,6 +35,56 @@ function AssetP:construct(object, property, propertyName)
 	self:addChild(nilButton)
 end
 
+---@param self Button
+local function buttonCanDropData(self, posX, posY, data)
+	if type(data) == "table" and type(data.path) == "string" then
+		---@type Previewer.AssetPath
+		local previewer = self.previewer
+		---@type Property.AssetPath
+		local property = previewer.property
+		---@type string
+		local path = data.path
+		local assetCollection = Loader.getCollection(property.collectionName)
+		return (pcall(assetCollection.get, assetCollection, path))
+	end
+end
+
+---@param self Button
+local function buttonGetDragData(self)
+	-- Return the contained Node
+	---@type Previewer.AssetPath
+	local previewer = self.previewer
+	---@type Property.AssetPath
+	local property = previewer.property
+	local object = property:get(previewer.object, previewer.propertyName)
+	if not object then return end
+	local assetCollection = Loader.getCollection(property.collectionName)
+	local path = assetCollection:getAssetPath(object)
+	if not path then return end
+	return
+		{type = "object", object = object, path = path},
+		Label(("%s\n[%s]"):format(tostring(path), tostring(object)))
+end
+
+---@param self Button
+local function buttonDropData(self, posX, posY, data)
+	if type(data) == "table" and type(data.path) == "string" then
+		---@type Previewer.AssetPath
+		local previewer = self.previewer
+		---@type Property.AssetPath
+		local property = previewer.property
+		---@type string
+		local path = data.path
+		local assetCollection = Loader.getCollection(property.collectionName)
+		local success, objOrErr = pcall(assetCollection.get, assetCollection, path)
+		if success then
+			previewer:attemptSet(objOrErr)
+		else
+			print(objOrErr)
+		end
+	end
+end
+
 function AssetP:newValueLabel(object, property, propertyName)
 	---@cast property Property.AssetPath
 	local collectionName = property.collectionName
@@ -48,6 +99,11 @@ function AssetP:newValueLabel(object, property, propertyName)
 		:setIconExpand(true)
 		:setClipText(true)
 	button.clicked:connect(self, "showPopup")
+
+	button.previewer = self
+	button._canDropData = buttonCanDropData
+	button._getDragData = buttonGetDragData
+	button._dropData = buttonDropData
 
 	if collectionName == "TextureLoader" then
 		-- It's a TextureSource
