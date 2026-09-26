@@ -58,7 +58,7 @@ function Inspector:new(toolbox, sceneTree)
 	---@type PopupMenu.Item[]
 	local menuItems = {
 		{label = "Reload", func = "reload"},
-		{label = "New Resource...", func = "newResource"},
+		{label = "New Object...", func = "newResource"},
 		{label = "Save as...", func = "saveResourceAs"},
 	}
 	local menuButton = MenuButton("...", nil, menuItems)
@@ -241,10 +241,12 @@ function Inspector:saveResourceAs()
 
 	window:getTitleLabel():setText("Save resource to...")
 
+	local existingPath = ObjectLoader:getAssetPath(selected)
+
 	---@type Form
 	local form = {
 		{type = "body", text = "File Path"},
-		{id = "path", type = "textfield", value = "data/resource.json"},
+		{id = "path", type = "textfield", value = existingPath or "data/object.json"},
 		{type = "body", text = "Format"},
 		{id = "format", type = "dropdown", items = FORMAT_OPTIONS, value = 1},
 	}
