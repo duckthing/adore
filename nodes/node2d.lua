@@ -131,9 +131,11 @@ function Node2d:_onLocalTransformUpdated()
 end
 
 ---Translates this Node2D locally
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param x number
 ---@param y number
----@return self self
+---@return T
 function Node2d:translate(x, y)
 	self._position.x, self._position.y =
 		self._position.x + x,
@@ -143,9 +145,11 @@ function Node2d:translate(x, y)
 end
 
 ---Translates this Node2d in world space
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param x number
 ---@param y number
----@return Node2d
+---@return T
 function Node2d:worldTranslate(x, y)
 	local gx, gy = self:getWorldPosition()
 	self:setWorldPosition(gx + x, gy + y)

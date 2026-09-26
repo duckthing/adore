@@ -629,10 +629,13 @@ function Control:getOffsets()
 	return self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom
 end
 
----Sets the position of this Control, relative to its pivot
+---Sets the local position of this Control, relative to its pivot and parent, by
+---setting the offsets. This means all anchors are set to 0.
+---@generic T: Control
+---@param self T | Control
 ---@param gx integer
 ---@param gy integer
----@return Control
+---@return T
 function Control:setPosition(gx, gy)
 	local pivotX, pivotY = self._pivot:unpack()
 	local currX, currY = self._offsetLeft, self._offsetTop
@@ -651,9 +654,34 @@ function Control:setPosition(gx, gy)
 	return self
 end
 
+---Sets the world position of this Control, relative to its pivot.
+---Can be inconsistent when called frequently; try using `:translate`
+---or the local variant `:setPosition` instead.
+---@generic T: Control
+---@param self T | Control
+---@param gx integer
+---@param gy integer
+---@return T
+function Control:setWorldPosition(gx, gy)
+	local currX, currY = self:getWorldPosition()
+	local diffX, diffY =
+		gx - currX,
+		gy - currY
+
+	self._offsetLeft, self._offsetTop, self._offsetRight, self._offsetBottom =
+		self._offsetLeft + diffX,
+		self._offsetTop + diffY,
+		self._offsetRight + diffX,
+		self._offsetBottom + diffY
+	self:deferRefreshSelf()
+	return self
+end
+
 ---Gets the local position of this Control, relative to its pivot.
 ---This method is only accurate immediately after a refresh;
 ---use `Control:getViewport():performRefreshesUntilDone()` before to fix.
+---@return number x
+---@return number y
 function Control:getPosition()
 	local lcr, pivot = self._localContentRect, self._pivot
 	return lcr.x + pivot.x, lcr.y + pivot.y
@@ -669,8 +697,11 @@ function Control:getWorldPosition()
 end
 
 ---Translates this Control locally
+---@generic T: Control
+---@param self T | Control
 ---@param x integer
 ---@param y integer
+---@return T
 function Control:translate(x, y)
 	self._offsetLeft, self._offsetRight, self._offsetTop, self._offsetBottom =
 		self._offsetLeft + x,
@@ -678,6 +709,19 @@ function Control:translate(x, y)
 		self._offsetTop + y,
 		self._offsetBottom + y
 	self:deferRefreshSelf()
+	return self
+end
+
+---Translates this Control in world space
+---@generic T: Control
+---@param self T | Control
+---@param x number
+---@param y number
+---@return T
+function Control:worldTranslate(x, y)
+	local gx, gy = self:getWorldPosition()
+	self:setWorldPosition(gx + x, gy + y)
+	return self
 end
 
 ---Sets the calculated position and size from the parent, and defers a self refresh

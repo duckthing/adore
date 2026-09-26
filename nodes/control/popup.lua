@@ -49,20 +49,20 @@ end
 local function updateDimensions(self)
 	-- Get the safe area where this Popup can exist in
 	local offsetX, offsetY = 0, 0
-	local targetW, targetH = 0, 0
+	local parentW, parentH = 0, 0
 	if self._resizeWithParent and self._topLevelNode ~= self then
 		-- Resize according to the parent
 		---@type Control
 		local parent = assert(self.parent, "Cannot popup outside of the tree")
-		offsetX, offsetY, targetW, targetH = parent._localContentRect:unpack()
+		offsetX, offsetY, parentW, parentH = parent._localContentRect:unpack()
 	else
 		-- Resize according to the Viewport safe area
 		local viewport = getTargetViewport(self)
-		offsetX, offsetY, targetW, targetH = viewport:getSafeArea()
+		offsetX, offsetY, parentW, parentH = viewport:getSafeArea()
 	end
 
 	-- Clamping happens in :onRefreshed
-	local x, y, w, h = self:_getRectFromParentSize(targetW, targetH)
+	local x, y, w, h = self:_getRectFromParentSize(parentW, parentH)
 
 	self:_setModalRect(x + offsetX, y + offsetY, w, h)
 end
@@ -104,7 +104,7 @@ function Popup:onRefreshed()
 
 		if clampedX ~= x or clampedY ~= y then
 			-- Move to clamped position
-			self:setPosition(self:toLocal(clampedX, clampedY))
+			self:setWorldPosition(clampedX, clampedY)
 			updateDimensions(self)
 		end
 	end
