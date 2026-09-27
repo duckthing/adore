@@ -88,6 +88,7 @@ end
 ---`inheritingClass:is(baseClass) or baseClass == inheritingClass`
 ---@param baseClass string | Object
 ---@param inheritingClass string | Object
+---@return boolean inherits
 function ClassDB.doesClassInherit(baseClass, inheritingClass)
 	-- Converts from class object to class name
 	if type(baseClass) == "string" then baseClass = Adore.Any(baseClass) end

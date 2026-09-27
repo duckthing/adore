@@ -35,7 +35,9 @@ local commonPaths = {
 	---@type Adore.Loader
 	["Adore.Loader"] = "loader",
 	---@type Adore.AssetCollection
-	["Adore.AssetCollection"] = "loader.assetcollection"
+	["Adore.AssetCollection"] = "loader.assetcollection",
+	---@type LoveClasses
+	LoveClasses = "common.loveclasses",
 }
 Common = LazyRequire(commonPaths)
 end
