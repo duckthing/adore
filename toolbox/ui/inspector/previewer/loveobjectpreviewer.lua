@@ -4,10 +4,12 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local FormBuilder = Adore.Common("FormBuilder")
+local LoveClasses = Adore.Common("LoveClasses")
 
 ---@type Previewer
 local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
 local WindowPopup = Nodes("WindowPopup")
+local Label = Nodes("Label")
 local Button = Nodes("Button")
 
 ---@class Previewer.LoveObject: Previewer
@@ -40,6 +42,46 @@ function LObjectP:construct(object, property, propertyName)
 	self:addChild(nilButton)
 end
 
+---@param self Button
+local function buttonCanDropData(self, posX, posY, data)
+	if type(data) == "table" and data.type == "loveobject" then
+		---@type Previewer.LoveObject
+		local previewer = self.previewer
+
+		---@type love.Object?
+		local object = data.object
+		if object and LoveClasses.doesClassInherit(previewer.property.baseClass, object) then
+			return true
+		end
+	end
+end
+
+---@param self Button
+local function buttonGetDragData(self)
+	-- Return the contained love.Object
+	---@type Previewer.LoveObject
+	local previewer = self.previewer
+	local object = previewer.property:get(previewer.object, previewer.propertyName)
+	if not object then return end
+	return
+		{type = "loveobject", object = object},
+		Label(("%s\n(Love2D Object)"):format(tostring(object)))
+end
+
+---@param self Button
+local function buttonDropData(self, posX, posY, data)
+	if type(data) == "table" and data.type == "loveobject" then
+		---@type love.Object?
+		local object = data.object
+		if not object then return end
+		---@type Previewer.LoveObject
+		local previewer = self.previewer
+		if object and LoveClasses.doesClassInherit(previewer.property.baseClass, object) then
+			previewer:attemptSet(object)
+			return true
+		end
+	end
+end
 function LObjectP:newValueLabel(object, property, propertyName, inspector)
 	---@type Object
 	local val = property:get(object, propertyName)
@@ -53,6 +95,9 @@ function LObjectP:newValueLabel(object, property, propertyName, inspector)
 	button:setDisabled(val == nil)
 
 	button.previewer = self
+	button._canDropData = buttonCanDropData
+	button._getDragData = buttonGetDragData
+	button._dropData = buttonDropData
 
 	return button
 end
@@ -83,173 +128,6 @@ function LObjectP:onInput(node)
 		:setDisabled(val == nil)
 end
 
----@type {[string]: string} # Every Love object and the class they directly inherit from
-local allLoveObjects = {
-	Object = "Object",
-	BezierCurve = "Object",
-	Body = "Object",
-	ByteData = "Data",
-	Canvas = "Texture",
-	ChainShape = "Shape",
-	Channel = "Object",
-	CircleShape = "Shape",
-	CompressedData = "Data",
-	CompressedImageData = "Data",
-	Contact = "Object",
-	Cursor = "Object",
-	Data = "Object",
-	Decoder = "Object",
-	DistanceJoint = "Joint",
-	Drawable = "Object",
-	DroppedFile = "File",
-	EdgeShape = "Shape",
-	File = "Object",
-	FileData = "Data",
-	Fixture = "Object",
-	Font = "Object",
-	FrictionJoint = "Joint",
-	GearJoint = "Joint",
-	GlyphData = "Data",
-	Image = "Texture",
-	ImageData = "Data",
-	Joint = "Object",
-	Joystick = "Object",
-	Mesh = "Drawable",
-	MotorJoint = "Joint",
-	MouseJoint = "Joint",
-	ParticleSystem = "Drawable",
-	PolygonShape = "Shape",
-	PrismaticJoint = "Joint",
-	PulleyJoint = "Joint",
-	Quad = "Object",
-	RandomGenerator = "Object",
-	Rasterizer = "Object",
-	RecordingDevice = "Object",
-	RevoluteJoint = "Joint",
-	RopeJoint = "Joint",
-	Shader = "Object",
-	Shape = "Object",
-	SoundData = "Data",
-	Source = "Object",
-	SpriteBatch = "Drawable",
-	Text = "Drawable",
-	Texture = "Drawable",
-	Thread = "Object",
-	Transform = "Object",
-	Video = "Drawable",
-	VideoStream = "Object",
-	WeldJoint = "Joint",
-	WheelJoint = "Joint",
-	World = "Object",
-}
-
----Gets a list of all classes that inherit from a base class.
----It's "below" this class.
----@param baseClass string
----@param arr string[]? # Existing matched classes
----@return string[] descendants
-local function getClassDescendants(baseClass, arr)
-	-- Insert the base class, if it's found
-	if not arr and not allLoveObjects[baseClass] then return {} end
-	arr = arr or {baseClass}
-
-	for class, inheritsFrom in pairs(allLoveObjects) do
-		-- Inherits from base class, and is not equal to itself (Object loop)
-		if inheritsFrom == baseClass and class ~= baseClass then
-			arr[#arr+1] = class
-			getClassDescendants(class, arr)
-		end
-	end
-
-	return arr
-end
-
----Gets a list of the super classes from the given class, including the current class
----@param className string
----@return string[]
-local function getClassAncestors(className)
-	local arr = {className}
-
-	local currClass = className
-	while currClass ~= "Object" do
-		local inherited = allLoveObjects[currClass]
-		if not inherited then break end
-		arr[#arr+1] = inherited
-		currClass = inherited
-	end
-
-	return arr
-end
-
----@alias Previewer.LoveObject.Constructor
----| PopupMenu.Item | {class: string, form: Form, submit: (fun(sheet: Form.Sheet): love.Object?)}
-
----@type Previewer.LoveObject.Constructor[]
-local constructors = {
-	{
-		label = "Box (PolygonShape)",
-		class = "PolygonShape",
-		form = {
-			{type = "body", text = "Width"},
-			{id = "width", type = "textfield", value = "10"},
-			{type = "body", text = "Height"},
-			{id = "height", type = "textfield", value = "10"},
-		},
-		submit = function(sheet)
-			local width, height =
-				sheet:getValue("width"), sheet:getValue("height")
-			return love.physics.newRectangleShape(width, height)
-		end
-	},
-	{
-		label = "CircleShape",
-		class = "CircleShape",
-		form = {
-			{type = "body", text = "Radius"},
-			{id = "radius", type = "textfield", value = "10"},
-		},
-		submit = function(sheet)
-			local radius = sheet:getValue("radius")
-			return love.physics.newCircleShape(radius)
-		end
-	},
-	{
-		label = "Box2D World",
-		class = "World",
-		form = {
-			{type = "body", text = "Gravity X"},
-			{id = "gx", type = "textfield", value = "0"},
-			{type = "body", text = "Gravity Y"},
-			{id = "gy", type = "textfield", value = "0"},
-		},
-		submit = function(sheet)
-			local gx, gy = tonumber(sheet:getValue("gx")), tonumber(sheet:getValue("gy"))
-			return love.physics.newWorld(gx or 0, gy or 0)
-		end
-	},
-}
-
----Gets a list of constructor Forms for the given classes
----@param classes string[]
----@return Previewer.LoveObject.Constructor[]
-local function getConstructorList(classes)
-	---@type Previewer.LoveObject.Constructor[]
-	local forms = {}
-
-	---@type {[string]: true} # included[constructor[i].form] = true
-	local included = {}
-	for i = 1, #classes do included[classes[i]] = true end
-
-	for i = 1, #constructors do
-		local constructor = constructors[i]
-		if included[constructor.class] then
-			forms[#forms+1] = constructor
-		end
-	end
-
-	return forms
-end
-
 ---Shows a dialog to edit this LoveObject
 function LObjectP:showConstructPopup()
 	local property, propertyName =
@@ -265,7 +143,7 @@ function LObjectP:showConstructPopup()
 	window:getTitleLabel():setText(("Set '%s' (%s)"):format(propertyName, baseClass))
 
 	--- All classes that match the provided base class
-	local menuItems = getConstructorList(getClassDescendants(baseClass))
+	local menuItems = LoveClasses.getConstructorFormList(LoveClasses.getClassDescendants(baseClass))
 
 	---@type Form
 	local form = {
@@ -289,7 +167,7 @@ function LObjectP:showConstructPopup()
 	---@type DropdownButton
 	local dropdown = sheet:getElement("className")
 	dropdown:getPopupMenu().itemSelected:connectCallable(function(_, _, item)
-		---@cast item Previewer.LoveObject.Constructor
+		---@cast item LoveClasses.Constructor
 		if otherVBox then
 			-- Remove the old sheet
 			otherVBox:unparent()
@@ -324,7 +202,7 @@ function LObjectP:showConstructPopup()
 	window:addAction("Cancel", "close")
 	window:addAction("Set", "submit")
 	window.submit = function(...)
-		---@type Previewer.LoveObject.Constructor?
+		---@type LoveClasses.Constructor?
 		local item = dropdown:getSelectedItem()
 		if not item or not otherSheet then return end
 
@@ -349,82 +227,6 @@ function LObjectP:showConstructPopup()
 	window:popup()
 end
 
----@alias Previewer.LoveObject.EditForm
----| PopupMenu.Item
----| {class: string, form: Form, submit: (fun(sheet: Form.Sheet, obj: love.Object): boolean)}
----| {fill: (fun(sheet: Form.Sheet, obj: love.Object))?}
-
----@type Previewer.LoveObject.EditForm[]
-local editForms = {
-	{
-		label = "CircleShape",
-		class = "CircleShape",
-		form = {
-			{type = "body", text = "Radius"},
-			{id = "radius", type = "textfield", value = "10"},
-		},
-		fill = function(sheet, obj)
-			---@cast obj love.CircleShape
-			local radiusField = sheet:getElement("radius")
-			---@cast radiusField LineEdit
-			radiusField:setText(tostring(obj:getRadius()))
-		end,
-		submit = function(sheet, obj)
-			---@cast obj love.CircleShape
-			local oldRadius = obj:getRadius()
-			obj:setRadius(tonumber(sheet:getValue("radius")) or oldRadius)
-			return true
-		end
-	},
-	{
-		label = "Box2D World",
-		class = "World",
-		form = {
-			{type = "body", text = "Gravity X"},
-			{id = "gx", type = "textfield", value = "0"},
-			{type = "body", text = "Gravity Y"},
-			{id = "gy", type = "textfield", value = "0"},
-		},
-		fill = function(sheet, obj)
-			---@cast obj love.World
-			local gxField, gyField = sheet:getElement("gx"), sheet:getElement("gy")
-			---@cast gxField LineEdit
-			---@cast gyField LineEdit
-			local gx, gy = obj:getGravity()
-			gxField:setText(tostring(gx))
-			gyField:setText(tostring(gy))
-		end,
-		submit = function(sheet, obj)
-			---@cast obj love.World
-			local gx, gy = tonumber(sheet:getValue("gx")), tonumber(sheet:getValue("gy"))
-			local oldGX, oldGY = obj:getGravity()
-			obj:setGravity(gx or oldGX, gy or oldGY)
-			return true
-		end
-	},
-}
-
----Gets a list of edit Forms for the given classes
----@param classes string[]
----@return Previewer.LoveObject.EditForm[]
-local function getEditFormList(classes)
-	---@type Previewer.LoveObject.EditForm[]
-	local forms = {}
-
-	---@type {[string]: true} # included[editForms[i].form] = true
-	local included = {}
-	for i = 1, #classes do included[classes[i]] = true end
-
-	for i = 1, #editForms do
-		local editForm = editForms[i]
-		if included[editForm.class] then
-			forms[#forms+1] = editForm
-		end
-	end
-
-	return forms
-end
-
 ---Shows a dialog to edit this love.Object
 ---@param val love.Object
 function LObjectP:showEditPopup(val)
@@ -443,7 +245,7 @@ function LObjectP:showEditPopup(val)
 	window:getTitleLabel():setText(("Edit '%s' (%s)"):format(propertyName, baseClass))
 
 	-- All classes that match the provided base class
-	local menuItems = getEditFormList(getClassAncestors(baseClass))
+	local menuItems = LoveClasses.getEditFormList(LoveClasses.getClassAncestors(baseClass))
 
 	---@type Form
 	local form = {
@@ -467,7 +269,7 @@ function LObjectP:showEditPopup(val)
 	---@type DropdownButton
 	local dropdown = sheet:getElement("className")
 	dropdown:getPopupMenu().itemSelected:connectCallable(function(_, _, item)
-		---@cast item Previewer.LoveObject.EditForm
+		---@cast item LoveClasses.EditForm
 		if otherVBox then
 			-- Remove the old sheet
 			otherVBox:unparent()
@@ -493,7 +295,7 @@ function LObjectP:showEditPopup(val)
 
 	-- Build the sheet with the current selection
 	if dropdown:getSelectedItem() then
-		---@type Previewer.LoveObject.EditForm
+		---@type LoveClasses.EditForm
 		local editForm = dropdown:getSelectedItem()
 		---@type VBox, Form.Sheet
 		otherVBox, otherSheet = FormBuilder.build(editForm.form)
@@ -516,7 +318,7 @@ function LObjectP:showEditPopup(val)
 	window:addAction("Cancel", "close")
 	window:addAction("Set", "submit")
 	window.submit = function(...)
-		---@type Previewer.LoveObject.EditForm?
+		---@type LoveClasses.EditForm?
 		local item = dropdown:getSelectedItem()
 		if not item or not otherSheet then return end
 

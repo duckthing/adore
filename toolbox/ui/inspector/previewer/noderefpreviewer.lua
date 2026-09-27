@@ -47,7 +47,7 @@ local function buttonGetDragData(self)
 	if not node then return end
 	return
 		{type = "node", node = node},
-		Label(tostring(node))
+		Label(("%s (Node)"):format(tostring(node)))
 end
 
 ---@param self Button

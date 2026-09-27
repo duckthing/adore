@@ -61,14 +61,14 @@ end
 
 ---@param self Button
 local function buttonGetDragData(self)
-	-- Return the contained Node
+	-- Return the contained Object
 	---@type Previewer.Object
 	local previewer = self.previewer
 	local object = previewer.property:get(previewer.object, previewer.propertyName)
-	if not object then return end
+	if not (object and object._adoreSelectable) then return end
 	return
 		{type = "object", object = object},
-		Label(tostring(object))
+		Label(("%s (Object)"):format(tostring(object)))
 end
 
 ---@param self Button
@@ -180,7 +180,7 @@ local constructors = {
 ---@param classes string[]
 ---@return Previewer.Object.Constructor[]
 local function getConstructorList(classes)
-	---@type Previewer.LoveObject.Constructor[]
+	---@type Previewer.Object.Constructor[]
 	local forms = {}
 
 	---@type {[string]: true} # included[constructor[i].form] = true
@@ -251,7 +251,7 @@ function ObjectP:showConstructPopup()
 	---@type DropdownButton
 	local dropdown = sheet:getElement("className")
 	dropdown:getPopupMenu().itemSelected:connectCallable(function(_, _, item)
-		---@cast item Previewer.LoveObject.Constructor
+		---@cast item Previewer.Object.Constructor
 		if otherVBox then
 			-- Remove the old sheet
 			otherVBox:unparent()

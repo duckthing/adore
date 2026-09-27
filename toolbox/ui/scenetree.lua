@@ -466,7 +466,7 @@ function SceneTreeViewer:_getDragData()
 	if pressedIndex then
 		local node = self:getNodeFromTreeIndex(pressedIndex)
 		if node then
-			local label = Label(node.name)
+			local label = Label(("%s (Node)"):format(node.name))
 			return {type = "node", node = node}, label
 		end
 	end

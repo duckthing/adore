@@ -63,7 +63,7 @@ local function buttonGetDragData(self)
 	if not path then return end
 	return
 		{type = "object", object = object, path = path},
-		Label(("%s\n[%s]"):format(tostring(path), tostring(object)))
+		Label(("%s (Object)\nPath: %s"):format(tostring(object), path))
 end
 
 ---@param self Button

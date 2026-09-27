@@ -124,11 +124,11 @@ local OBJECT_EXTENSIONS = {
 local function getItemDragData(button)
 	---@type string # The path, minus the starting slash
 	local itemPath = (Toolbox.mainWindow.fileBrowser.pathLE._submittedText:sub(2))..button._text
-	local label = Label(itemPath)
 	local extension = LuaPath:extension_name(itemPath)
 
 	if OBJECT_EXTENSIONS[extension] then
 		local success, obj = pcall(ObjectLoader.get, ObjectLoader, itemPath)
+		local label = Label(("%s (Object)\nPath: %s"):format(tostring(obj), itemPath))
 		if not success then
 			print("[Toolbox.FileBrowser.getItemDragData]", obj)
 		else
@@ -140,6 +140,7 @@ local function getItemDragData(button)
 		end
 	end
 
+	local label = Label(("%s\nPath: %s"):format(itemPath))
 	return {
 		type = "path",
 		path = itemPath,

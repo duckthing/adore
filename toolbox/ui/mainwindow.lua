@@ -314,7 +314,7 @@ function MainWindow:new(toolbox, subroot)
 		---@param button integer
 		sceneTree.nodePressed:connectCallable(function(_, pressedNode, button)
 			if button == 2 then
-				nodeContextMenu:setPosition(love.mouse.getPosition())
+				nodeContextMenu:setWorldPosition(love.mouse.getPosition())
 				self.sceneTree:focusNode(pressedNode)
 				nodeContextMenu:popup()
 			end
