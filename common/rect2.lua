@@ -19,10 +19,31 @@ else
 	usingFFI = ADORE_FORCE_FFI
 end
 
+local Rect2MT
+local equalCheck
 if usingFFI then
 ffi.cdef [[
 typedef struct { double x, y, w, h; } arect2_t;
 ]]
+	---@param self Rect2
+	---@param other any
+	---@return boolean
+	equalCheck = function(self, other)
+		if ffi.istype("arect2_t", other) then
+			return self.x == other.x and self.y == other.y and self.w == other.w and self.h == other.h
+		end
+		return false
+	end
+else
+	---@param self Rect2
+	---@param other any
+	---@return boolean
+	equalCheck = function(self, other)
+		if getmetatable(other) == Rect2MT then
+			return self.x == other.x and self.y == other.y and self.w == other.w and self.h == other.h
+		end
+		return false
+	end
 end
 
 ---@type Rect2 # Calling this returns a new Rect2 (ex. `Rect2C(0, 0, 0, 0)`)
@@ -37,8 +58,9 @@ local tempRect2
 ---@field h number
 ---@overload fun(x: number?, y: number?, w: number?, h: number?): Rect2
 local Rect2 = {}
-local Rect2MT = {
+Rect2MT = {
 	__index = Rect2,
+	__eq = equalCheck,
 	__tostring = function(self)
 		return ("Rect2(%f, %f, %f, %f)"):format(self.x, self.y, self.w, self.h)
 	end,

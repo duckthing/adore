@@ -31,6 +31,7 @@ local ConnectionMT = {__index = Connection}
 
 ---@class Signal.SimpleConnection: Signal.Connection
 local SConnection = {}
+SConnection.CLASS_NAME = "SimpleConnection"
 local SConnectionMT = {__index = SConnection}
 
 local tremove = table.remove
