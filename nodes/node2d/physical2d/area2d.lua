@@ -114,4 +114,12 @@ function Area2d:forceDestroy(...)
 	self.bodyLeft = nil
 end
 
+function Area2d._addDefinition(entry)
+	entry:newBoolean("ignoreAncestors", false)
+	entry:newBoolean("ignoreDescendents", false)
+	entry:newBoolean("ignoreDirectParent", false)
+	entry:newSignal("bodyEntered")
+	entry:newSignal("bodyLeft")
+end
+
 return Area2d

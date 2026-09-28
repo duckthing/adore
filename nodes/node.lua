@@ -498,6 +498,10 @@ function Node:getRelativePathToOther(node)
 			ownAncestors[currNode] = ownPath
 			currNode = currNode.parent
 			ownPath = ownPath .. "../"
+			if currNode == node then
+				-- The Node we're looking for is an ancestor
+				return ownPath
+			end
 		end
 	end
 
