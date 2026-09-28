@@ -74,8 +74,10 @@ function Button:getMinimumSize()
 end
 
 ---Sets the text inside the Label
+---@generic T: Button
+---@param self T | Button
 ---@param text string?
----@return self
+---@return T
 function Button:setText(text)
 	text = text or ""
 	if self._text ~= text then
@@ -86,8 +88,10 @@ function Button:setText(text)
 end
 
 ---Sets the FontSource of this Button. Set to `nil` to use the Theme's font.
+---@generic T: Button
+---@param self T | Button
 ---@param font FontSource?
----@return self
+---@return T
 function Button:setFont(font)
 	if self._font ~= font then
 		self._font = font
@@ -97,8 +101,10 @@ function Button:setFont(font)
 end
 
 ---Sets the font size of this Button. Set to `nil` or `0` to use the default.
+---@generic T: Button
+---@param self T | Button
 ---@param size number
----@return self
+---@return T
 function Button:setFontSize(size)
 	if self._fontSize ~= size then
 		self._fontSize = size
@@ -108,8 +114,10 @@ function Button:setFontSize(size)
 end
 
 ---Sets the icon used inside the Button
+---@generic T: Button
+---@param self T | Button
 ---@param icon TextureSource?
----@return self
+---@return T
 function Button:setIcon(icon)
 	if self._icon ~= icon then
 		self._icon = icon
@@ -119,8 +127,10 @@ function Button:setIcon(icon)
 end
 
 ---Sets the text alignment, which changes where the text is horizontally
+---@generic T: Button
+---@param self T | Button
 ---@param align love.AlignMode
----@return self
+---@return T
 function Button:setTextAlign(align)
 	if self._textAlign ~= align then
 		self._textAlign = align
@@ -130,8 +140,10 @@ function Button:setTextAlign(align)
 end
 
 ---Sets how the text wraps
+---@generic T: Button
+---@param self T | Button
 ---@param autowrap AutoWrap.Mode
----@return self
+---@return T
 function Button:setTextAutoWrap(autowrap)
 	if self._autowrap ~= autowrap then
 		self._autowrap = autowrap
@@ -141,8 +153,10 @@ function Button:setTextAutoWrap(autowrap)
 end
 
 ---Sets whether text gets clipped out of bounds
+---@generic T: Button
+---@param self T | Button
 ---@param clip boolean
----@return self
+---@return T
 function Button:setClipText(clip)
 	if self._clipText ~= clip then
 		self._clipText = clip
@@ -152,8 +166,10 @@ function Button:setClipText(clip)
 end
 
 ---Sets the icon alignment, which changes where the icon is horizontally
+---@generic T: Button
+---@param self T | Button
 ---@param align love.AlignMode
----@return self
+---@return T
 function Button:setIconAlign(align)
 	if self._iconAlign ~= align then
 		self._iconAlign = align
@@ -163,8 +179,10 @@ function Button:setIconAlign(align)
 end
 
 ---Sets the icon justify mode, which changes where the icon is vertically
+---@generic T: Button
+---@param self T | Button
 ---@param justify Label.JustifyMode
----@return self
+---@return T
 function Button:setIconJustify(justify)
 	if self._iconJustify ~= justify then
 		self._iconJustify = justify
@@ -174,8 +192,10 @@ function Button:setIconJustify(justify)
 end
 
 ---Sets whether the icon expands/shrinks to fill the Button
+---@generic T: Button
+---@param self T | Button
 ---@param expand boolean
----@return Button
+---@return T
 function Button:setIconExpand(expand)
 	if self._iconExpand ~= expand then
 		self._iconExpand = expand
