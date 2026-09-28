@@ -27,6 +27,7 @@ local LuaPath = Adore.Libraries("LuaPath")
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
 local FileBrowser = require(ADORE_PATH..".toolbox.ui.filebrowser")
+local SignalPanel = require(ADORE_PATH..".toolbox.ui.signalpanel")
 local Assets = require(ADORE_PATH..".toolbox.assets")
 ---@type Toolbox.EditableScene
 local EditableScene = require(ADORE_PATH..".toolbox.editablescene")
@@ -332,6 +333,12 @@ function MainWindow:new(toolbox, subroot)
 		:setAnchors(0, 0, 1, 1)
 	self.inspector = inspector
 
+	--======== SIGNAL PANEL
+	---@type Toolbox.SignalPanel
+	local signalPanel = SignalPanel(toolbox, self.sceneTree)
+		:setAnchors(0, 0, 1, 1)
+	self.signalPanel = signalPanel
+
 	--======== FILE BROWSER
 	---@type Toolbox.FileBrowser
 	local fileBrowser = FileBrowser(toolbox)
@@ -341,6 +348,7 @@ function MainWindow:new(toolbox, subroot)
 	--======== SCENE STRUCTURE
 	leftPanel:addChild(sceneTreeContainer)
 	rightPanel:addChild(inspector)
+	rightPanel:addChild(signalPanel)
 	bottomPanel:addChild(fileBrowser)
 
 	editor:addChild(leftPanel)
@@ -1071,14 +1079,14 @@ function MainWindow:showLinkScenePopup()
 			return
 		end
 
-		local scene, err = ObjectLoader:get(path, "SceneFactory")
-		if scene then
-			---@cast scene SceneFactory
+		local success, sceneOrErr = pcall(ObjectLoader.get, ObjectLoader, path)
+		if success then
+			---@cast sceneOrErr SceneFactory
 			-- Add it
-			self:linkScene(scene, instanceUnder)
+			self:linkScene(sceneOrErr, instanceUnder)
 			window:close()
 		else
-			print(err)
+			print(sceneOrErr)
 		end
 	end
 

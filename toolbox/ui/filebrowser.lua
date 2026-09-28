@@ -31,7 +31,6 @@ local Toolbox
 ---@param toolbox Toolbox
 function FileBrowser:new(toolbox)
 	FileBrowser.super.new(self)
-	self:setVariant("panel")
 	self.name = "Files"
 	Toolbox = toolbox
 	self.toolbox = toolbox
@@ -63,7 +62,7 @@ function FileBrowser:new(toolbox)
 		local hbox = HBox()
 		hbox:setAnchorsAndOffsets(
 			0, 0, 1, 0,
-			4, 4, -4, ICON_SIZE + 4
+			5, 5, -5, ICON_SIZE + 5
 		)
 		local reloadButton = Button()
 			:setOffsets(0, 0, ICON_SIZE, ICON_SIZE)
@@ -79,7 +78,7 @@ function FileBrowser:new(toolbox)
 	local itemVBox = VBox()
 		:setAnchorsAndOffsets(
 			0, 0, 1, 1,
-			4, ICON_SIZE + 8, -4, 0
+			5, ICON_SIZE + 10, -5, 0
 		)
 		:setClipChildren(true)
 	self.itemVBox = itemVBox

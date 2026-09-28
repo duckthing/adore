@@ -3,7 +3,6 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
-local Node = Nodes("Node")
 local Label = Nodes("Label")
 local MenuButton = Nodes("MenuButton")
 local WindowPopup = Nodes("WindowPopup")
@@ -24,6 +23,11 @@ local FontLoader = Adore.Loader.getCollection("FontLoader")
 local BOLD_FONT = FontLoader:get("")
 local BOLD_SIZE = 16
 local FORMAT_OPTIONS = {{label = "json"}, {label = "lua"}, {label = "binary"}}
+---Signals that shouldn't be shown in the Inspector
+local FORBIDDEN_PROPERTY_TYPES = {
+	Signal = true,
+	["string.buffer"] = true,
+}
 
 local function getAddr(t)
 	local mt = getmetatable(t)
@@ -37,7 +41,6 @@ end
 ---@param sceneTree Toolbox.SceneTree
 function Inspector:new(toolbox, sceneTree)
 	Inspector.super.new(self)
-	self:setVariant("panel")
 
 	self.toolbox = toolbox
 	self.sceneTree = sceneTree
@@ -48,7 +51,7 @@ function Inspector:new(toolbox, sceneTree)
 	self.nameLabel = nameLabel
 	nameLabel
 		:setAnchors(0, 0, 1, 0)
-		:setOffsets(5, 0, -35, 30)
+		:setOffsets(5, 5, -35, 35)
 		:setAlign("left")
 		:setJustify("center")
 		:setFont(BOLD_FONT)
@@ -64,7 +67,7 @@ function Inspector:new(toolbox, sceneTree)
 	local menuButton = MenuButton("...", nil, menuItems)
 		:setAnchorsAndOffsets(
 			1, 0, 1, 0,
-			-35, 0, -5, 30
+			-35, 5, -5, 35
 		)
 		:setVariant("")
 
@@ -77,7 +80,7 @@ function Inspector:new(toolbox, sceneTree)
 	self.vbox = vbox
 	vbox:setAnchorsAndOffsets(
 		0, 0, 1, 1,
-		0, 36, 0, 0
+		0, 40, 0, 0
 	)
 		:setMargin(4)
 		:setClipChildren(true)
@@ -110,9 +113,12 @@ function Inspector:onNodeFocusChanged(viewer, node, inTree)
 	-- Node exists, create the properties
 	local entry = node:getClassDBEntry()
 	local lastClass = nil
-	self.nameLabel:setText(tostring(node)..(" (%s)"):format(getAddr(node)))
+	self.nameLabel:setText(("%s (%s)"):format(tostring(node), getAddr(node)))
 
 	entry:forEachProperty(node, true, function(obj, property, propertyName, fromClass, ...)
+		local propertyType = property.TYPE
+		if FORBIDDEN_PROPERTY_TYPES[propertyType] or not property.visible then return end
+
 		if fromClass ~= lastClass then
 			-- Make the new class header
 			lastClass = fromClass
@@ -126,10 +132,7 @@ function Inspector:onNodeFocusChanged(viewer, node, inTree)
 			vbox:addChild(header)
 		end
 
-		if not property.visible then return end
-
-		local Previewer = Previewers[property.TYPE] or Previewers.any
-
+		local Previewer = Previewers[propertyType] or Previewers.any
 		vbox:addChild(Previewer(obj, property, propertyName, self))
 	end)
 end
