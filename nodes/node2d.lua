@@ -67,7 +67,9 @@ function Node2d:getParentGlobalTransform()
 end
 
 ---Resets the transform to the parent's transform
----@return self self
+---@generic T: Node2d
+---@param self T | Node2d
+---@return T
 function Node2d:resetToGlobal()
 	self._localTransform:reset()
 	self._globalTransform:setMatrix("row", self:getParentGlobalTransform():getMatrix())
@@ -90,9 +92,11 @@ function Node2d:_eParentGlobalTransformUpdated(parentGlobalTransform)
 	if self._transformRelativeToParent then
 		self._globalTransform:setMatrix(parentGlobalTransform:getMatrix())
 			:apply(self._localTransform)
+		---@type Node
 		local parent = self.parent
 		local pAncestorRotation = rawget(parent, "_ancestorRotation")
 		if pAncestorRotation then
+			---@cast parent Node2d
 			self._ancestorRotation = (parent._rotation + pAncestorRotation) % PI2
 		else
 			self._ancestorRotation = 0
@@ -170,8 +174,10 @@ function Node2d:setPosition(x, y)
 end
 
 ---Copies the values of the passed Vec2 into the position
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param vector Vec2
----@return self self
+---@return T
 function Node2d:setPositionVector(vector)
 	self._position:iCopyVector(vector)
 	self:_onLocalTransformUpdated()
@@ -179,9 +185,11 @@ function Node2d:setPositionVector(vector)
 end
 
 ---Sets the world position of this Node2d
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param gx number
 ---@param gy number
----@return Node2d
+---@return T
 function Node2d:setWorldPosition(gx, gy)
 	self:setPosition(self:getParentGlobalTransform():inverseTransformPoint(gx, gy))
 	return self
@@ -202,9 +210,11 @@ function Node2d:getWorldPosition()
 end
 
 ---Sets the relative scale
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param x number
 ---@param y number
----@return self self
+---@return T
 function Node2d:setScale(x, y)
 	self._scale.x, self._scale.y =
 		x, y
@@ -213,8 +223,10 @@ function Node2d:setScale(x, y)
 end
 
 ---Copies the values of the passed Vec2 into the scale
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param vector Vec2
----@return self self
+---@return T
 function Node2d:setScaleVector(vector)
 	self._scale:iCopyVector(vector)
 	self:_onLocalTransformUpdated()
@@ -222,8 +234,10 @@ function Node2d:setScaleVector(vector)
 end
 
 ---Rotates this Node2d, in radians
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param angle number
----@return self self
+---@return T
 function Node2d:rotate(angle)
 	self._rotation = (self._rotation + angle) % PI2
 	self:_onLocalTransformUpdated()
@@ -231,8 +245,10 @@ function Node2d:rotate(angle)
 end
 
 ---Sets the local rotation of this Node2d, in radians
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param angle number
----@return self self
+---@return T
 function Node2d:setRotation(angle)
 	self._rotation = angle % PI2
 	self:_onLocalTransformUpdated()
@@ -240,8 +256,10 @@ function Node2d:setRotation(angle)
 end
 
 ---Sets the global rotation of this Node2d, in radians
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param angle number
----@return self
+---@return T
 function Node2d:setGlobalRotation(angle)
 	return self:setRotation(angle - self._ancestorRotation)
 end
@@ -293,8 +311,10 @@ function Node2d:toGlobal(lx, ly)
 end
 
 ---Sets whether this Node2d will transform relative to the parent
+---@generic T: Node2d
+---@param self T | Node2d
 ---@param relative boolean
----@return self
+---@return T
 function Node2d:setRelativeTransform(relative)
 	if self._transformRelativeToParent == relative then return self end
 	self._transformRelativeToParent = relative

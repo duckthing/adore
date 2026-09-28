@@ -221,9 +221,11 @@ function Control:setOffsetBottom(value) self._offsetBottom = value; self:deferRe
 
 ---Sets the pivot of this Control.
 ---If a parameter is `nil`, it won't be changed.
+---@generic T: Control
+---@param self T | Control
 ---@param x number?
 ---@param y number?
----@return Control
+---@return T
 function Control:setPivot(x, y)
 	local pivot = self._pivot
 	x, y = x or pivot.x, y or pivot.y
@@ -235,16 +237,20 @@ function Control:setPivot(x, y)
 end
 
 ---Sets the pivot of this Control with a Vec2
+---@generic T: Control
+---@param self T | Control
 ---@param vec Vec2
----@return Control
+---@return T
 function Control:setPivotVec(vec)
 	self:setPivot(vec.x, vec.y)
 	return self
 end
 
 ---Rotates this Control, in radians
+---@generic T: Control
+---@param self T | Control
 ---@param angle number
----@return Control
+---@return T
 function Control:rotate(angle)
 	self._rotation = (self._rotation + angle) % PI2
 	self:deferRefreshSelf()
@@ -252,8 +258,10 @@ function Control:rotate(angle)
 end
 
 ---Sets the local rotation of this Node2d, in radians
+---@generic T: Control
+---@param self T | Control
 ---@param angle number
----@return Control
+---@return T
 function Control:setRotation(angle)
 	angle = (angle and angle % PI2) or 0
 	if self._rotation ~= angle then
@@ -306,9 +314,11 @@ end
 
 ---Sets the scale of this Control.
 ---If a parameter is `nil`, it won't be changed.
+---@generic T: Control
+---@param self T | Control
 ---@param x number?
 ---@param y number?
----@return Control
+---@return T
 function Control:setScale(x, y)
 	local scale = self._scale
 	x, y = x or scale.x, y or scale.y
@@ -320,8 +330,10 @@ function Control:setScale(x, y)
 end
 
 ---Sets the scale of this Control with a Vec2
+---@generic T: Control
+---@param self T | Control
 ---@param vec Vec2
----@return Control
+---@return T
 function Control:setScaleVec(vec)
 	self:setScale(vec.x, vec.y)
 	return self
@@ -362,8 +374,10 @@ function Control:setAnchorPreset(preset)
 end
 
 ---Sets the Theme used for this Control, and whatever is beneath it
+---@generic T: Control
+---@param self T | Control
 ---@param theme Theme
----@return self
+---@return T
 function Control:setTheme(theme)
 	self._theme = theme
 	self:_eOnThemeChanged()
@@ -371,8 +385,10 @@ function Control:setTheme(theme)
 end
 
 ---Sets the subclass, and maps it according to the subclass map
+---@generic T: Control
+---@param self T | Control
 ---@param subclass string
----@return self
+---@return T
 function Control:setSubclass(subclass)
 	self._currentOriginalSubclass = subclass
 	local newSubclass = self.subclassMap[subclass]
@@ -386,8 +402,10 @@ end
 ---Sets the subclass map. This table is responsible for mapping one subclass to another value.
 ---Subclass maps are used to provide variations of the same Control.
 ---It's recommended to create your variation inside of a Theme and call `:setVariant` instead.
+---@generic T: Control
+---@param self T | Control
 ---@param subclassMap {[string]: string} # The map
----@return self
+---@return T
 function Control:setSubclassMap(subclassMap)
 	if self.subclassMap ~= subclassMap then
 		self.subclassMap = subclassMap
@@ -462,8 +480,10 @@ function Control:setClipChildren(clip)
 end
 
 ---Sets the input filter for this Control
+---@generic T: Control
+---@param self T | Control
 ---@param mode Control.InputFilter
----@return self
+---@return T
 function Control:setInputMode(mode)
 	if self._inputMode ~= mode then
 		self._inputMode = mode
@@ -811,6 +831,7 @@ function Control:_getRectFromParentSize(w, h)
 end
 
 ---Returns a (read-only) `love.Transform` that contains the parent's offset/rotation/scale
+---@return love.Transform
 function Control:_getParentTransform()
 	if self._topLevelNode == self or not self._inTree then
 		-- This Control does not rely on what is above it; it can calculate its dimensions itself

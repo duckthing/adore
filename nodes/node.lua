@@ -891,20 +891,26 @@ function Node:createTween(realTime)
 end
 
 ---Shows this Node, which allows this Node and all children to be drawn
----@return self
+---@generic T: Node
+---@param self T | Node
+---@return T
 function Node:show()
 	return self:setVisible(true)
 end
 
 ---Hides this Node, which prevents this Node and all children from being drawn
----@return self
+---@generic T: Node
+---@param self T | Node
+---@return T
 function Node:hide()
 	return self:setVisible(false)
 end
 
 ---Sets the visibility of this Node
 ---@param visible boolean
----@return self
+---@generic T: Node
+---@param self T | Node
+---@return T
 function Node:setVisible(visible)
 	if self._visible ~= visible then
 		self._visible = visible
