@@ -7,7 +7,7 @@ local Vec2 = Common("Vec2")
 local Rect2 = Common("Rect2")
 
 ---@class Node2d: Node
----@field super Node
+---@field super Node2d
 ---@overload fun(x: number?, y: number?): Node2d
 local Node2d = Node:extend()
 Node2d.CLASS_NAME = "Node2d"

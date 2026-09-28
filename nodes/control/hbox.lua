@@ -123,8 +123,10 @@ function HBox:_focusOnChild(child)
 end
 
 ---Sets whether scrolling is allowed on this HBox
+---@generic T: HBox
+---@param self T | HBox
 ---@param allow boolean
----@return self
+---@return T
 function HBox:setAllowScrolling(allow)
 	self._allowScrolling = allow
 	if allow then
@@ -136,8 +138,10 @@ function HBox:setAllowScrolling(allow)
 end
 
 ---Sets whether this HBox will resize to fit all content
+---@generic T: HBox
+---@param self T | HBox
 ---@param resize boolean
----@return self
+---@return T
 function HBox:setResizeToContent(resize)
 	self._resizeToContent = resize
 	self:deferRefreshSelf()
@@ -145,8 +149,10 @@ function HBox:setResizeToContent(resize)
 end
 
 ---Sets the margin between elements
+---@generic T: HBox
+---@param self T | HBox
 ---@param margin integer
----@return HBox
+---@return T
 function HBox:setMargin(margin)
 	self._margin = margin
 	self:deferRefreshSelf()
@@ -154,8 +160,10 @@ function HBox:setMargin(margin)
 end
 
 ---Sets the padding around the elements
+---@generic T: HBox
+---@param self T | HBox
 ---@param padding integer
----@return HBox
+---@return T
 function HBox:setPadding(padding)
 	self._padding = padding
 	self:deferRefreshSelf()
@@ -163,8 +171,10 @@ function HBox:setPadding(padding)
 end
 
 ---Sets the direction sorting occurs in
+---@generic T: HBox
+---@param self T | HBox
 ---@param sortMode VBox.SortMode
----@return HBox
+---@return T
 function HBox:setSortMode(sortMode)
 	if self._sortMode ~= sortMode then
 		self._sortMode = sortMode

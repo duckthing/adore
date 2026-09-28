@@ -45,7 +45,6 @@ function TabBar:forceRefresh()
 end
 
 ---Call this if the tab info changed
----@return self
 function TabBar:onTabInfoUpdated()
 	local selectedTab = self._currentTab
 	local tabs = self._tabs
@@ -64,12 +63,13 @@ function TabBar:onTabInfoUpdated()
 		self:selectTab(selectedTab)
 	end
 	self:deferRefreshSelf()
-	return self
 end
 
 ---Selects a certain tab index
+---@generic T: TabBar
+---@param self T | TabBar
 ---@param index integer
----@return self
+---@return T
 function TabBar:selectTab(index)
 	local newIndex = min(#self._tabs, index)
 	if newIndex ~= self._currentTab then

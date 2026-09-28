@@ -129,8 +129,10 @@ function VBox:_focusOnChild(child)
 end
 
 ---Sets whether scrolling is allowed on this VBox
+---@generic T: VBox
+---@param self T | VBox
 ---@param allow boolean
----@return self
+---@return T
 function VBox:setAllowScrolling(allow)
 	self._allowScrolling = allow
 	if allow then
@@ -142,8 +144,10 @@ function VBox:setAllowScrolling(allow)
 end
 
 ---Sets whether this VBox will resize to fit all content
+---@generic T: VBox
+---@param self T | VBox
 ---@param resize boolean
----@return self
+---@return T
 function VBox:setResizeToContent(resize)
 	if self._resizeToContent ~= resize then
 		self._resizeToContent = resize
@@ -153,8 +157,10 @@ function VBox:setResizeToContent(resize)
 end
 
 ---Sets the margin between elements
+---@generic T: VBox
+---@param self T | VBox
 ---@param margin integer
----@return VBox
+---@return T
 function VBox:setMargin(margin)
 	if self._margin ~= margin then
 		self._margin = margin
@@ -164,8 +170,10 @@ function VBox:setMargin(margin)
 end
 
 ---Sets the padding around the elements
+---@generic T: VBox
+---@param self T | VBox
 ---@param padding integer
----@return VBox
+---@return T
 function VBox:setPadding(padding)
 	if self._padding ~= padding then
 		self._padding = padding
@@ -175,8 +183,10 @@ function VBox:setPadding(padding)
 end
 
 ---Sets the direction sorting occurs in
+---@generic T: VBox
+---@param self T | VBox
 ---@param sortMode VBox.SortMode
----@return VBox
+---@return T
 function VBox:setSortMode(sortMode)
 	if self._sortMode ~= sortMode then
 		self._sortMode = sortMode

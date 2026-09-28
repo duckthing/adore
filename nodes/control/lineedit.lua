@@ -122,8 +122,10 @@ function LineEdit:isTextDifferent()
 end
 
 ---Sets the text of the LineEdit. Will also clear the history of the text.
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param text string?
----@return self
+---@return T
 function LineEdit:setText(text)
 	text = text or ""
 	if self._text ~= text then
@@ -140,8 +142,10 @@ function LineEdit:setText(text)
 end
 
 ---Sets the FontSource of this LineEdit
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param font FontSource?
----@return LineEdit
+---@return T
 function LineEdit:setFont(font)
 	if self._font ~= font then
 		self._font = font
@@ -151,8 +155,10 @@ function LineEdit:setFont(font)
 end
 
 ---Sets the font size of this LineEdit. Set to `nil` or `0` to use the default.
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param size number
----@return self
+---@return T
 function LineEdit:setFontSize(size)
 	if self._fontSize ~= size then
 		self._fontSize = size
@@ -162,8 +168,10 @@ function LineEdit:setFontSize(size)
 end
 
 ---Sets the placeholder text of the LineEdit. This appears when there is no text entered.
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param text string
----@return self
+---@return T
 function LineEdit:setPlaceholderText(text)
 	if self._placeholderText ~= text then
 		self._placeholderText = text
@@ -189,7 +197,10 @@ local function setFieldUnfocusedAlignment(self)
 end
 
 ---Sets the horizontal placement of the field
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param align love.AlignMode
+---@return T
 function LineEdit:setAlign(align)
 	if self._align ~= align then
 		self._align= align
@@ -203,7 +214,10 @@ function LineEdit:setAlign(align)
 end
 
 ---Sets the vertical placement of the field
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param justify Label.JustifyMode
+---@return T
 function LineEdit:setJustify(justify)
 	if self._justify ~= justify then
 		self._justify = justify
@@ -213,8 +227,10 @@ function LineEdit:setJustify(justify)
 end
 
 ---Sets what the LineEdit will show when unfocused
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param newPosition LineEdit.FocusPosition
----@return self
+---@return T
 function LineEdit:setUnfocusedPosition(newPosition)
 	if self._unfocusedPosition ~= newPosition then
 		self._unfocusedPosition = newPosition
@@ -226,8 +242,10 @@ function LineEdit:setUnfocusedPosition(newPosition)
 end
 
 ---Sets whether or not this LineEdit submits its contents when losing focus
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param shouldSubmit boolean
----@return LineEdit
+---@return T
 function LineEdit:setSubmitOnFocusLost(shouldSubmit)
 	if self._submitOnFocusLost ~= shouldSubmit then
 		self._submitOnFocusLost = shouldSubmit
@@ -236,8 +254,10 @@ function LineEdit:setSubmitOnFocusLost(shouldSubmit)
 end
 
 ---Sets what the LineEdit will show when focused
+---@generic T: LineEdit
+---@param self T | LineEdit
 ---@param newPosition LineEdit.FocusPosition
----@return self
+---@return T
 function LineEdit:setFocusedPosition(newPosition)
 	if self._focusedPosition ~= newPosition then
 		self._focusedPosition = newPosition

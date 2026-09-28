@@ -55,8 +55,10 @@ function Label:getMinimumSize()
 end
 
 ---Sets the text inside the Label
+---@generic T: Label
+---@param self T | Label
 ---@param text string?
----@return self
+---@return T
 function Label:setText(text)
 	text = text or ""
 	if self._text ~= text then
@@ -67,8 +69,10 @@ function Label:setText(text)
 end
 
 ---Sets the FontSource of this Label. Set to `nil` to use the Theme's font.
+---@generic T: Label
+---@param self T | Label
 ---@param font FontSource
----@return self
+---@return T
 function Label:setFont(font)
 	if self._font ~= font then
 		self._font = font
@@ -78,8 +82,10 @@ function Label:setFont(font)
 end
 
 ---Sets the font size of this Label. Set to `nil` or `0` to use the default.
+---@generic T: Label
+---@param self T | Label
 ---@param size number
----@return self
+---@return T
 function Label:setFontSize(size)
 	if self._fontSize ~= size then
 		self._fontSize = size
@@ -89,8 +95,10 @@ function Label:setFontSize(size)
 end
 
 ---Sets how the text aligns horizontally
+---@generic T: Label
+---@param self T | Label
 ---@param align love.AlignMode
----@return self
+---@return T
 function Label:setAlign(align)
 	if self._align ~= align then
 		self._align = align
@@ -100,8 +108,10 @@ function Label:setAlign(align)
 end
 
 ---Sets how the text aligns vertically
+---@generic T: Label
+---@param self T | Label
 ---@param justify Label.JustifyMode
----@return self
+---@return T
 function Label:setJustify(justify)
 	if self._justify ~= justify then
 		self._justify = justify
@@ -111,8 +121,10 @@ function Label:setJustify(justify)
 end
 
 ---Sets how the text wraps
+---@generic T: Label
+---@param self T | Label
 ---@param autowrap AutoWrap.Mode
----@return self
+---@return T
 function Label:setAutoWrap(autowrap)
 	if self._autowrap ~= autowrap then
 		self._autowrap = autowrap
@@ -122,8 +134,10 @@ function Label:setAutoWrap(autowrap)
 end
 
 ---Sets whether text gets clipped out of bounds
+---@generic T: Label
+---@param self T | Label
 ---@param clip boolean
----@return self
+---@return T
 function Label:setClipText(clip)
 	if self._clipText ~= clip then
 		self._clipText = clip

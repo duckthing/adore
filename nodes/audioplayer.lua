@@ -30,7 +30,7 @@ function AudioPlayer:_initAudioPlayer(source)
 
 	---@type integer # The current polyphony index we're on
 	self._polyIndex = 1
-	---@type love.Source[]?
+	---@type love.Source[]? # Not real polyphony but pretend it is
 	self._polySources = nil
 end
 
@@ -68,8 +68,10 @@ function AudioPlayer:_createPolyphonyArray()
 end
 
 ---Sets the Source
+---@generic T: AudioPlayer
+---@param self T | AudioPlayer
 ---@param source love.Source
----@return self
+---@return T
 function AudioPlayer:setSource(source)
 	if source ~= self._source then
 		local oldSource = self._source
@@ -91,8 +93,10 @@ function AudioPlayer:setSource(source)
 end
 
 ---Whether duplicate calls to `:play()` should overlap new sounds instead of restarting
+---@generic T: AudioPlayer
+---@param self T | AudioPlayer
 ---@param amount integer
----@return self
+---@return T
 function AudioPlayer:setPolyphony(amount)
 	amount = (amount and max(amount, 1)) or 1
 	if amount ~= self._polyIndex then
@@ -104,7 +108,9 @@ function AudioPlayer:setPolyphony(amount)
 end
 
 ---Plays the Source
----@return self
+---@generic T: AudioPlayer
+---@param self T | AudioPlayer
+---@return T
 function AudioPlayer:play()
 	if self._polySources then
 		-- Use the polyphony
@@ -126,7 +132,9 @@ function AudioPlayer:play()
 end
 
 ---Pauses the Source
----@return self
+---@generic T: AudioPlayer
+---@param self T | AudioPlayer
+---@return T
 function AudioPlayer:pause()
 	if self._polySources then
 		-- Use the polyphony
@@ -144,7 +152,9 @@ function AudioPlayer:pause()
 end
 
 ---Stops the Source
----@return self
+---@generic T: AudioPlayer
+---@param self T | AudioPlayer
+---@return T
 function AudioPlayer:stop()
 	if self._polySources then
 		-- Use the polyphony
@@ -163,9 +173,11 @@ function AudioPlayer:stop()
 end
 
 ---Seeks the Source to the specified position
+---@generic T: AudioPlayer
+---@param self T | AudioPlayer
 ---@param offset number
 ---@param unit love.TimeUnit?
----@return self
+---@return T
 function AudioPlayer:seek(offset, unit)
 	if self._polySources then
 		-- Use the polyphony

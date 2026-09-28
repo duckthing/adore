@@ -44,17 +44,21 @@ end
 ---Connects a simple Callable to the BaseButton.
 ---**Bad practice!** Use `self.clicked` and connect to a `Node` to get more benefits.
 ---For info on this, see `Signal` and its documentation between `:connect` and `:connectCallable`.
+---@generic T: BaseButton
+---@param self T | BaseButton
 ---@param func fun(self: BaseButton, buttonIndex: integer)
 ---@param oneShot boolean?
----@return self
+---@return T
 function BaseButton:onClick(func, oneShot)
 	self.clicked:connectCallable(func, oneShot)
 	return self
 end
 
 ---Sets the `disabled` state, which prevents the button from being pressed and focused
+---@generic T: BaseButton
+---@param self T | BaseButton
 ---@param disabled boolean
----@return self
+---@return T
 function BaseButton:setDisabled(disabled)
 	if self._disabled ~= disabled then
 		self._disabled = disabled

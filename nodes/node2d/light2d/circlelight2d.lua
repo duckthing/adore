@@ -17,8 +17,10 @@ function CircleLight2d:new(x, y, radius)
 end
 
 ---Sets the radius of the light
+---@generic T: CircleLight2d
+---@param self T | CircleLight2d
 ---@param newRadius number
----@return self
+---@return T
 function CircleLight2d:setRadius(newRadius)
 	if self.lightRadius ~= newRadius then
 		-- TODO: Fix disappearing when not completely offscreen

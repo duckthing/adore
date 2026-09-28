@@ -31,8 +31,10 @@ function TextureRect:new()
 end
 
 ---Sets the texture inside the Label
+---@generic T: TextureRect
+---@param self T | TextureRect
 ---@param texture TextureSource?
----@return self
+---@return T
 function TextureRect:setTexture(texture)
 	if self._texture ~= texture then
 		self._texture = texture
@@ -42,8 +44,10 @@ function TextureRect:setTexture(texture)
 end
 
 ---Sets how the texture stretches
+---@generic T: TextureRect
+---@param self T | TextureRect
 ---@param mode TextureRect.StretchMode
----@return self
+---@return T
 function TextureRect:setStretchMode(mode)
 	if self._stretchMode ~= mode then
 		self._stretchMode = mode

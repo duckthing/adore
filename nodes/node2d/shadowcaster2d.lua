@@ -30,8 +30,10 @@ function Shadow2d:new(x, y, points, fill, transform)
 end
 
 ---Sets the local shape of the occluder, and then calculates the bounds of them.
+---@generic T: ShadowCaster2d
+---@param self T | ShadowCaster2d
 ---@param points number[]
----@return self
+---@return T
 function Shadow2d:setPoints(points)
 	if points ~= self.points then
 		if points then
@@ -46,7 +48,9 @@ end
 
 ---Manually calculates the local content bounds by looking at the existing points, and then updates the global bounds.
 ---Call this whenever the points change; called automatically when :setPoints() is called, and in the constructor.
----@return self
+---@generic T: ShadowCaster2d
+---@param self T | ShadowCaster2d
+---@return T
 function Shadow2d:calculateBounds()
 	local points = self.points
 	assert(#points % 2 == 0, "ShadowCaster2d's points given in :setPoints() is incomplete (not a set of 2)")

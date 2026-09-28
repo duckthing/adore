@@ -232,7 +232,7 @@ end
 ---[IN PLACE] Sets this Rect2 to a dimension that is `percent` between `self` and `to`
 ---@param to Rect2
 ---@param percent number
----@return Rect2 self
+---@return self
 function Rect2:iLerp(to, percent)
 	local diff = tempRect2:iCopyRect(to)
 	diff.x, diff.y, diff.w, diff.h =

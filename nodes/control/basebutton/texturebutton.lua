@@ -37,8 +37,10 @@ function TextureButton:getMinimumSize()
 end
 
 ---Sets the texture used for the TextureButton
+---@generic T: TextureButton
+---@param self T | TextureButton
 ---@param texture TextureSource?
----@return self
+---@return T
 function TextureButton:setTexture(texture)
 	if self._texture ~= texture then
 		self._texture = texture
@@ -48,8 +50,10 @@ function TextureButton:setTexture(texture)
 end
 
 ---Sets how the texture stretches
+---@generic T: TextureButton
+---@param self T | TextureButton
 ---@param mode TextureRect.StretchMode
----@return self
+---@return T
 function TextureButton:setStretchMode(mode)
 	if self._stretchMode ~= mode then
 		self._stretchMode = mode
@@ -59,8 +63,10 @@ function TextureButton:setStretchMode(mode)
 end
 
 ---Sets whether the TextureButton can be made smaller than the texture itself
+---@generic T: TextureButton
+---@param self T | TextureButton
 ---@param shrink boolean
----@return TextureButton
+---@return T
 function TextureButton:setTextureShrink(shrink)
 	if self._allowTextureShrink ~= shrink then
 		self._allowTextureShrink = shrink

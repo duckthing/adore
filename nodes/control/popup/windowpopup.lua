@@ -94,8 +94,10 @@ function WindowPopup:getActionBar()
 end
 
 ---Sets the visibility of the close button
+---@generic T: WindowPopup
+---@param self T | WindowPopup
 ---@param visible boolean
----@return self
+---@return WindowPopup
 function WindowPopup:setCloseButtonVisible(visible)
 	if self._showCloseButton ~= visible then
 		self._showCloseButton = visible

@@ -28,8 +28,10 @@ end
 
 ---Sets the ParticleSystem used.
 ---If you're putting the ParticleSystem into multiple Nodes, don't forget to call `:clone()` on the ParticleSystems.
+---@generic T: Particles2d
+---@param self T | Particles2d
 ---@param system love.ParticleSystem?
----@return Particles2d
+---@return T
 function Particles2d:setParticleSystem(system)
 	if self.particleSystem ~= system then
 		self.particleSystem = system
@@ -56,8 +58,10 @@ end
 ---Sets whether the particles are positioned based on where they were emitted in global space.
 ---`true` makes the particles linger where they were originally emitted, while `false` makes them move with the Node2D's
 ---transform.
+---@generic T: Particles2d
+---@param self T | Particles2d
 ---@param global boolean
----@return Particles2d
+---@return T
 function Particles2d:setGlobalParticles(global)
 	if self._globalParticles ~= global then
 		self._globalParticles = global
@@ -79,16 +83,20 @@ function Particles2d:setGlobalParticles(global)
 end
 
 ---Sets the speed the ParticleSystem will be processed.
+---@generic T: Particles2d
+---@param self T | Particles2d
 ---@param speed number?
----@return self
+---@return T
 function Particles2d:setSpeed(speed)
 	self.particleSpeed = speed or 1
 	return self
 end
 
 ---Sets whether the ParticleSystem will get started immediately (upon `:ready()` or system change).
+---@generic T: Particles2d
+---@param self T | Particles2d
 ---@param autostart boolean?
----@return Particles2d
+---@return T
 function Particles2d:setAutostart(autostart)
 	if self.autostart ~= autostart then
 		self.autostart = autostart or false

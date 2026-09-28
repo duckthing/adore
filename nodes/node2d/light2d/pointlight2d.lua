@@ -42,8 +42,10 @@ function PointLight2d:_updateOffset()
 end
 
 ---Sets the TextureSource used for the PointLight2d
+---@generic T: PointLight2d
+---@param self T | PointLight2d
 ---@param tSource TextureSource?
----@return self
+---@return T
 function PointLight2d:setTexture(tSource)
 	if self._lightTexture ~= tSource then
 		self._lightTexture = tSource
@@ -53,8 +55,10 @@ function PointLight2d:setTexture(tSource)
 end
 
 ---Sets whether the TextureSource is centered
+---@generic T: PointLight2d
+---@param self T | PointLight2d
 ---@param centered boolean
----@return self
+---@return T
 function PointLight2d:setCentered(centered)
 	if self._centered ~= centered then
 		self._centered = centered

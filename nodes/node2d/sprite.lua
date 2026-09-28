@@ -82,9 +82,11 @@ function Sprite:_updateQuad()
 end
 
 ---Sets the frame count and updates the quad
+---@generic T: Sprite
+---@param self T | Sprite
 ---@param rows integer
 ---@param columns integer
----@return self
+---@return T
 function Sprite:setFrameCount(rows, columns)
 	local tSource = self._texture
 	if not tSource then
@@ -124,8 +126,10 @@ function Sprite:setColumns(columns) self:setFrameCount(self._rows, columns) end
 function Sprite:setRows(rows) self:setFrameCount(rows, self._columns) end
 
 ---Sets whether the texture will be centered in the Sprite
+---@generic T: Sprite
+---@param self T | Sprite
 ---@param centered boolean
----@return self
+---@return T
 function Sprite:setCentered(centered)
 	if self._centered == centered then return self end
 	self._centered = centered
@@ -134,8 +138,10 @@ function Sprite:setCentered(centered)
 end
 
 ---Sets the texture used for drawing
+---@generic T: Sprite
+---@param self T | Sprite
 ---@param texture TextureSource?
----@return self
+---@return T
 function Sprite:setTexture(texture)
 	if self._texture ~= texture then
 		self._texture = texture
@@ -145,8 +151,10 @@ function Sprite:setTexture(texture)
 end
 
 ---Sets the current frame index
+---@generic T: Sprite
+---@param self T | Sprite
 ---@param frame integer
----@return self
+---@return T
 function Sprite:setFrame(frame)
 	if self._frame ~= frame then
 		self._frame = frame
