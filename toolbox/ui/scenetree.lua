@@ -403,9 +403,11 @@ end
 function SceneTreeViewer:_canDropData(posX, posY, data)
 	if type(data) ~= "table" then return false end
 
+	local node
 	if data.type == "node" then
+		-- Check that this Node is valid (and also set the `node` value)
 		---@type Node?
-		local node = data.node
+		node = data.node
 		if not node then return false end
 		local hoveredIndex = self.hoveredIndex
 		if not hoveredIndex then return false end
@@ -413,49 +415,36 @@ function SceneTreeViewer:_canDropData(posX, posY, data)
 		if not hoveredNode then return false end
 		-- It exists, but don't allow the parent to have a descendant as its parent
 		if hoveredNode:hasAncestor(node) then return false end
-		-- Valid
-		local insertInto, childIndex = getInsertRequestAtPoint(self, posX, posY, node)
-		if insertInto then
-			local child = insertInto.children[childIndex]
-			local insertIndex
-			self.insertUnderIndex = self:getTreeIndexOfNode(insertInto) or 0
-			if child then
-				insertIndex = self:getTreeIndexOfNode(child)
-				self.insertAsChild = false
-			else
-				if #insertInto.children > 0 then
-					insertIndex = self:getTreeIndexOfNode(insertInto.children[childIndex - 1]) + 1
-					self.insertAsChild = false
-				else
-					insertIndex = self:getTreeIndexOfNode(insertInto)
-					self.insertAsChild = true
-				end
-			end
-			self.insertIndex = insertIndex or 0
-			return true
-		end
 	elseif data.type == "object" then
+		-- Check that this Object is a valid SceneFactory
 		---@type Object?
 		local object = data.object
-		if not object then return false end
-		if object:is(SceneFactory) then
-			-- We can drop scenes here
-			local insertInto, childIndex = getInsertRequestAtPoint(self, posX, posY, node)
-			if insertInto then
-				local insertIndex = self:getTreeIndexOfNode(insertInto) or 0
-				local children = insertInto.children
-				self.insertUnderIndex = insertIndex
-				self.insertIndex =
-					(next(children) and self:getTreeIndexOfNode(children[childIndex]))
-					or insertIndex
-				self.insertAsChild = true
+		if not (object and object:is(SceneFactory)) then return false end
+	else
+		-- Not supported
+		return false
+	end
+
+	-- Valid, get the insert position
+	local insertInto, childIndex = getInsertRequestAtPoint(self, posX, posY, node)
+	if insertInto then
+		local child = insertInto.children[childIndex]
+		local insertIndex
+		self.insertUnderIndex = self:getTreeIndexOfNode(insertInto) or 0
+		if child then
+			insertIndex = self:getTreeIndexOfNode(child)
+			self.insertAsChild = false
+		else
+			if #insertInto.children > 0 then
+				insertIndex = self:getTreeIndexOfNode(insertInto.children[childIndex - 1]) + 1
+				self.insertAsChild = false
 			else
-				self.insertIndex = 0
-				self.insertUnderIndex = 0
-				self.insertUnderAsChild = false
+				insertIndex = self:getTreeIndexOfNode(insertInto)
+				self.insertAsChild = true
 			end
-			return true
 		end
+		self.insertIndex = insertIndex or 0
+		return true
 	end
 	return false
 end
