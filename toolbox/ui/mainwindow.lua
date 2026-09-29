@@ -1161,7 +1161,7 @@ end
 function MainWindow:performReloadDependency(dependencyPath)
 	for eScene, packed in pairs(tabToPackedContents) do
 		eScene:pushSubroot()
-		print("reloading", eScene)
+		print("Reloading", eScene)
 		eScene:changeSceneTo(packed)
 		tabToPackedContents[eScene] = nil
 		eScene:popSubroot()

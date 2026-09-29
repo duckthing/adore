@@ -89,12 +89,10 @@ end
 ---@param newAsset (table | userdata)
 function AssetCollection:destructor(toDestroy, newAsset)
 	local toDestroyPath, toDestroyId = self:getAssetPath(toDestroy)
-	print(toDestroyPath, toDestroyId)
 	if toDestroyPath then
 		-- Replace with the new asset (or nil)
 		---@cast toDestroyId integer
 		self.assets[toDestroyId] = newAsset or false
-		print("replaced with", newAsset)
 		if not newAsset then
 			-- Remove it
 			self.pathToId[toDestroyPath] = nil
