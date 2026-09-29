@@ -44,26 +44,28 @@ local function getTargetViewport(self)
 	return assert(viewport, "Cannot popup outside of the tree")
 end
 
----Updates the dimensions of the Popup to be accurate
+---Gets the area this Popup is allowed to be in
 ---@param self Popup
-local function updateDimensions(self)
+local function getAllowedArea(self)
 	-- Get the safe area where this Popup can exist in
-	local offsetX, offsetY = 0, 0
-	local parentW, parentH = 0, 0
 	if self._resizeWithParent and self._topLevelNode ~= self then
 		-- Resize according to the parent
 		---@type Control
 		local parent = assert(self.parent, "Cannot popup outside of the tree")
-		offsetX, offsetY, parentW, parentH = parent._localContentRect:unpack()
+		return parent._localContentRect:unpack()
 	else
 		-- Resize according to the Viewport safe area
 		local viewport = getTargetViewport(self)
-		offsetX, offsetY, parentW, parentH = viewport:getSafeArea()
+		return viewport:getSafeArea()
 	end
+end
 
+---Updates the dimensions of the Popup to be accurate
+---@param self Popup
+local function updateDimensions(self)
+	local offsetX, offsetY, parentW, parentH = getAllowedArea(self)
 	-- Clamping happens in :onRefreshed
 	local x, y, w, h = self:_getRectFromParentSize(parentW, parentH)
-
 	self:_setModalRect(x + offsetX, y + offsetY, w, h)
 end
 
@@ -72,6 +74,19 @@ function Popup:popup()
 	updateDimensions(self)
 	self:pushModal()
 	self:show()
+end
+
+---Same as `:popup()` but aligned to the center
+function Popup:popupCentered()
+	local offsetX, offsetY, parentW, parentH = getAllowedArea(self)
+	local centerX, centerY = offsetX + parentW * 0.5, offsetY + parentH * 0.5
+	local _, _, w, h = self:_getRectFromParentSize(parentW, parentH)
+	local halfW, halfH = w * 0.5, h * 0.5
+	self:setAnchorsAndOffsets(
+		0, 0, 0, 0,
+			centerX - halfW, centerY - halfH, centerX + halfW, centerY + halfH
+		)
+	self:popup()
 end
 
 ---Closes the Popup

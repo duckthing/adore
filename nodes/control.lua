@@ -347,6 +347,7 @@ end
 ---| "bottomLeft"
 ---| "bottomRight"
 
+do
 ---@type {[Control.AnchorPreset]: number[]}
 local presets = {
 	full = {0, 0, 1, 1},
@@ -371,6 +372,7 @@ function Control:setAnchorPreset(preset)
 
 	self:setAnchors(p[1], p[2], p[3], p[4])
 	return self
+end
 end
 
 ---Sets the Theme used for this Control, and whatever is beneath it
