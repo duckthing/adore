@@ -85,4 +85,22 @@ function Signal:isDefault(v)
 	return v.connections and #v.connections == 0
 end
 
+---@param a Signal
+---@param b Signal
+---@return boolean
+function Signal:areEqual(a, b)
+	local aConnections = a.connections
+	local bConnections = b.connections
+	if aConnections == bConnections then return true end
+	---@cast aConnections Signal.Connection[]
+	---@cast bConnections Signal.Connection[]
+	for i = 1, #aConnections do
+		local ac, bc = aConnections[i], bConnections[i]
+		if ac ~= bc then
+			return false
+		end
+	end
+	return true
+end
+
 return Signal
