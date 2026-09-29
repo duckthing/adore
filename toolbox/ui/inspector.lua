@@ -152,7 +152,7 @@ function Inspector:newResource()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -71, 90, 56
+		0, 0, 180, 127
 	)
 
 	window:getTitleLabel():setText("Add node...")
@@ -226,7 +226,7 @@ function Inspector:newResource()
 
 	-- Show the popup
 	self:addChild(window)
-	window:popup()
+	window:popupCentered()
 	classField:grabFocus(false)
 end
 
@@ -238,7 +238,7 @@ function Inspector:saveResourceAs()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -76, 90, 76
+		0, 0, 180, 152
 	)
 	window._resizeWithParent = false
 
@@ -297,7 +297,7 @@ function Inspector:saveResourceAs()
 
 	-- Show the popup
 	self:addChild(window)
-	window:popup()
+	window:popupCentered()
 	pathField:grabFocus(false)
 end
 

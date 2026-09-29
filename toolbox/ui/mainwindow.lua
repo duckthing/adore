@@ -554,7 +554,7 @@ function MainWindow:saveSceneAs()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -76, 90, 76
+		0, 0, 180, 152
 	)
 
 	window:getTitleLabel():setText("Save to...")
@@ -611,7 +611,7 @@ function MainWindow:saveSceneAs()
 
 	-- Show the popup
 	self:addChild(window)
-	window:popup()
+	window:popupCentered()
 	pathField:grabFocus(false)
 end
 
@@ -646,7 +646,7 @@ function MainWindow:loadScene()
 	-- Create the popup
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
-		0.5, 0.5, 0.5, 0.5,
+		0.0, 0.5, 0.0, 0.5,
 		-90, -71, 90, 56
 	)
 
@@ -707,7 +707,7 @@ function MainWindow:loadScene()
 
 	-- Show the popup
 	self:addChild(window)
-	window:popup()
+	window:popupCentered()
 	pathField:grabFocus(false)
 end
 
@@ -724,7 +724,7 @@ function MainWindow:addNode()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -71, 90, 56
+		0, 0, 180, 127
 	)
 
 	window:getTitleLabel():setText("Add node...")
@@ -815,7 +815,7 @@ function MainWindow:extendNode()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -121, 90, 121
+		0, 0, 180, 242
 	)
 
 	window:getTitleLabel():setText("Extend node...")
@@ -926,7 +926,7 @@ function MainWindow:extendNode()
 
 	-- Show the popup
 	self:addChild(window)
-	window:popup()
+	window:popupCentered()
 	newClassField:grabFocus(false)
 end
 
@@ -1030,7 +1030,7 @@ function MainWindow:showLinkScenePopup()
 	local window = WindowPopup()
 	window:setAnchorsAndOffsets(
 		0.5, 0.5, 0.5, 0.5,
-		-90, -76, 90, 56
+		0, 0, 180, 132
 	)
 
 	window:getTitleLabel():setText("Link scene...")
@@ -1092,7 +1092,7 @@ function MainWindow:showLinkScenePopup()
 
 	-- Show the popup
 	self:addChild(window)
-	window:popup()
+	window:popupCentered()
 	sheet:getElement("path"):grabFocus(false)
 end
 
