@@ -139,7 +139,7 @@ local function getItemDragData(button)
 		end
 	end
 
-	local label = Label(("%s\nPath: %s"):format(itemPath))
+	local label = Label(("[Unknown]\nPath: %s"):format(itemPath))
 	return {
 		type = "path",
 		path = itemPath,
