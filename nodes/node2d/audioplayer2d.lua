@@ -7,13 +7,13 @@ local sin, cos = math.sin, math.cos
 
 ---@class AudioPlayer2d: Node2d, AudioPlayer
 ---@field super Node2d
----@overload fun(x: number?, y: number?, source: love.Source?): AudioPlayer2d
+---@overload fun(x: number?, y: number?, source: SoundSource?): AudioPlayer2d
 local AudioPlayer2d = Node2d:extend()
 AudioPlayer2d.CLASS_NAME = "AudioPlayer2d"
 
 ---@param x number?
 ---@param y number?
----@param source love.Source?
+---@param source SoundSource?
 function AudioPlayer2d:new(x, y, source)
 	AudioPlayer2d.super.new(self, x, y)
 	AudioPlayer._initAudioPlayer(self, source)
@@ -33,7 +33,6 @@ AudioPlayer2d.play = AudioPlayer.play
 AudioPlayer2d.pause = AudioPlayer.pause
 AudioPlayer2d.seek = AudioPlayer.seek
 AudioPlayer2d.stop = AudioPlayer.stop
-AudioPlayer2d.clone = AudioPlayer.clone
 
 function AudioPlayer2d:_onGlobalTransformChanged()
 	AudioPlayer2d.super._onGlobalTransformChanged(self)
@@ -75,25 +74,74 @@ function AudioPlayer2d:_onGlobalTransformChanged()
 	end
 end
 
-function AudioPlayer2d:update(dt)
-	AudioPlayer.super.update(self, dt)
-	local num = love.math.random(0, 10)
-	if num == 1 then
-		self:play()
+---Sets whether this AudioPlayer2d can rotate its sound source
+---@generic T: AudioPlayer2d
+---@param self T | AudioPlayer2d
+---@param useRot boolean
+---@return self
+function AudioPlayer2d:setUseRotation(useRot)
+	if self._useRotation ~= useRot then
+		self._useRotation = useRot
+		self:_onGlobalTransformChanged()
 	end
+	return self
+end
+
+---Sets whether repeated sources keep their original world position when
+---this AudioPlayer2d moves
+---@generic T: AudioPlayer2d
+---@param self T | AudioPlayer2d
+---@param keepPos boolean
+---@return self
+function AudioPlayer2d:setPolyKeepPosition(keepPos)
+	if self._polyKeepPosition ~= keepPos then
+		self._polyKeepPosition = keepPos
+	end
+	return self
+end
+
+---Sets where this source is on the Z axis
+---@generic T: AudioPlayer2d
+---@param self T | AudioPlayer2d
+---@param zPosition number
+---@return self
+function AudioPlayer2d:setSourceZ(zPosition)
+	if self._sourceZ ~= zPosition then
+		self._sourceZ = zPosition
+	end
+	return self
 end
 
 function AudioPlayer2d:forceDestroy(...)
-	self._source:release()
-	if self._polySources then
-		local arr = self._polySources
+	local source = self._source
+	if source then
+		source:release()
+	end
+	local polySources = self._polySources
+	if polySources then
 		for i = self._maxPolyphony, 1, -1 do
-			arr[i]:release()
-			arr[i] = nil
+			local s = polySources[i]
+			s:stop()
+			s:release()
+			polySources[i] = nil
 		end
 		self._polySources = nil
 	end
 	AudioPlayer.super.forceDestroy(self, ...)
+end
+
+function AudioPlayer2d:update()
+	local rand = love.math.random(0, 10)
+	if rand == 5 then
+		self:play()
+	end
+end
+
+function AudioPlayer2d._addDefinition(entry)
+	AudioPlayer._addDefinition(entry)
+	entry:newBoolean("_useRotation", false, "setUseRotation")
+	entry:newBoolean("_polyKeepPosition", false, "setPolyKeepPosition")
+	entry:newNumber("_sourceZ", 0, nil, nil, nil, "setSourceZ")
 end
 
 return AudioPlayer2d

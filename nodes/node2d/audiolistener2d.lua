@@ -1,7 +1,6 @@
 ---@type AdoreInit
 local Adore = require ""
 local Node2d = Adore.Nodes("Node2d")
-local LoveAudio = love.audio
 local sin, cos = math.sin, math.cos
 
 ---@class AudioListener2d: Node2d
@@ -22,7 +21,7 @@ function AudioListener2d:new(x, y, current)
 	self._listenerZ = 0
 
 	if current then
-		self:makeCurrent()
+		self:setCurrent(true)
 	end
 end
 
@@ -55,18 +54,62 @@ function AudioListener2d:_onGlobalTransformChanged()
 	end
 end
 
----Makes this AudioListener2d current
-function AudioListener2d:makeCurrent()
-	local root = self:getRoot()
-	local otherAudio = root._activeAudioListener
+---Sets whether this AudioListener2d is active
+---@generic T: AudioListener2d
+---@param self T | AudioListener2d
+---@param current boolean
+---@return T
+function AudioListener2d:setCurrent(current)
+	if self._current ~= current then
+		local root = self:getRoot()
+		if current then
+			-- Activate
+			local otherAudio = root._activeAudioListener
 
-	if otherAudio then
-		otherAudio._current = false
+			if otherAudio then
+				otherAudio._current = false
+			end
+
+			root._activeAudioListener = self
+			self._current = true
+			setPosition(self)
+		else
+			-- Deactivate
+			root._activeAudioListener = nil
+			self._current = false
+		end
 	end
+	return self
+end
 
-	root._activeAudioListener = self
-	self._current = true
-	setPosition(self)
+---Sets whether rotation on this AudioListener2d rotates the audio listener
+---@generic T: AudioListener2d
+---@param self T | AudioListener2d
+---@param useRot boolean
+---@return T
+function AudioListener2d:setUseRotation(useRot)
+	if self._useRotation ~= useRot then
+		self._useRotation = useRot
+		if self._current then
+			setPosition(self)
+		end
+	end
+	return self
+end
+
+---Sets where the listener is on the Z axis
+---@generic T: AudioListener2d
+---@param self T | AudioListener2d
+---@param zPosition number
+---@return T
+function AudioListener2d:setListenerZ(zPosition)
+	if self._listenerZ ~= zPosition then
+		self._listenerZ = zPosition
+		if self._current then
+			setPosition(self)
+		end
+	end
+	return self
 end
 
 function AudioListener2d:onAddedToTree()
@@ -74,7 +117,7 @@ function AudioListener2d:onAddedToTree()
 	local root = self:getRoot()
 	if not root._activeAudioListener then
 		-- No existing audio listener, assume this one will be current
-		self:makeCurrent()
+		self:setCurrent(true)
 	end
 end
 
@@ -84,6 +127,12 @@ function AudioListener2d:onRemovedFromTree()
 		self:getRoot()._activeAudioListener = nil
 		self._current = false
 	end
+end
+
+function AudioListener2d._addDefinition(entry)
+	entry:newBoolean("_current", false, "setCurrent")
+	entry:newBoolean("_current", true, "setUseRotation")
+	entry:newNumber("_listenerZ", 0, nil, nil, nil, "setListenerZ")
 end
 
 return AudioListener2d

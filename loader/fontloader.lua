@@ -83,6 +83,7 @@ function FontLoader:handler(path)
 	else
 		hinting = "normal"
 	end
+	if not realPath then realPath = path end
 
 	---@type FontSource
 	local t = {

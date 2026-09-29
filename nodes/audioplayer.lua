@@ -5,11 +5,11 @@ local max = math.max
 
 ---@class AudioPlayer: Node
 ---@field super Node
----@overload fun(source: love.Source?): AudioPlayer
+---@overload fun(source: SoundSource?): AudioPlayer
 local AudioPlayer = Node:extend()
 AudioPlayer.CLASS_NAME = "AudioPlayer"
 
----@param source love.Source?
+---@param source SoundSource?
 function AudioPlayer:new(source)
 	AudioPlayer.super.new(self)
 
@@ -17,13 +17,12 @@ function AudioPlayer:new(source)
 end
 
 ---Initializes all AudioPlayer variables
----@param source love.Source?
+---@param source SoundSource?
 function AudioPlayer:_initAudioPlayer(source)
+	---@type SoundSource?
+	self._soundSource = nil
 	---@type love.Source?
-	self._source = nil
-	if source and source:getType() == "static" then
-		self._source = source:clone()
-	end
+	self._source = (source and source:get()) or nil
 
 	---@type integer # When calling :play() repeatedly, should new sounds be played?
 	self._maxPolyphony = 1
@@ -38,9 +37,20 @@ end
 ---@param self AudioPlayer
 local function createPolyphonyArray(self)
 	local amount = self._maxPolyphony
-	if amount == 1 or not self._source then
-		self._polySources = nil
+	if amount == 1 or not self._soundSource then
+		local arr = self._polySources
+		if arr then
+			-- Destroy any references to old sources
+			self._polySources = nil
+			for i = #arr, 1, -1 do
+				local source = arr[i]
+				arr[i] = nil
+				source:stop()
+				source:release()
+			end
+		end
 	else
+		-- Source is guaranteed to exist here
 		local source = self._source
 		---@cast source love.Source
 
@@ -63,29 +73,31 @@ local function createPolyphonyArray(self)
 end
 
 ---Internal; you may call this if the source parameters have changed
-function AudioPlayer:_createPolyphonyArray()
-	createPolyphonyArray(self)
-end
+AudioPlayer._createPolyphonyArray = createPolyphonyArray
 
----Sets the Source
+---Sets the SoundSource
 ---@generic T: AudioPlayer
 ---@param self T | AudioPlayer
----@param source love.Source
+---@param source SoundSource
 ---@return T
 function AudioPlayer:setSource(source)
-	if source ~= self._source then
+	if source ~= self._soundSource then
 		local oldSource = self._source
 		if oldSource then
 			oldSource:stop()
 		end
 
-		self._source = source
-
-		if source and self._maxPolyphony > 1 then
-			-- Creates the polyphone array
-			local amount = self._maxPolyphony
-			self._maxPolyphony = 1
-			self:setPolyphony(amount)
+		self._soundSource = source
+		if source then
+			self._source = (source and source:get()) or nil
+			if self._maxPolyphony > 1 then
+				-- Creates the polyphone array
+				local amount = self._maxPolyphony
+				self._maxPolyphony = 1
+				self:setPolyphony(amount)
+			end
+		else
+			createPolyphonyArray(self)
 		end
 	end
 
@@ -124,7 +136,7 @@ function AudioPlayer:play()
 			end
 			self._polyIndex = index
 		end
-	else
+	elseif self._source then
 		-- Use the source
 		self._source:play()
 	end
@@ -190,24 +202,27 @@ function AudioPlayer:seek(offset, unit)
 	return self
 end
 
----Clones this AudioPlayer and the source, and returns it
----@return AudioPlayer
-function AudioPlayer:clone()
-	local newSource = (self._source and self._source:clone())
-	return AudioPlayer(newSource):setPolyphony(self._maxPolyphony)
-end
-
 function AudioPlayer:forceDestroy(...)
-	self._source:release()
+	local source = self._source
+	if source then
+		source:release()
+	end
 	local polySources = self._polySources
 	if polySources then
 		for i = self._maxPolyphony, 1, -1 do
-			polySources[i]:release()
+			local s = polySources[i]
+			s:stop()
+			s:release()
 			polySources[i] = nil
 		end
 		self._polySources = nil
 	end
 	AudioPlayer.super.forceDestroy(self, ...)
+end
+
+function AudioPlayer._addDefinition(entry)
+	entry:newAssetPath("_soundSource", "SoundLoader", nil, "setSource")
+	entry:newNumber("_maxPolyphony", 1, nil, nil, nil, "setPolyphony")
 end
 
 return AudioPlayer

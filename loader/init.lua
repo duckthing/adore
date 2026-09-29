@@ -5,8 +5,7 @@
 ---| "FontLoader"
 ---| "ObjectLoader"
 ---| "ShaderLoader"
----| "MusicLoader"
----| "SFXLoader"
+---| "SoundLoader"
 
 ---These collections are used automatically.
 ---You may read from these collections if you'd like to debug your assets.
@@ -37,14 +36,14 @@ local loadedCollections = {}
 
 ---@type {[string]: fun(path: string): (table | userdata | any)}
 local handlers = {
-	["MusicLoader"] = function(path)
+	--[[ ["MusicLoader"] = function(path)
 		-- Music, decoded when necessary
 		return love.audio.newSource(path, "stream")
 	end,
 	["SFXLoader"] = function(path)
 		-- Sound FX, decoded entirely in memory
 		return love.audio.newSource(path, "static")
-	end,
+	end, --]]
 }
 
 ---@type {[string]: fun(collection: Adore.AssetCollection, path: string, ...: unknown)}

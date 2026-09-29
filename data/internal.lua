@@ -21,6 +21,7 @@ local internalPaths = {
 	FontLoader = "loader.fontloader",
 	ObjectLoader = "loader.objectloader",
 	ShaderLoader = "loader.shaderloader",
+	SoundLoader = "loader.soundloader",
 }
 Internal = LazyRequire(internalPaths)
 end
