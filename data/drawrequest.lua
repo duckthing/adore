@@ -12,6 +12,8 @@ DrawRequest.CLASS_NAME = "DrawRequest"
 function DrawRequest:new(drawFunc)
 	DrawRequest.super.new(self)
 
+	---@type boolean # Should a Control always refresh when this DrawRequest is swapped to?
+	self.refreshOnEnter = false
 	---@type integer, integer # The offset applied to the Control's minimum size
 	self.minOffsetW, self.minOffsetH =
 		0, 0

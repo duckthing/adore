@@ -390,11 +390,21 @@ end
 ---@param subclass string
 ---@return T
 function Control:setSubclass(subclass)
+	local oldDR = (rawget(self, "_inheritedDRMap") and self:getAppliedDrawable())
 	self._currentOriginalSubclass = subclass
 	local newSubclass = self.subclassMap[subclass]
 	if self._currentSubclass ~= newSubclass then
 		self._currentSubclass = newSubclass
-		self:deferRefreshSelf()
+		if oldDR then
+			local newDR = self:getAppliedDrawable()
+			if newDR.refreshOnEnter or not (oldDR.minOffsetW == newDR.minOffsetW and oldDR.minOffsetH == newDR.minOffsetH) then
+				-- This DrawRequest changes the Control's dimensions; refresh
+				self:deferRefreshSelf()
+			else
+				-- No refresh required, except if :themeUpdate causes one
+				newDR:themeUpdate(self)
+			end
+		end
 	end
 	return self
 end
