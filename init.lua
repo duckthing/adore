@@ -396,6 +396,16 @@ function Adore:build(rootOptions, defaultTheme)
 		if config.userPaths then
 			Adore.addUserPaths(config.userPaths)
 		end
+
+		if rootOptions then
+			-- Root options were passed, write it to the config
+			print("[Adore.Init] Root options passed into :build() will be written into the config")
+			config.rootOptions = rootOptions
+			self.shouldWriteConfig = true
+		else
+			-- Root options weren't passed, get them from the config
+			rootOptions = config.rootOptions
+		end
 	end
 
 	do
