@@ -175,6 +175,19 @@ function Property:serialize(obj, propertyName, value, resources, ...)
 	return value
 end
 
+---Like `:serialize`, but if we're getting compared against a scene default, it gets passed as the 5th parameter.
+---Usually you don't have to worry about this.
+---@param obj Object
+---@param propertyName string
+---@param value any
+---@param resources any[]?
+---@param customDefault any
+---@param ...Object # If this Property is a part of another Property (like a Map), all tuples will be earlier Objects
+---@return any
+function Property:diffSerialize(obj, propertyName, value, resources, customDefault, ...)
+	return self:serialize(obj, propertyName, value, resources, ...)
+end
+
 ---Sets a Property from a deserialized Lua value.
 ---If the Property is binary data, this function will not be called.
 ---@param obj Object

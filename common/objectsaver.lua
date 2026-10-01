@@ -94,16 +94,20 @@ do
 			-- "Custom defaults" come from Nodes that are scene roots
 			-- There are no other sources as of writing
 			local customDefault = customDefaultValues and customDefaultValues[propertyName] or nil
-			if
-				-- No custom default, use the property
-				(customDefault == nil and not property:isDefault(value))
-				or
-				-- Has a custom default, use :areEqual
-				(customDefault ~= nil and not property:areEqual(customDefault, value))
-			then
-				-- All modified values go into the body
-				local serialized = property:serialize(obj, propertyName, value, resources)
-				body[propertyName] = serialized
+			if customDefault == nil then
+				-- No custom default; compare with `:isDefault`
+				if not property:isDefault(value) then
+					-- All modified values go into the body
+					local serialized = property:serialize(obj, propertyName, value, resources)
+					body[propertyName] = serialized
+				end
+			else
+				-- Compare against the custom default
+				if not property:areEqual(customDefault, value) then
+					-- All modified values go into the body
+					local serialized = property:diffSerialize(obj, propertyName, value, resources, customDefault)
+					body[propertyName] = serialized
+				end
 			end
 		end
 	end
@@ -118,30 +122,9 @@ do
 	---@param resources any[]
 	---@param customDefaultValues {[string]: any}?
 	local function femvInsertWithoutBinaryCallback(obj, property, propertyName, fromClass, header, body, resources, customDefaultValues)
-		if not property.IS_BINARY then
-			-- Exclude binary properties
-			local value = property:get(obj, propertyName)
-			if property.isHeader then
-				-- Any header property goes into the header, even if it's not modified
-				local serialized = property:serialize(obj, propertyName, value, resources)
-				header[propertyName] = serialized
-			else
-				-- "Custom defaults" come from Nodes that are scene roots
-				-- There are no other sources as of writing
-				local customDefault = customDefaultValues and customDefaultValues[propertyName] or nil
-				if
-					-- No custom default, use the property
-					(customDefault == nil and not property:isDefault(value))
-					or
-					-- Has a custom default, use :areEqual
-					(customDefault ~= nil and not property:areEqual(customDefault, value))
-				then
-					-- All modified values go into the body
-					local serialized = property:serialize(obj, propertyName, value, resources)
-					body[propertyName] = serialized
-				end
-			end
-		end
+		-- Exclude binary properties
+		if property.IS_BINARY then return end
+		return femvInsertWithBinaryCallback(obj, property, propertyName, fromClass, header, body, resources, customDefaultValues)
 	end
 
 	---Gets the table of modified values that can be used to load this Object's properties again later.
