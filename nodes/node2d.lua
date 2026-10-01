@@ -334,6 +334,34 @@ function Node2d:doesPointOverlap(worldX, worldY)
 	return false
 end
 
+---Sets the albedo of this Node2d
+---@generic T: Node2d
+---@param self T | Node2d
+---@param r number?
+---@param g number?
+---@param b number?
+---@param a number?
+---@return T
+function Node2d:setAlbedo(r, g, b, a)
+	local albedo = rawget(self, "albedo")
+	if albedo then
+		-- Overwrite the table
+		if r then albedo[1] = r end
+		if g then albedo[2] = g end
+		if b then albedo[3] = b end
+		if a then albedo[4] = a end
+	else
+		-- Table doesn't exist, create it
+		self.albedo = {
+			r or 1,
+			g or 1,
+			b or 1,
+			a or 1
+		}
+	end
+	return self
+end
+
 -- local appleCakeProfileNode2dDraw
 -- local appleCakeArgs = {class = ""}
 
