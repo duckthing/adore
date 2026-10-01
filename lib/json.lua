@@ -51,15 +51,27 @@ local function encode_nil(val)
 	return "null"
 end
 
-local function encode_table(val, stack)
-	local res = {}
+local INDENT_CHARACTER = "\t"
+local function encode_table(val, stack, depth)
 	stack = stack or {}
+	local indent
+	local indentWithNewLine
+	local indentWithComma
+	local finalIndent
+	if depth and depth > 0 then
+		indent = (INDENT_CHARACTER):rep(depth)
+		indentWithNewLine = "\n"..indent
+		indentWithComma = ",\n"..indent
+		finalIndent = (INDENT_CHARACTER):rep(depth - 1)
+		depth = depth + 1
+	end
 
 	-- Circular reference?
 	if stack[val] then error("circular reference") end
 
 	stack[val] = true
 
+	local res = {}
 	if rawget(val, 1) ~= nil or next(val) == nil then
 		-- Treat as array -- check keys are valid and it is not sparse
 		local n = 0
@@ -74,10 +86,18 @@ local function encode_table(val, stack)
 		end
 		-- Encode
 		for i, v in ipairs(val) do
-			table.insert(res, encode(v, stack))
+			table.insert(res, encode(v, stack, depth))
 		end
 		stack[val] = nil
-		return "["..table.concat(res, ",").."]"
+		if indent and #res ~= 0 then
+			return ("[%s%s\n%s]"):format(
+				indentWithNewLine,
+				table.concat(res, indentWithComma),
+				finalIndent
+			)
+		else
+			return ("[%s]"):format(table.concat(res, ","))
+		end
 
 	else
 		-- Treat as an object
@@ -85,10 +105,18 @@ local function encode_table(val, stack)
 			if type(k) ~= "string" then
 				error("invalid table: mixed or invalid key types")
 			end
-			table.insert(res, encode(k, stack)..":"..encode(v, stack))
+			table.insert(res, encode(k, stack)..":"..encode(v, stack, depth))
 		end
 		stack[val] = nil
-		return "{"..table.concat(res, ",").."}"
+		if indent then
+			return ("{%s%s\n%s}"):format(
+				indentWithNewLine,
+				table.concat(res, indentWithComma),
+				finalIndent
+			)
+		else
+			return ("{%s}"):format(table.concat(res, ","))
+		end
 	end
 end
 
@@ -112,11 +140,11 @@ local type_func_map = {
 	["boolean"] = tostring,
 }
 
-encode = function(val, stack)
+encode = function(val, stack, depth)
 	local t = type(val)
 	local f = type_func_map[t]
 	if f then
-		return f(val, stack)
+		return f(val, stack, depth)
 	end
 	error("unexpected type '"..t.."'")
 end
@@ -373,6 +401,18 @@ local jsonWrapper = {
 	---@return string? err
 	encode = function(val)
 		local success, valOrError = pcall(encode, val)
+		if success then
+			return valOrError
+		else
+			return nil, valOrError
+		end
+	end,
+	---Turns a Lua value into a pretty JSON string
+	---@param val any
+	---@return string? json
+	---@return string? err
+	encodePretty = function(val)
+		local success, valOrError = pcall(encode, val, nil, 1)
 		if success then
 			return valOrError
 		else

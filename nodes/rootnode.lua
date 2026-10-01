@@ -1641,7 +1641,7 @@ do
 local configWriters = {
 	json = function(config)
 		local JSON = Adore.Libraries("JSON")
-		return JSON.encode(config)
+		return JSON.encodePretty(config)
 	end,
 	toml = function(config)
 		local TinyTOML = Adore.Libraries("TinyTOML")

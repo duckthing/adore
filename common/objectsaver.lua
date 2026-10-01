@@ -684,7 +684,7 @@ local saveFormatHandler = {
 		local array = {}
 		local resources = ObjectSaver.serializeObjectToArray(object, array)
 		array[#array+1] = resources
-		local val, err = JSON.encode(array)
+		local val, err = JSON.encodePretty(array)
 		if val then
 			_, err = file:write(val)
 		end
