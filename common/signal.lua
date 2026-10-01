@@ -26,6 +26,10 @@ local SignalMT = {__index = Signal,
 
 ---@class Signal.Connection
 local Connection = {}
+---@type boolean # [Internal] Used for Toolbox; makes a Connection not show up in
+---the SignalPanel when a connection belongs to a linked SceneFactory and not the
+---current scene
+Connection._inherited = false
 Connection.CLASS_NAME = "Connection"
 local ConnectionMT = {__index = Connection}
 

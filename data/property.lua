@@ -338,6 +338,29 @@ function Property:asProxy(superProperty)
 	return proxy
 end
 
+do
+local t = {v = false}
+---Creates a separate value similar to the current value and returns it
+---* Won't get updated when the original value is changed
+---* Use with `Property:isComparableEqual()`
+---@param obj Object
+---@param propertyName string
+---@return any
+function Property:newComparable(obj, propertyName)
+	t.v = nil
+	self:rawSet(t, "v", self:get(obj, propertyName))
+	return t.v
+end
+end
+
+---Compares a real value against a comparable created by `Property:newComparable()`
+---@param realValue any
+---@param comparable any
+---@return boolean
+function Property:isComparableEqual(realValue, comparable)
+	return self:areEqual(realValue, comparable)
+end
+
 function Property:__tostring()
 	if self.propertyName then
 		-- It's an instance

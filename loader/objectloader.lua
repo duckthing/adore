@@ -106,8 +106,7 @@ local function insertModifiedValues(node, property, propertyName, fromClass, mod
 		local value = property:get(node, propertyName)
 		if not property:isDefault(value) then
 			-- It's modified
-			-- (Use :rawSet to clone the value)
-			property:rawSet(modified, propertyName, value)
+			modified[propertyName] = property:newComparable(node, propertyName)
 		end
 	end
 end

@@ -103,7 +103,7 @@ do
 				end
 			else
 				-- Compare against the custom default
-				if not property:areEqual(customDefault, value) then
+				if not property:isComparableEqual(value, customDefault) then
 					-- All modified values go into the body
 					local serialized = property:serializeDiff(obj, propertyName, value, resources, customDefault)
 					body[propertyName] = serialized
