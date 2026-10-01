@@ -176,7 +176,8 @@ function Property:serialize(obj, propertyName, value, resources, ...)
 end
 
 ---Like `:serialize`, but if we're getting compared against a scene default, it gets passed as the 5th parameter.
----Usually you don't have to worry about this.
+---You should serialize the difference between the current value and the custom default.
+---By default, it calls `:serialize` with its expected parameters.
 ---@param obj Object
 ---@param propertyName string
 ---@param value any
@@ -184,7 +185,7 @@ end
 ---@param customDefault any
 ---@param ...Object # If this Property is a part of another Property (like a Map), all tuples will be earlier Objects
 ---@return any
-function Property:diffSerialize(obj, propertyName, value, resources, customDefault, ...)
+function Property:serializeDiff(obj, propertyName, value, resources, customDefault, ...)
 	return self:serialize(obj, propertyName, value, resources, ...)
 end
 

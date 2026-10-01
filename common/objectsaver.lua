@@ -105,7 +105,7 @@ do
 				-- Compare against the custom default
 				if not property:areEqual(customDefault, value) then
 					-- All modified values go into the body
-					local serialized = property:diffSerialize(obj, propertyName, value, resources, customDefault)
+					local serialized = property:serializeDiff(obj, propertyName, value, resources, customDefault)
 					body[propertyName] = serialized
 				end
 			end
