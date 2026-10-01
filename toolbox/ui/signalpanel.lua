@@ -156,28 +156,56 @@ function newSignalVBox(sourceNode, property, propertyName, signalPanel)
 		sourceNode, property, propertyName, signal, signalPanel
 
 	local connections = signal.connections
-	local skipInherited = signalPanel.iterateMode == "owned"
+	local showingAll = signalPanel.iterateMode == "full"
 	if connections then
+		-- Hidden connections to show later
+		local nonNode = 0
+		local innerScene = 0
+
 		for i = 1, #connections do
 			local connection = connections[i]
-			if connection.CLASS_NAME == "Connection" and connection._sourceIsNode and connection:isValid() and connection._persist then
-				-- Ignore SimpleConnections and non-Nodes
-				if not (skipInherited and connection._inherited) then
-					local node, method = connection._source, connection.method
-					---@cast node Node
-					local button = Button(("%s :: %s()"):format(tostring(sourceNode:getRelativePathToOther(node)), method))
-						:setAnchors(0, 0, 1, 0)
-						:setOffsets(20, 0, 0, 20)
-						:setTextAlign("left")
-						:setVariant("flat")
-					vbox:addChild(button)
+			if connection.CLASS_NAME ~= "Connection" or not connection._sourceIsNode then
+				-- It's a SimpleConnection or a connection to a non-Node
+				nonNode = nonNode + 1
+			elseif showingAll or (connection._persist and connection._inherited) then
+				-- It's a connection that can't be saved or came from instantiating a scene
+				innerScene = innerScene + 1
+			elseif connection:isValid() then
+				-- Valid connection
+				local node, method = connection._source, connection.method
+				---@cast node Node
+				local button = Button(("%s :: %s()"):format(tostring(sourceNode:getRelativePathToOther(node)), method))
+					:setAnchors(0, 0, 1, 0)
+					:setOffsets(20, 0, 0, 20)
+					:setTextAlign("left")
+					:setVariant("flat")
+				vbox:addChild(button)
 
-					button.clicked:connectCallable(function ()
-						connection:disconnect()
-						button:queueDestroy(true)
-					end)
-				end
+				button.clicked:connectCallable(function ()
+					connection:disconnect()
+					button:queueDestroy(true)
+				end)
 			end
+		end
+
+		-- Show a label for connections to Nodes that can't be saved
+		if innerScene > 0 then
+			local label = Label(("+ %d connections inside link"):format(innerScene))
+				:setAnchors(0, 0, 1, 0)
+				:setOffsets(20, 0, 0, 20)
+				:setFontSize(11)
+				:setAlbedo(1, 1, 1, 0.6)
+			vbox:addChild(label)
+		end
+
+		-- Show a label for connections that don't have data we can see
+		if nonNode > 0 then
+			local label = Label(("+ %d non-Node connections"):format(nonNode))
+				:setAnchors(0, 0, 1, 0)
+				:setOffsets(20, 0, 0, 20)
+				:setFontSize(11)
+				:setAlbedo(1, 1, 1, 0.6)
+			vbox:addChild(label)
 		end
 	end
 
