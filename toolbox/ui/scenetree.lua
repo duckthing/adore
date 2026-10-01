@@ -436,7 +436,7 @@ function SceneTreeViewer:_canDropData(posX, posY, data)
 			self.insertAsChild = false
 		else
 			if #insertInto.children > 0 then
-				insertIndex = self:getTreeIndexOfNode(insertInto.children[childIndex - 1]) + 1
+				insertIndex = (self:getTreeIndexOfNode(insertInto.children[childIndex - 1]) or self.insertUnderIndex) + 1
 				self.insertAsChild = false
 			else
 				insertIndex = self:getTreeIndexOfNode(insertInto)

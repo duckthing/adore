@@ -114,7 +114,9 @@ function MainWindow:new(toolbox, subroot)
 			260, 36, -260, -240
 	)
 	gameTabContainer.tabSelected:connectCallable(function(_, index, tabInfo)
-		self.sceneTree.iterateMode = (tabInfo and tabInfo.node:is(GameScene) and "full") or "owned"
+		local iterateMode = (tabInfo and tabInfo.node:is(GameScene) and "full") or "owned"
+		self.sceneTree.iterateMode = iterateMode
+		self.signalPanel.iterateMode = iterateMode
 		self.sceneTree:setStartNode((tabInfo and tabInfo.node) or nil)
 		self.inspector:onNodeFocusChanged(nil)
 		self:updateButtonTexture()
@@ -509,7 +511,7 @@ function MainWindow:saveScene()
 	NativeFS.createDirectory(LuaPath:dir_name(savePath))
 	local file = NativeFS.newFile(savePath)
 	if not (file:isOpen() or file:open("w") or file:getMode() == "w") then
-		print("Can't open file")
+		print("Can't open file at", savePath)
 		return false
 	end
 

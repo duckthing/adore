@@ -40,6 +40,8 @@ function SignalPanel:new(toolbox, sceneTree)
 	self.sceneTree = sceneTree
 	---@type Node? # The selected Node
 	self.selected = nil
+	---@type "full" | "owned" # See SceneTree.iterateMode
+	self.iterateMode = "full"
 
 	local nameLabel = Label()
 	self.nameLabel = nameLabel
@@ -154,24 +156,27 @@ function newSignalVBox(sourceNode, property, propertyName, signalPanel)
 		sourceNode, property, propertyName, signal, signalPanel
 
 	local connections = signal.connections
+	local skipInherited = signalPanel.iterateMode == "owned"
 	if connections then
 		for i = 1, #connections do
 			local connection = connections[i]
 			if connection.CLASS_NAME == "Connection" and connection._sourceIsNode and connection:isValid() and connection._persist then
 				-- Ignore SimpleConnections and non-Nodes
-				local node, method = connection._source, connection.method
-				---@cast node Node
-				local button = Button(("%s :: %s()"):format(tostring(sourceNode:getRelativePathToOther(node)), method))
-					:setAnchors(0, 0, 1, 0)
-					:setOffsets(20, 0, 0, 20)
-					:setTextAlign("left")
-					:setVariant("flat")
-				vbox:addChild(button)
+				if not (skipInherited and connection._inherited) then
+					local node, method = connection._source, connection.method
+					---@cast node Node
+					local button = Button(("%s :: %s()"):format(tostring(sourceNode:getRelativePathToOther(node)), method))
+						:setAnchors(0, 0, 1, 0)
+						:setOffsets(20, 0, 0, 20)
+						:setTextAlign("left")
+						:setVariant("flat")
+					vbox:addChild(button)
 
-				button.clicked:connectCallable(function ()
-					connection:disconnect()
-					button:queueDestroy(true)
-				end)
+					button.clicked:connectCallable(function ()
+						connection:disconnect()
+						button:queueDestroy(true)
+					end)
+				end
 			end
 		end
 	end
@@ -226,7 +231,7 @@ function showConnectPopup(self, node)
 			signalPanel:onNodeFocusChanged(nil, object, nil)
 			window:close()
 		else
-			print(("Method '%s' doesn't exist"):format(methodNameLE))
+			print(("Method '%s' doesn't exist"):format(methodName))
 		end
 	end
 

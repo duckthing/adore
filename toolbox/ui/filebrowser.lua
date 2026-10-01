@@ -95,7 +95,8 @@ end
 
 ---@param button Button
 function FileBrowser:_onItemButtonPressed(button)
-	local path = self.pathLE._submittedText..button._text
+	-- Remove the starting slash
+	local path = self.pathLE._submittedText:match("^/(.*)")..button._text
 
 	local success, obj = pcall(ObjectLoader.get, ObjectLoader, path)
 	if not success then print(obj) return end
