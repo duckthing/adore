@@ -1150,7 +1150,6 @@ function MainWindow:prepareReloadDependency(dependencyPath)
 					local packed = TableScene()
 					packed:pack(eScene:getSceneRoot())
 					tabToPackedContents[eScene] = packed
-					sceneRoot:forceDestroy(true)
 				end
 			end
 		end
