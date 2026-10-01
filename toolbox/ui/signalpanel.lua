@@ -145,7 +145,7 @@ function newSignalVBox(sourceNode, property, propertyName, signalPanel)
 	local signalButton = Button(propertyName)
 		:setAnchors(0, 0, 1, 0)
 		:setTextAlign("left")
-	signalButton.onClick = printTutorial
+	signalButton.clicked:connectCallable(printTutorial)
 	---@type Signal
 	local signal = property:get(sourceNode, propertyName)
 	vbox:addChild(signalButton)
@@ -156,7 +156,7 @@ function newSignalVBox(sourceNode, property, propertyName, signalPanel)
 		sourceNode, property, propertyName, signal, signalPanel
 
 	local connections = signal.connections
-	local showingAll = signalPanel.iterateMode == "full"
+	local onlyShowingOwned = signalPanel.iterateMode == "owned"
 	if connections then
 		-- Hidden connections to show later
 		local nonNode = 0
@@ -167,7 +167,7 @@ function newSignalVBox(sourceNode, property, propertyName, signalPanel)
 			if connection.CLASS_NAME ~= "Connection" or not connection._sourceIsNode then
 				-- It's a SimpleConnection or a connection to a non-Node
 				nonNode = nonNode + 1
-			elseif showingAll or (connection._persist and connection._inherited) then
+			elseif onlyShowingOwned and (connection._persist and connection._inherited) then
 				-- It's a connection that can't be saved or came from instantiating a scene
 				innerScene = innerScene + 1
 			elseif connection:isValid() then
@@ -190,7 +190,7 @@ function newSignalVBox(sourceNode, property, propertyName, signalPanel)
 
 		-- Show a label for connections to Nodes that can't be saved
 		if innerScene > 0 then
-			local label = Label(("+ %d connections inside link"):format(innerScene))
+			local label = Label(("+ %d connections inside scene"):format(innerScene))
 				:setAnchors(0, 0, 1, 0)
 				:setOffsets(20, 0, 0, 20)
 				:setFontSize(11)
@@ -200,7 +200,7 @@ function newSignalVBox(sourceNode, property, propertyName, signalPanel)
 
 		-- Show a label for connections that don't have data we can see
 		if nonNode > 0 then
-			local label = Label(("+ %d non-Node connections"):format(nonNode))
+			local label = Label(("+ %d unknown connections"):format(nonNode))
 				:setAnchors(0, 0, 1, 0)
 				:setOffsets(20, 0, 0, 20)
 				:setFontSize(11)
