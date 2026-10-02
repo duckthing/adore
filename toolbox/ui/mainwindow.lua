@@ -525,6 +525,7 @@ function MainWindow:saveScene()
 		scene = TableScene()
 	end
 	scene:pack(sceneRoot)
+	scene.source = savePath
 
 	-- Write to the file
 	local success, err = ObjectSaver.saveToFile(file, scene, format)
