@@ -804,7 +804,7 @@ function MainWindow:addNode()
 
 	-- Show the popup
 	self:addChild(window)
-	window:popup()
+	window:popupCentered()
 	classField:grabFocus(false)
 end
 
