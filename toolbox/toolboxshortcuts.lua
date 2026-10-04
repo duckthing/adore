@@ -111,16 +111,31 @@ local actions = {
 		return true
 	end,
 
+	selectParentNode = function(context, isRepeat)
+		if isGamePrioritized() then return false end
+		local sceneTree = mainWindow.sceneTree
+		local startNode = sceneTree.startNode
+		local focused = sceneTree.focusedNode
+		if startNode and focused then
+			local parent = focused.parent
+			local owner = startNode.children[1]
+			if parent and (parent._owner == owner or parent == owner) then
+				sceneTree:focusNode(parent)
+			end
+			return true
+		end
+		return false
+	end,
+
 	deselectNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
 		local sceneTree = mainWindow.sceneTree
 		if sceneTree.focusedNode then
 			sceneTree:focusNode()
-			mainWindow.inspector:onNodeFocusChanged()
 			return true
 		end
 		return false
-	end
+	end,
 }
 ---@type ShortcutContext.Keybinds?
 local pressedKeybinds = {
@@ -129,6 +144,9 @@ local pressedKeybinds = {
 		delete = "deleteSelectedNode",
 		f5 = "togglePause",
 		escape = "deselectNode",
+
+		left = "selectParentNode",
+		right = "selectLowerNode",
 	},
 	ctrl = {
 		a = "addNode",
