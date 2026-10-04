@@ -7,6 +7,7 @@ local EScene = require(ADORE_PATH..".toolbox.editablescene")
 ---@class Toolbox.GameScene: Toolbox.EditableScene
 ---@overload fun(root: RootNode?): Toolbox.GameScene
 local GScene = EScene:extend()
+GScene.CLASS_NAME = "GameScene"
 
 ---@param root RootNode
 function GScene:new(root)

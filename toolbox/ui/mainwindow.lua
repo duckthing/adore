@@ -95,7 +95,19 @@ local menuActions = {
 				if not (srContainer and srContainer.cameraActive) then return end
 				srContainer.camera:setPosition(0, 0):setZoom(1, 1)
 			end},
-		}
+			{label = "Toggle Physics Draw", func = function(window)
+				---@cast window Toolbox.MainWindow
+				local srContainer = window:getSubrootContainer()
+				if not srContainer then return end
+				local layers = srContainer.subroot._canvasLayers
+				local firstViewport = layers[1]._viewport
+				local shouldDraw = not firstViewport.shouldDrawPhysics
+				firstViewport.shouldDrawPhysics = shouldDraw
+				for i = 2, #layers do
+					layers[i]._viewport.shouldDrawPhysics = shouldDraw
+				end
+			end},
+		},
 	},
 }
 

@@ -403,6 +403,14 @@ function drawEditableSubroot(self, subroot)
 	love.graphics.intersectScissor = lgIntersectScissor
 	love.graphics.pop()
 
+	-- Since we aren't using push/popping the subroot Viewport,
+	-- we have to do this manually
+	local subrootViewport = subroot._viewport
+	if subrootViewport.shouldDrawPhysics then
+		---@diagnostic disable-next-line: invisible
+		subrootViewport:drawPhysics()
+	end
+
 	drawForegroundGizmos(self)
 end
 end
