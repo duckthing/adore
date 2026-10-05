@@ -11,6 +11,8 @@ local tclear = Adore.Common("Structures").tableClear
 local PackedScene = SceneFactory:extend()
 PackedScene.CLASS_NAME = "PackedScene"
 
+local END_CONTROL_CODE = "$END_SCENE_TREE^"
+
 function PackedScene:new()
 	PackedScene.super.new(self)
 	---@type string.buffer
@@ -19,19 +21,13 @@ function PackedScene:new()
 	self._consumed = false
 end
 
-local STRING_TO_CONTROL = {
-	BEGIN_NODE = 1,
-	END_NODE = 2,
-	BEGIN_CHILDREN = 3,
-	END_CHILDREN = 4,
-}
-
 ---@param buffer string.buffer
 ---@param node Node
+---@param parentPath string
 ---@param resources any[]
 ---@param owner Node? # What we're allowed to save with; if not inside of recursion, leave this `nil`
 ---@param dependencyMap {[string]: true} # A map of filepaths to `true`
-local function packInto(buffer, node, resources, owner, dependencyMap)
+local function packInto(buffer, node, parentPath, resources, owner, dependencyMap)
 	if not node._adorePersist then return end
 
 	if owner then
@@ -49,29 +45,23 @@ local function packInto(buffer, node, resources, owner, dependencyMap)
 		dependencyMap[node._sceneFilePath] = true
 	end
 
-	buffer:encode(STRING_TO_CONTROL.BEGIN_NODE)
+	-- Add the path of the parent and this Node to the array
+	buffer:encode(parentPath)
 	ObjectSaver.serializeObjectToBuffer(node, buffer, resources)
 
-	if #node.children ~= 0 then
-		local index = 1
-		for i = 1, #node.children do
-			local child = node.children[i]
-			if child._adorePersist then
-				if index == 1 then
-					buffer:encode(STRING_TO_CONTROL.BEGIN_CHILDREN)
-				end
-
-				index = index + 1
-				packInto(buffer, child, resources, owner, dependencyMap)
-			end
+	-- Pack any children
+	local children = node.children
+	local childrenCount = #children
+	if childrenCount ~= 0 then
+		local ownPath = ""
+		if node ~= owner then
+			ownPath = ("%s/%s"):format(parentPath, node.name)
 		end
-
-		-- If there is at least 1 child that has '_adorePersist', we end the list
-		if index > 1 then
-			buffer:encode(STRING_TO_CONTROL.END_CHILDREN)
+		for i = 1, childrenCount do
+			local child = children[i]
+			packInto(buffer, child, ownPath, resources, owner, dependencyMap)
 		end
 	end
-	buffer:encode(STRING_TO_CONTROL.END_NODE)
 end
 
 ---Packs the node and any children
@@ -87,7 +77,8 @@ function PackedScene:pack(node)
 	tclear(dependencyMap)
 
 	-- Pack the scene tree and the resources
-	packInto(self.buffer, node, resources, nil, dependencyMap)
+	packInto(self.buffer, node, "", resources, nil, dependencyMap)
+	self.buffer:encode(END_CONTROL_CODE)
 	ObjectSaver.serializeResourcesToBuffer(self.buffer, resources)
 
 	-- Update dependency map with what we just found while packing
@@ -95,58 +86,46 @@ function PackedScene:pack(node)
 	self._shouldUpdateDependencies = false
 end
 
-local instantiateTree
-
----@param ontoParent Node?
+---@param lastParent Node?
+---@param lastPath string
 ---@param buffer string.buffer
 ---@param allDeferredProperties {[Node]: {[string]: any}}?
 ---@param owner Node?
 ---@return Node? node
-function instantiateTree(ontoParent, buffer, allDeferredProperties, owner)
-	local control = buffer:decode()
-	if control ~= STRING_TO_CONTROL.BEGIN_NODE then return end
-	local err, obj, deferredProperties =
-		ObjectSaver.deserializeFromBuffer(buffer, "Node", true, owner ~= nil)
-	---@cast obj Node?
+local function instantiateTree(lastParent, lastPath, buffer, allDeferredProperties, owner)
+	local parentPath = buffer:decode()
+	if parentPath == nil or parentPath == END_CONTROL_CODE then return end
+	if parentPath ~= lastPath then
+		-- If it's not a string, don't look at it
+		if type(parentPath) ~= "string" then return end
 
-	if not obj then
-		-- Errored and didn't create the Object;
-		-- Try to recover from this error by skipping what would be the tree
-		-- below the problematic Node
-		print(("[Adore.PackedScene...instantiateTree] %s"):format(err))
-		local depth = 1
-		while depth > 0 do
-			local success, nextControl = pcall(buffer.decode, buffer)
-			if not success then
-				-- Errored while decoding
-				print(("[Adore.PackedScene...instantiateTree] Error while decoding buffer: %s"):format(nextControl))
-			end
-			if nextControl == STRING_TO_CONTROL.BEGIN_CHILDREN then
-				-- Go deeper in the tree
-				depth = depth + 1
-			elseif nextControl == STRING_TO_CONTROL.BEGIN_NODE then
-				-- Skip useless data
-				buffer:decode()
-				buffer:decode()
-			elseif nextControl == STRING_TO_CONTROL.END_CHILDREN then
-				-- Go higher in the tree
-				depth = depth - 1
-				if depth == 1 then
-					-- The end of this Node's tree
-					return
-				end
-			elseif nextControl == nil then
-				-- No more controls
-				break
-			end
+		---@diagnostic disable-next-line
+		local newParent = owner:getNodeFromPath(parentPath)
+		if not lastParent then
+			-- Parent doesn't exist; continue
+			print(("[Adore.TableScene...instantiateTree] Path doesn't result in Node: '%s'"):format(parentPath))
+			-- Skip the body and header
+			buffer:decode()
+			buffer:decode()
+			return instantiateTree(lastParent, parentPath, buffer, allDeferredProperties, owner)
 		end
-		print("[Adore.PackedScene...instantiateTree] Badly formatted scene; could not recover")
-		return
+		lastParent = newParent
 	end
 
+	local err, obj, deferredProperties =
+		ObjectSaver.deserializeFromBuffer(buffer, "Node", true, owner ~= nil)
+
+	if not obj then
+		-- Errored and didn't create the Object; continue
+		print(("[Adore.TableScene...instantiateTree] %s"):format(err))
+		return instantiateTree(lastParent, parentPath, buffer, allDeferredProperties, owner)
+	end
+
+	local ownsTree = false
 	if not owner then
 		-- This Node is the scene root and owns the tree
 		owner = obj
+		ownsTree = true
 	else
 		-- This Node is owned by the scene root
 		obj._owner = owner
@@ -157,23 +136,17 @@ function instantiateTree(ontoParent, buffer, allDeferredProperties, owner)
 		allDeferredProperties[obj] = deferredProperties
 	end
 
-	control = buffer:decode()
-	if control == STRING_TO_CONTROL.END_NODE then
-		-- Finished with this Node
-		if ontoParent then
-			ontoParent:addChild(obj)
-		end
+	if lastParent and not ownsTree then
+		-- Parent exists, add it
+		lastParent:addChild(obj)
+		return instantiateTree(lastParent, parentPath, buffer, allDeferredProperties, owner)
+	elseif ownsTree then
+		-- The instanced Node is the owner of the tree
+		lastParent = obj
+		parentPath = "."
+		instantiateTree(lastParent, parentPath, buffer, allDeferredProperties, owner)
+		-- Return it
 		return obj
-	elseif control == STRING_TO_CONTROL.BEGIN_CHILDREN then
-		-- Repeat this until a Node isn't returned (which means END_CHILDREN was (probably) returned)
-		while instantiateTree(obj, buffer, allDeferredProperties, owner) ~= nil do end
-		assert(buffer:decode() == STRING_TO_CONTROL.END_NODE, "Did not get END_NODE control code (after END_CHILDREN was received)")
-		if ontoParent then
-			ontoParent:addChild(obj)
-		end
-		return obj
-	else
-		error("Got unexpected control code (expected END_NODE or BEGIN_CHILDREN)")
 	end
 end
 
@@ -200,7 +173,7 @@ function PackedScene:build(consumeBuffer)
 			buffer:put(self.buffer)
 		end
 
-		local success, instanced = pcall(instantiateTree, nil, buffer, deferredData)
+		local success, instanced = pcall(instantiateTree, nil, "", buffer, deferredData)
 		if not success then
 			print(("[Adore.PackedScene:build] Error while instantiating tree: %s"):format(instanced))
 			return

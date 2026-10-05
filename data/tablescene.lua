@@ -12,27 +12,23 @@ local tclear = Adore.Common("Structures").tableClear
 local TableScene = SceneFactory:extend()
 TableScene.CLASS_NAME = "TableScene"
 
+local END_CONTROL_CODE = "$END_SCENE_TREE^"
+
 function TableScene:new()
 	TableScene.super.new(self)
-	---@type table[]
+	---@type (table | string)[]
 	self.table = {}
 	---@type boolean # If this TableScene's buffer was consumed
 	self._consumed = false
 end
 
-local STRING_TO_CONTROL = {
-	BEGIN_NODE = 1,
-	END_NODE = 2,
-	BEGIN_CHILDREN = 3,
-	END_CHILDREN = 4,
-}
-
 ---@param array table[]
 ---@param node Node
+---@param parentPath string
 ---@param resources any[]
 ---@param owner Node? # What we're allowed to save with; if not inside of recursion, leave this `nil`
 ---@param dependencyMap {[string]: true} # A map of filepaths to `true`
-local function packInto(array, node, resources, owner, dependencyMap)
+local function packInto(array, node, parentPath, resources, owner, dependencyMap)
 	if not node._adorePersist then return end
 
 	if owner then
@@ -50,29 +46,23 @@ local function packInto(array, node, resources, owner, dependencyMap)
 		dependencyMap[node._sceneFilePath] = true
 	end
 
-	enqueue(array, STRING_TO_CONTROL.BEGIN_NODE)
+	-- Add the path of the parent and this Node to the array
+	enqueue(array, parentPath)
 	ObjectSaver.serializeObjectToArray(node, array, resources)
 
-	if #node.children ~= 0 then
-		local index = 1
-		for i = 1, #node.children do
-			local child = node.children[i]
-			if child._adorePersist then
-				if index == 1 then
-					enqueue(array, STRING_TO_CONTROL.BEGIN_CHILDREN)
-				end
-
-				index = index + 1
-				packInto(array, child, resources, owner, dependencyMap)
-			end
+	-- Pack any children
+	local children = node.children
+	local childrenCount = #children
+	if childrenCount ~= 0 then
+		local ownPath = ""
+		if node ~= owner then
+			ownPath = ("%s/%s"):format(parentPath, node.name)
 		end
-
-		-- If there is at least 1 child that has '_adorePersist', we end the list
-		if index > 1 then
-			enqueue(array, STRING_TO_CONTROL.END_CHILDREN)
+		for i = 1, childrenCount do
+			local child = children[i]
+			packInto(array, child, ownPath, resources, owner, dependencyMap)
 		end
 	end
-	enqueue(array, STRING_TO_CONTROL.END_NODE)
 end
 
 ---Packs the node and any children
@@ -88,7 +78,8 @@ function TableScene:pack(node)
 	tclear(dependencyMap)
 
 	-- Pack the scene tree and the resources
-	packInto(self.table, node, resources, nil, dependencyMap)
+	packInto(self.table, node, "", resources, nil, dependencyMap)
+	self.table[#self.table+1] = END_CONTROL_CODE
 	self.table[#self.table+1] = resources
 
 	-- Update dependency map with what we just found while packing
@@ -96,57 +87,48 @@ function TableScene:pack(node)
 	self._shouldUpdateDependencies = false
 end
 
-local instantiateTree
-
----@param ontoParent Node?
+---@param lastParent Node?
+---@param lastPath string
 ---@param array table[]
 ---@param allDeferredProperties {[Node]: {[string]: any}}?
 ---@param owner Node?
 ---@return Node? node
-function instantiateTree(ontoParent, array, allDeferredProperties, owner)
-	local control = tremove(array, 1)
-	if control ~= STRING_TO_CONTROL.BEGIN_NODE then return end
+local function instantiateTree(lastParent, lastPath, array, allDeferredProperties, owner)
+	local parentPath = tremove(array, 1)
+	if parentPath == nil or parentPath == END_CONTROL_CODE then return end
+	if parentPath ~= lastPath then
+		-- If it's not a string, don't look at it
+		if type(parentPath) ~= "string" then return end
+
+		---@diagnostic disable-next-line
+		local newParent = owner:getNodeFromPath(parentPath)
+		if not lastParent then
+			-- Parent doesn't exist; continue
+			print(("[Adore.TableScene...instantiateTree] Path doesn't result in Node: '%s'"):format(parentPath))
+			-- Skip the body and header
+			tremove(array, 1)
+			tremove(array, 1)
+			return instantiateTree(lastParent, parentPath, array, allDeferredProperties, owner)
+		end
+		lastParent = newParent
+	end
 
 	local header, body = tremove(array, 1), tremove(array, 1)
 
 	local err, obj, deferredProperties =
 		ObjectSaver.deserializeObjectFromArray(header, body, "Node", true, owner ~= nil)
-	---@cast obj Node?
 
 	if not obj then
-		-- Errored and didn't create the Object;
-		-- Try to recover from this error by skipping what would be the tree
-		-- below the problematic Node
+		-- Errored and didn't create the Object; continue
 		print(("[Adore.TableScene...instantiateTree] %s"):format(err))
-		local depth = 1
-		while depth > 0 do
-			local nextControl = tremove(array, 1)
-			if nextControl == STRING_TO_CONTROL.BEGIN_CHILDREN then
-				-- Go deeper in the tree
-				depth = depth + 1
-			elseif nextControl == STRING_TO_CONTROL.BEGIN_NODE then
-				-- Skip useless data
-				tremove(array, 1)
-				tremove(array, 1)
-			elseif nextControl == STRING_TO_CONTROL.END_CHILDREN then
-				-- Go higher in the tree
-				depth = depth - 1
-				if depth == 1 then
-					-- The end of this Node's tree
-					return
-				end
-			elseif nextControl == nil then
-				-- No more controls
-				break
-			end
-		end
-		print("[Adore.TableScene] Badly formatted scene; could not recover")
-		return
+		return instantiateTree(lastParent, parentPath, array, allDeferredProperties, owner)
 	end
 
+	local ownsTree = false
 	if not owner then
 		-- This Node is the scene root and owns the tree
 		owner = obj
+		ownsTree = true
 	else
 		-- This Node is owned by the scene root
 		obj._owner = owner
@@ -157,23 +139,17 @@ function instantiateTree(ontoParent, array, allDeferredProperties, owner)
 		allDeferredProperties[obj] = deferredProperties
 	end
 
-	control = tremove(array, 1)
-	if control == STRING_TO_CONTROL.END_NODE then
-		-- Finished with this Node
-		if ontoParent then
-			ontoParent:addChild(obj)
-		end
+	if lastParent and not ownsTree then
+		-- Parent exists, add it
+		lastParent:addChild(obj)
+		return instantiateTree(lastParent, parentPath, array, allDeferredProperties, owner)
+	elseif ownsTree then
+		-- The instanced Node is the owner of the tree
+		lastParent = obj
+		parentPath = "."
+		instantiateTree(lastParent, parentPath, array, allDeferredProperties, owner)
+		-- Return it
 		return obj
-	elseif control == STRING_TO_CONTROL.BEGIN_CHILDREN then
-		-- Repeat this until a Node isn't returned (which means END_CHILDREN was (probably) returned)
-		while instantiateTree(obj, array, allDeferredProperties, owner) ~= nil do end
-		assert(tremove(array, 1) == STRING_TO_CONTROL.END_NODE, "Did not get END_NODE control code (after END_CHILDREN was received)")
-		if ontoParent then
-			ontoParent:addChild(obj)
-		end
-		return obj
-	else
-		error("Got unexpected control code (expected END_NODE or BEGIN_CHILDREN)")
 	end
 end
 
@@ -215,17 +191,11 @@ function TableScene:build(consumeBuffer)
 			resources = newResources
 		end
 
-		local instanced = instantiateTree(nil, array, deferredData)
+		local instanced = instantiateTree(nil, "", array, deferredData)
 		if self._shouldUpdateDependencies and instanced then
 			-- Update dependencies (if it was missed while packing)
 			self._shouldUpdateDependencies = false
 			self:updateDependencies(instanced)
-		end
-
-		local err
-
-		if err then
-			print(("[Adore.TableScene:build] Error while deserializing resources: %s"):format(err))
 		end
 
 		-- Set all deferred properties; they are usually deferred if they depend on a tree structure (like Signals)
