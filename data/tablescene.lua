@@ -54,8 +54,9 @@ local function packInto(array, node, parentPath, resources, owner, dependencyMap
 	local children = node.children
 	local childrenCount = #children
 	if childrenCount ~= 0 then
-		local ownPath = ""
+		local ownPath = "."
 		if node ~= owner then
+			-- Has a parent; append our name to the path and give it to the children
 			ownPath = ("%s/%s"):format(parentPath, node.name)
 		end
 		for i = 1, childrenCount do
