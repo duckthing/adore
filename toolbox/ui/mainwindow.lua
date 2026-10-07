@@ -6,6 +6,7 @@ local Nodes = Adore.Nodes
 local Common = Adore.Common
 local Resources = Adore.Resources
 
+local ClassDB = Common("ClassDB")
 local ObjectSaver = Common("ObjectSaver")
 local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
 local TableScene = Resources("TableScene")
@@ -303,6 +304,7 @@ function MainWindow:new(toolbox, subroot)
 				self:extendNode()
 			end},
 			{label = "Change Type...", func = function()
+				self:showChangeTypePopup()
 			end},
 			{separator = true},
 			{label = "Move Up", func = function()
@@ -924,17 +926,21 @@ function MainWindow:extendNode()
 		success, err = file:write(newSource)
 		if not success then print(err) return end
 
-		Adore.addUserPaths({[newClassName] = savePath})
+		-- Make it searchable
+		local requirePath = savePath:match("(.*)%.lua"):gsub("/", ".")
+		Adore.addUserPaths({[newClassName] = requirePath})
 
 		-- Write the configuration
 		local toolbox = self.toolbox
 		local config = toolbox.projectConfig
 		if config then
-			local requirePath = savePath:match("(.*)%.lua"):gsub("/", ".")
 			config.userPaths = config.userPaths or {}
 			config.userPaths[newClassName] = requirePath
 			toolbox.godRoot:writeConfiguration()
 		end
+
+		-- Make the selected Node the new type
+		self:changeTypeOfNode(selectedNode, newClassName)
 
 		window:close()
 	end
@@ -1109,6 +1115,125 @@ function MainWindow:showLinkScenePopup()
 	self:addChild(window)
 	window:popupCentered()
 	sheet:getElement("path"):grabFocus(false)
+end
+
+---Changes the type of `node` to `class` while keeping relevant properties
+---@param node Node
+---@param class string | Node
+function MainWindow:changeTypeOfNode(node, class)
+	if type(class) == "string" then class = Adore.Any(class) end
+	if not class:is(Node) then
+		print(("Class '%s' is not a Node"):format(tostring(class)))
+		return
+	end
+	local parent = node.parent
+	if not parent then
+		print(("Node '%s' does not have a parent"):format(tostring(node)))
+		return
+	end
+	local childIndex = parent:getIndexOfChild(node)
+
+	local resources = {}
+	local header, body = ObjectSaver.getPropertyPairs(node, resources, false)
+	node:forceDestroy()
+	setmetatable(node, class)
+	class.new(node)
+	local deferredProperties = ObjectSaver.setPropertiesFromPairs(node, header, body)
+	ObjectSaver.setDeferredProperties(node, deferredProperties, resources)
+	parent:insertChild(node, childIndex)
+end
+
+---Shows the popup for changing the type of the selected node
+function MainWindow:showChangeTypePopup()
+	local srContainer = self:getSubrootContainer()
+	if not srContainer then return end
+	local sceneRoot = srContainer:getSceneRoot()
+	local selected = self.sceneTree:getPressedNode()
+	if not selected then return end
+
+	-- Create the popup
+	local window = WindowPopup()
+	window:setAnchorsAndOffsets(
+		0.5, 0.5, 0.5, 0.5,
+		0, 0, 180, 127
+	)
+
+	window:getTitleLabel():setText(("Change type of %s (%s)..."):format(tostring(selected), selected.CLASS_NAME))
+
+	---@type Form
+	local form = {
+		{type = "body", text = "Class Name"},
+		{id = "class", type = "textfield",
+				value = (selected ~= srContainer.subroot and selected.CLASS_NAME) or "Node"},
+		{id = "searchMatch", type = "body", text = "Search result..."},
+	}
+
+	local vbox, sheet = FormBuilder.build(form)
+	---@cast vbox VBox
+	vbox:setAnchorsAndOffsets(
+			0, 0, 1, 1,
+			10, 10, -10, 0
+		)
+		:setResizeToContent(true)
+		:setMargin(4)
+
+	local classField = sheet:getElement("class")
+	---@cast classField LineEdit
+	classField:setUnfocusedPosition("right")
+		:setSubmitOnFocusLost(false)
+	classField.textSubmitted:connect(window, "submit", false, false)
+	window:addChild(vbox)
+
+	-- Search result label
+	---@type Label
+	local matchLabel = sheet:getElement("searchMatch")
+	classField.textChanged:connectCallable(function(_, text)
+		local match = fzy.get_best_match(text, Adore.getClassNames())
+		if match then
+			matchLabel:setText(match)
+		else
+			matchLabel:setText("(no match)")
+		end
+	end)
+
+	-- Connect events
+	window:addAction("Cancel", "close")
+	window:addAction("Add", "submit")
+	window.submit = function(...)
+		local enteredClassName = classField._submittedText
+
+		local className = fzy.get_best_match(enteredClassName, Adore.getClassNames())
+		if not className then
+			return
+		end
+
+		local success, ClassOrErr = pcall(Adore.Any, className)
+		if success then
+			if ClassOrErr.is and ClassOrErr:is(Node) or ClassOrErr == Node then
+				-- Create the scene and add the tab
+				srContainer:pushSubroot()
+
+				---@type Node
+				srContainer:handleInsideSubroot(self.changeTypeOfNode, self, selected, ClassOrErr)
+				selected._owner = sceneRoot
+
+				srContainer:popSubroot()
+				self.sceneTree:updateNodes()
+				self.sceneTree:focusNode()
+				self.sceneTree:focusNode(selected)
+				window:close()
+			else
+				print(("Class '%s' is not a Node"):format(className))
+			end
+		else
+			print(ClassOrErr)
+		end
+	end
+
+	-- Show the popup
+	self:addChild(window)
+	window:popupCentered()
+	classField:grabFocus(false)
 end
 
 function MainWindow:populateToolbar()
