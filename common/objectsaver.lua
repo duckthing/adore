@@ -312,43 +312,7 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 		obj = TargetClass()
 	end
 
-	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
-	local deferredData = nil
-
-	-- Set the properties
-	for i = 1, 2 do
-		local t = (i == 1 and header) or body
-		for propertyName, value in pairs(t) do
-			local property = entry:getProperty(propertyName)
-			if property and not property.IS_BINARY and not property.isConstant then
-				-- Property, not a binary blob, not constant
-				if not property.DEFER_MODE then
-					-- Not deferred, deserialize immediately
-					-- (It won't rely on resources)
-					property:deserialize(obj, propertyName, value)
-				else
-					-- Deserialize later outside of this function
-					if not deferredData then deferredData = {} end
-					deferredData[propertyName] = value
-				end
-			end
-		end
-	end
-
-	-- Deserialize any remaining binary data
-	entry:forEachBinaryProperty(obj, true, function(obj, property, propertyName, fromClass, ...)
-		local t = (property.isHeader and header) or body
-		if not property.DEFER_MODE then
-			-- Not deferred, deserialize the binary data immediately
-			property:unpackBuffer(obj, propertyName, t[propertyName], binaryBuffer)
-		else
-			-- Deferred binary data resides in the resource blob at the end
-			-- The value that is stored is the reference created by the property
-			if not deferredData then deferredData = {} end
-			deferredData[propertyName] = t[propertyName]
-		end
-	end)
-
+	local deferredData = ObjectSaver.setPropertiesFromPairs(obj, header, body, binaryBuffer)
 	obj:_afterDeserialized(binaryBuffer, header, body)
 	return nil, obj, deferredData
 end
@@ -585,14 +549,27 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 	end
 
 	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
-	local deferredData = nil
+	local deferredData = ObjectSaver.setPropertiesFromPairs(obj, header, body, binaryBuffer)
+	return nil, obj, deferredData
+end
 
-	-- Set the properties
+---Sets the properties of an Object from property pairs
+---@param obj Object
+---@param header {[string]: any}
+---@param body {[string]: any}
+---@param binaryBuffer string.buffer? # Leave `nil` if you're doing plain-text
+---@return {[string]: any}? deferredData # Call `ObjectSaver.setDeferredProperties` with this
+function ObjectSaver.setPropertiesFromPairs(obj, header, body, binaryBuffer)
+	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
+	local deferredData = nil
+	local entry = obj:getClassDBEntry()
+
+	-- Set the properties from the decoded tables
 	for i = 1, 2 do
 		local t = (i == 1 and header) or body
 		for propertyName, value in pairs(t) do
 			local property = entry:getProperty(propertyName)
-			if property and not property.isConstant then
+			if property and not property.IS_BINARY and not property.isConstant then
 				-- Property, not a binary blob, not constant
 				if not property.DEFER_MODE then
 					-- Not deferred, deserialize immediately
@@ -607,7 +584,23 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 		end
 	end
 
-	return nil, obj, deferredData
+	-- Deserialize any remaining binary data
+	if binaryBuffer then
+		entry:forEachBinaryProperty(obj, true, function(obj, property, propertyName, fromClass, ...)
+			local t = (property.isHeader and header) or body
+			if not property.DEFER_MODE then
+				-- Not deferred, deserialize the binary data immediately
+				property:unpackBuffer(obj, propertyName, t[propertyName], binaryBuffer)
+			else
+				-- Deferred binary data resides in the resource blob at the end
+				-- The value that is stored is the reference created by the property
+				if not deferredData then deferredData = {} end
+				deferredData[propertyName] = t[propertyName]
+			end
+		end)
+	end
+
+	return deferredData
 end
 
 ---Sets the deferred properties that were deserialized.

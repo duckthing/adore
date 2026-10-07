@@ -184,6 +184,7 @@ local shouldReloadClasses = true
 ---
 ---For example, loading a custom `Player` class from a PackedScene requires
 ---Adore to know where the class is.
+---* Must be able to used within `require`, ex. `"path.to.player"`
 ---@param paths {[string]: string | false}
 function Adore.addUserPaths(paths)
 	shouldReloadClasses = true
