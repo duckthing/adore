@@ -173,7 +173,7 @@ function Label._addDefinition(entry)
 		basic = true,
 	}
 	entry:newEnum("_autowrap", wrapMap, "none", "setAutoWrap")
-	entry:newBoolean("_clipText", true, "setClipText")
+	entry:newBoolean("_clipText", false, "setClipText")
 end
 
 return Label

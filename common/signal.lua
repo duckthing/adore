@@ -56,9 +56,9 @@ function Signal.new(source)
 	return setmetatable(t, SignalMT)
 end
 
----Connects a method on an Object to a Signal's `:fire()`.
+---Connects a method on a table to a Signal's `:fire()`.
 ---This will manage validation better with a `Node`.
----@param connectingFrom Object
+---@param connectingFrom table | Node
 ---@param method string
 ---@param oneShot boolean? # [Default: `false`] oneShot makes the signal disconnect after firing
 ---@param persist boolean? # [Default: `false`] Allow saving this Connection
@@ -175,7 +175,7 @@ end
 ---@private
 function Connection.new(connectingFrom, method, oneShot, persist)
 	-- Check if it has a "name" field; if it does, it's probably an INSTANCED Node.
-	local isNode = connectingFrom.IS_NODE and rawget(connectingFrom, "name")
+	local isNode = rawget(connectingFrom, "name") and connectingFrom.IS_NODE
 	---@class Signal.Connection
 	local t = {
 		_source = connectingFrom,
