@@ -23,10 +23,18 @@ local ToolboxPopups = {}
 
 ---@type Toolbox.MainWindow
 local mw
----Sets the MainWindw so that popups know where to put their popups
----@param mainWindow any
+---Sets the MainWindow so that popups know where to put their popups
+---@param mainWindow Toolbox.MainWindow
 function ToolboxPopups.setMainWindow(mainWindow)
 	mw = mainWindow
+end
+
+---@type Toolbox.Actions
+local ToolboxActions
+---Sets the MainWindow so that popups know where to put their popups
+---@param actions Toolbox.Actions
+function ToolboxPopups.setActions(actions)
+	ToolboxActions = actions
 end
 
 ---Shows the "save scene as" popup
@@ -66,8 +74,7 @@ function ToolboxPopups.popupSaveSceneAs()
 		:setResizeToContent(true)
 		:setMargin(4)
 
-	local pathField = sheet:getElement("path")
-	---@cast pathField LineEdit
+	local pathField = sheet:getElement("path", "LineEdit")
 	pathField
 		:setUnfocusedPosition("right")
 		:setSubmitOnFocusLost(false)
@@ -79,7 +86,7 @@ function ToolboxPopups.popupSaveSceneAs()
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Save", "submit")
-	window.submit = function(...)
+	window.submit = function()
 		local path = pathField._submittedText
 		if not srContainer._lastFilepath then
 			mw.toolbox.addFilePath(path)
@@ -89,7 +96,7 @@ function ToolboxPopups.popupSaveSceneAs()
 		local item = sheet:getValue("format")
 		---@cast item PopupMenu.Item
 		srContainer._lastFormat = item.label
-		if mw:saveScene() then
+		if ToolboxActions.saveScene() then
 			window:close()
 			mw.gameTabContainer:updateTabs()
 		end
@@ -137,8 +144,7 @@ function ToolboxPopups.popupLoadScene()
 	window:addChild(vbox)
 
 	-- Search result label
-	---@type Label
-	local matchLabel = sheet:getElement("searchMatch")
+	local matchLabel = sheet:getElement("searchMatch", "Label")
 	pathField.textChanged:connectCallable(function(_, text)
 		local match = fzy.get_best_match(text, mw.toolbox.getFilePaths())
 		if match then
@@ -151,7 +157,7 @@ function ToolboxPopups.popupLoadScene()
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Load", "submit")
-	window.submit = function(...)
+	window.submit = function()
 		local enteredPath = pathField._submittedText
 		local path = fzy.get_best_match(enteredPath, mw.toolbox.getFilePaths())
 		if not path then
@@ -160,7 +166,7 @@ function ToolboxPopups.popupLoadScene()
 
 		local _, sceneOrErr = pcall(ObjectLoader.get, ObjectLoader, path, "SceneFactory")
 		if sceneOrErr then
-			mw:loadSceneFromFactory(sceneOrErr, path)
+			ToolboxActions.loadSceneFromFactory(sceneOrErr, path)
 			window:close()
 		else
 			print(sceneOrErr)
@@ -217,8 +223,7 @@ function ToolboxPopups.popupAddNode()
 	window:addChild(vbox)
 
 	-- Search result label
-	---@type Label
-	local matchLabel = sheet:getElement("searchMatch")
+	local matchLabel = sheet:getElement("searchMatch", "Label")
 	classField.textChanged:connectCallable(function(_, text)
 		local match = fzy.get_best_match(text, Adore.getClassNames())
 		if match then
@@ -231,7 +236,7 @@ function ToolboxPopups.popupAddNode()
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Add", "submit")
-	window.submit = function(...)
+	window.submit = function()
 		local enteredClassName = classField._submittedText
 
 		local className = fzy.get_best_match(enteredClassName, Adore.getClassNames())
@@ -323,7 +328,7 @@ function ToolboxPopups.popupExtendNode()
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Extend", "submit")
-	window.submit = function(...)
+	window.submit = function()
 		local baseClassName = baseClassField._submittedText
 		local newClassName = newClassField._submittedText
 		local savePath = pathField._submittedText
@@ -350,8 +355,7 @@ function ToolboxPopups.popupExtendNode()
 			return false
 		end
 
-		local dropdown = sheet:getElement("template")
-		---@cast dropdown DropdownButton
+		local dropdown = sheet:getElement("template", "DropdownButton")
 		local dropdownOption = dropdown:getSelectedItem().template
 
 		if baseClassOrErr:is(Adore.Nodes("Physical2d")) then
@@ -387,7 +391,7 @@ function ToolboxPopups.popupExtendNode()
 		end
 
 		-- Make the selected Node the new type
-		mw:changeTypeOfNode(selectedNode, newClassName)
+		ToolboxActions.changeTypeOfNode(selectedNode, newClassName)
 
 		window:close()
 	end
@@ -439,8 +443,7 @@ function ToolboxPopups.popupLinkScene()
 	window:addChild(vbox)
 
 	-- Search result label
-	---@type Label
-	local matchLabel = sheet:getElement("searchMatch")
+	local matchLabel = sheet:getElement("searchMatch", "Label")
 	pathField.textChanged:connectCallable(function(_, text)
 		local match = fzy.get_best_match(text, mw.toolbox.getFilePaths())
 		if match then
@@ -453,7 +456,7 @@ function ToolboxPopups.popupLinkScene()
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Link", "submit")
-	window.submit = function(...)
+	window.submit = function()
 		local enteredPath = pathField._submittedText
 		local path = fzy.get_best_match(enteredPath, mw.toolbox.getFilePaths()) or enteredPath
 		if not path then
@@ -464,7 +467,7 @@ function ToolboxPopups.popupLinkScene()
 		if success then
 			---@cast sceneOrErr SceneFactory
 			-- Add it
-			mw:linkScene(sceneOrErr, instanceUnder)
+			ToolboxActions.linkScene(sceneOrErr, instanceUnder)
 			window:close()
 		else
 			print(sceneOrErr)
@@ -519,8 +522,7 @@ function ToolboxPopups.popupChangeType()
 	window:addChild(vbox)
 
 	-- Search result label
-	---@type Label
-	local matchLabel = sheet:getElement("searchMatch")
+	local matchLabel = sheet:getElement("searchMatch", "Label")
 	classField.textChanged:connectCallable(function(_, text)
 		local match = fzy.get_best_match(text, Adore.getClassNames())
 		if match then
@@ -533,7 +535,7 @@ function ToolboxPopups.popupChangeType()
 	-- Connect events
 	window:addAction("Cancel", "close")
 	window:addAction("Add", "submit")
-	window.submit = function(...)
+	window.submit = function()
 		local enteredClassName = classField._submittedText
 
 		local className = fzy.get_best_match(enteredClassName, Adore.getClassNames())
@@ -548,7 +550,7 @@ function ToolboxPopups.popupChangeType()
 				srContainer:pushSubroot()
 
 				---@type Node
-				srContainer:handleInsideSubroot(mw.changeTypeOfNode, mw, selected, ClassOrErr)
+				srContainer:handleInsideSubroot(ToolboxActions.changeTypeOfNode, mw, selected, ClassOrErr)
 				selected._owner = sceneRoot
 
 				srContainer:popSubroot()

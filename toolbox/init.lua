@@ -241,7 +241,7 @@ return setmetatable(Toolbox, {
 		if options then
 			if options.openEditor then
 				-- Open the editor into full screen
-				self.mainWindow:toggleFull()
+				self.mainWindow:getActions().toggleFull()
 			end
 
 			if options.skipRoot then

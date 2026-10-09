@@ -39,6 +39,8 @@ local Templates = require(ADORE_PATH..".toolbox.scripttemplates")
 local Tool = require(ADORE_PATH..".toolbox.tool")
 ---@type Toolbox.Popups
 local ToolboxPopups = require(ADORE_PATH..".toolbox.toolboxpopups")
+---@type Toolbox.Actions
+local ToolboxActions = require(ADORE_PATH..".toolbox.toolboxactions")
 
 ---@class Toolbox.MainWindow: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.MainWindow
@@ -62,11 +64,11 @@ local menuActions = {
 		{
 			{label = "New Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
-				window:newScene()
+				ToolboxActions.newScene()
 			end},
 			{label = "Save Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
-				window:saveScene()
+				ToolboxActions.saveScene()
 			end},
 			{label = "Save As...", func = function(window)
 				---@cast window Toolbox.MainWindow
@@ -78,11 +80,11 @@ local menuActions = {
 			end},
 			{label = "Reload Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
-				window:reloadScene()
+				ToolboxActions.reloadScene()
 			end},
 			{label = "Close Scene", func = function(window)
 				---@cast window Toolbox.MainWindow
-				window:closeScene()
+				ToolboxActions.closeScene()
 			end},
 		}
 	},
@@ -119,6 +121,9 @@ function MainWindow:new(toolbox, subroot)
 	self.toolbox = toolbox
 	Tool.mainWindow = self
 	ToolboxPopups.setMainWindow(self)
+	ToolboxActions.setMainWindow(self)
+	ToolboxPopups.setActions(ToolboxActions)
+	ToolboxActions.setPopups(ToolboxPopups)
 
 	--======== GAME TABS
 	local gameTabContainer = TabContainer()
@@ -234,7 +239,7 @@ function MainWindow:new(toolbox, subroot)
 				0, 0, 0, 1,
 				0, 0, 32, 0
 			)
-		button.clicked:connect(self, action[2])
+		button.clicked:connect(ToolboxActions, action[2])
 		gameActionBar:addChild(button)
 	end
 
@@ -268,9 +273,9 @@ function MainWindow:new(toolbox, subroot)
 		do
 			-- Create the buttons for the scene tree
 			local treeActions = {
-				"Add", "addNode",
-				"Link", "showLinkScenePopup",
-				"Extend", "extendNode",
+				"Add", "popupAddNode",
+				"Link", "popupLinkScene",
+				"Extend", "popupExtendNode",
 			}
 			for i = 1, 5, 2 do
 				local button = Button(treeActions[i])
@@ -292,12 +297,12 @@ function MainWindow:new(toolbox, subroot)
 			end},
 			{separator = true},
 			{label = "Cut", func = function()
-				self:deleteSelectedNode()
+				ToolboxActions.deleteSelectedNode()
 			end},
 			{label = "Copy", func = function()
 			end},
 			{label = "Duplicate", func = function()
-				self:duplicateSelectedNode()
+				ToolboxActions.duplicateSelectedNode()
 			end},
 			{separator = true},
 			{label = "Extend...", func = function()
@@ -314,7 +319,7 @@ function MainWindow:new(toolbox, subroot)
 			{label = "Make Scene Root", func = function()
 			end},
 			{label = "Delete", func = function()
-				self:deleteSelectedNode()
+				ToolboxActions.deleteSelectedNode()
 			end},
 		}
 
@@ -392,311 +397,22 @@ function MainWindow:getSubrootContainer()
 	return nil
 end
 
+---Returns the actions this MainWindow can do
+---@return Toolbox.Actions
+function MainWindow:getActions()
+	return ToolboxActions
+end
+
+---Returns the popups relevant to this MainWindow
+---@return Toolbox.Popups
+function MainWindow:getPopups()
+	return ToolboxPopups
+end
+
 ---Changes the pause button texture
 function MainWindow:updateButtonTexture()
 	local srContainer = self:getSubrootContainer()
 	self.pauseButton:setTexture((srContainer and srContainer._running) and Assets.Pause or Assets.Play)
-end
-
----Toggles the pause mode of the current tab
-function MainWindow:togglePause()
-	local srContainer = self:getSubrootContainer()
-	if srContainer then
-		if srContainer:is(GameScene) then
-			srContainer._running = not srContainer._running
-			srContainer._errorMessage = nil
-			self:updateButtonTexture()
-		else
-			-- Run the scene
-			local gScene
-			if not srContainer._fromScript then
-				-- Only save if this EditableScene wasn't from a script
-				local path, format = srContainer._lastFilepath, srContainer._lastFormat
-				if not (path and format) then return ToolboxPopups.popupSaveSceneAs() end
-				self:saveScene()
-
-				gScene = GameScene()
-				gScene:createSubroot()
-
-				-- Load from file
-				local scene, err = ObjectSaver.loadFromFilePath(path, format, "SceneFactory", true)
-				if scene then
-					gScene:changeSceneTo(scene)
-				else
-					print(err)
-					return
-				end
-			else
-				-- Load from script
-				gScene = GameScene()
-				gScene:createSubroot()
-				local path = srContainer._lastFilepath
-				local requirePath = path:match("(.*)%.lua"):gsub("/", ".")
-				gScene:changeSceneTo(requirePath)
-				gScene.name = ("Game (%s)"):format(LuaPath:file_name(path))
-			end
-
-			-- Insert this tab
-			gScene.name = ("Game (%s)"):format(LuaPath:file_name(srContainer._lastFilepath))
-			local tabContainer = self.gameTabContainer
-			local index = (tabContainer:getIndexOfChild(self:getSubrootContainer()) or #tabContainer.children) + 1
-			tabContainer:insertChild(gScene, index)
-			tabContainer:selectTab(gScene)
-		end
-	end
-end
-
----Toggles fullscreen of the current tab
-function MainWindow:toggleFull()
-	if not self._fullView then
-		-- We are going to fullscreen
-		-- Remove the current tab from the TabContainer, and make it fullscreen on the main window
-		local tab = self.gameTabContainer:getActiveTab()
-		if tab then
-			self._fullView = true
-			self._tabIndex = self.gameTabContainer:getIndexOfChild(tab)
-
-			self:addChild(tab)
-			tab:setVisible(true)
-			self._currentTab = tab
-
-			self.editor:setVisible(false)
-		end
-	else
-		-- We are exiting fullscreen
-		-- Re-insert it into the TabContainer
-		local tab = self._currentTab
-		if tab then
-			self._fullView = false
-			self.gameTabContainer:insertChild(tab, self._tabIndex)
-			self.gameTabContainer:selectTab(tab)
-
-			self.editor:setVisible(true)
-		end
-	end
-end
-
----Reloads the scene of the current tab
-function MainWindow:reloadScene()
-	local srContainer = self:getSubrootContainer()
-	if not srContainer then return end
-	if srContainer:is(GameScene) then
-		srContainer._running = true
-		srContainer:handleOnSubroot("reloadCurrentScene")
-	end
-end
-
----Creates an empty EditableScene and selects it
-function MainWindow:newScene()
-	local tabContainer = self.gameTabContainer
-	local eScene = EditableScene()
-	eScene:createSubroot()
-	eScene.name = "(Empty)"
-
-	local index = (tabContainer:getIndexOfChild(self:getSubrootContainer()) or #tabContainer.children) + 1
-
-	tabContainer:insertChild(eScene, index)
-	tabContainer:selectTab(eScene)
-end
-
----Closes the current tab
-function MainWindow:closeScene()
-	local srContainer = self:getSubrootContainer()
-	if not srContainer then return end
-	local index = self.gameTabContainer:getIndexOfChild(srContainer)
-	if index then
-		self.gameTabContainer:removeChildAtIndex(index)
-	end
-end
-
----Saves the scene of the current tab, if it has its filepath set
----@return boolean success
-function MainWindow:saveScene()
-	local srContainer = self:getSubrootContainer()
-	if not srContainer then return false end
-	local sceneRoot = srContainer:getSceneRoot()
-	if not sceneRoot then return false end
-	local savePath = srContainer._lastFilepath
-	local format = srContainer._lastFormat
-	if not savePath or not format then return ToolboxPopups.popupSaveSceneAs() or false end
-
-	-- Create the directories, and error early if we can't open that file
-	local NativeFS = Adore.Libraries("NativeFS")
-	NativeFS.createDirectory(LuaPath:dir_name(savePath))
-	local file = NativeFS.newFile(savePath)
-	if not (file:isOpen() or file:open("w") or file:getMode() == "w") then
-		print("Can't open file at", savePath)
-		return false
-	end
-
-	-- Pack the scene object
-	---@type SceneFactory
-	local scene
-	if format == "binary" then
-		local PackedScene = Resources("PackedScene")
-		scene = PackedScene()
-	else
-		scene = TableScene()
-	end
-	scene:pack(sceneRoot)
-	scene.source = savePath
-
-	-- Write to the file
-	local success, err = ObjectSaver.saveToFile(file, scene, format)
-	if success then
-		print("Written to path:", savePath)
-		-- Remove it from ObjectLoader so that it gets reloaded
-		if ObjectLoader:has(savePath) then
-			ObjectLoader:destructor((ObjectLoader:get(savePath)), scene)
-		end
-		ObjectLoader:register(scene, savePath)
-		self:prepareReloadDependency(savePath)
-		ObjectLoader:updateModifiedSceneProperties(sceneRoot, savePath)
-		self:performReloadDependency(savePath)
-	else
-		-- Errored
-		print(err)
-	end
-
-	return success
-end
-
-
----Creates the subroot and instances the EditableScene
----@param scene SceneFactory
----@param path string
-function MainWindow:loadSceneFromFactory(scene, path)
-	-- Create the scene and add the tab
-	local eScene = EditableScene()
-	eScene:createSubroot()
-	eScene:changeSceneTo(scene)
-	eScene._lastFilepath = path
-
-	local extension = LuaPath:extension_name(path)
-	local format = extension
-	if not (extension == "json" or extension == "lua") then
-		format = "binary"
-	end
-	eScene._lastFormat = format
-
-	local fileName = LuaPath:file_name(path)
-	eScene.name = fileName
-
-	self.gameTabContainer:addChild(eScene)
-	self.gameTabContainer:selectTab(eScene)
-end
-
-function MainWindow:deleteSelectedNode()
-	local srContainer = self:getSubrootContainer()
-	if not srContainer then return end
-	local selectedNode = self.sceneTree:getPressedNode()
-	if not (selectedNode and selectedNode:is(Node)) then return end
-
-	srContainer:handleInsideSubroot(selectedNode.unparent, selectedNode)
-
-	local sceneTree = self.sceneTree
-	sceneTree:focusNode()
-	sceneTree:updateNodes()
-end
-
-do
----@param node Node
----@param owner Node
-local setOwner = function(node, owner) node._owner = owner end
----@param node Node
----@param owner Node
-local ignoreSubScenes = function(node, owner)
-	if node._sceneFilePath ~= nil then
-		node._owner = owner
-		return false
-	end
-	return true
-end
-
-function MainWindow:duplicateSelectedNode()
-	local srContainer = self:getSubrootContainer()
-	if not srContainer then return end
-	local selectedNode = self.sceneTree:getPressedNode()
-	if not (selectedNode and selectedNode:is(Node)) then return end
-	local sceneRoot = srContainer:getSceneRoot()
-	if not (sceneRoot and sceneRoot ~= selectedNode) then return end
-
-	local parent = selectedNode.parent
-	if parent then
-		srContainer:pushSubroot()
-		local index = parent:getIndexOfChild(selectedNode)
-		local clone = selectedNode:duplicate()
-
-		clone._owner = sceneRoot
-		clone:traverseDownSelf(setOwner, ignoreSubScenes, sceneRoot)
-
-		parent:insertChild(clone, index + 1)
-		srContainer:popSubroot()
-
-		local sceneTree = self.sceneTree
-		sceneTree:updateNodes()
-		sceneTree:focusNode(clone)
-	end
-end
-end
-
----Links a scene under a Node, with an optional index
----@param scene SceneFactory
----@param instanceUnder Node
----@param index integer?
-function MainWindow:linkScene(scene, instanceUnder, index)
-	local srContainer = self:getSubrootContainer()
-	if not srContainer then return end
-	local sceneRoot = srContainer:getSceneRoot()
-	if not sceneRoot then return end
-
-	local shouldPush = not srContainer:isPushed()
-	if shouldPush then
-		srContainer:pushSubroot()
-	end
-
-	local instanced = scene:instantiate(instanceUnder)
-	if instanced then
-		instanced._owner = sceneRoot
-		if index then
-			instanceUnder:insertChild(instanced, index)
-		end
-	end
-
-	self.sceneTree:updateNodes()
-	if instanced then
-		self.sceneTree:focusNode(instanced)
-	end
-
-	if shouldPush then
-		srContainer:popSubroot()
-	end
-end
-
----Changes the type of `node` to `class` while keeping relevant properties
----@param node Node
----@param class string | Node
-function MainWindow:changeTypeOfNode(node, class)
-	if type(class) == "string" then class = Adore.Any(class) end
-	if not class:is(Node) then
-		print(("Class '%s' is not a Node"):format(tostring(class)))
-		return
-	end
-	local parent = node.parent
-	if not parent then
-		print(("Node '%s' does not have a parent"):format(tostring(node)))
-		return
-	end
-	local childIndex = parent:getIndexOfChild(node)
-
-	local resources = {}
-	local header, body = ObjectSaver.getPropertyPairs(node, resources, false)
-	node:forceDestroy()
-	setmetatable(node, class)
-	class.new(node)
-	local deferredProperties = ObjectSaver.setPropertiesFromPairs(node, header, body)
-	ObjectSaver.setDeferredProperties(node, deferredProperties, resources)
-	parent:insertChild(node, childIndex)
 end
 
 function MainWindow:populateToolbar()
@@ -718,57 +434,6 @@ function MainWindow:populateToolbar()
 
 		toolbar:addChild(button)
 	end
-end
-
-do
----The packed contents of each tab that will get reloaded
----@type {[Toolbox.EditableScene]: TableScene}
-local tabToPackedContents = {}
-
----Called before default scene properties are updated.
----Here, existing scenes are packed for use after the properties are updated.
----@param dependencyPath string
-function MainWindow:prepareReloadDependency(dependencyPath)
-	tclear(tabToPackedContents)
-	local tabbar = self.gameTabContainer._internalTabBar
-	local tabs = tabbar._tabs
-
-	for i = 1, #tabs do
-		-- For each tab, pack it if it's a good idea
-		local tab = tabs[i]
-		---@type Toolbox.EditableScene
-		local eScene = tab.node
-		local sceneRoot = eScene:getSceneRoot()
-		local path = eScene._lastFilepath
-		if eScene.CLASS_NAME == "EditableScene" and path and sceneRoot then
-			-- Only look at EditableScenes from a filepath with something underneath them
-			---@type SceneFactory
-			local asset = ObjectLoader:has(path)
-			if asset then
-				if asset._dependencyMap[dependencyPath] then
-					-- This opened scene relies on the dependency we're reloading
-					-- Pack it and clear it
-					local packed = TableScene()
-					packed:pack(eScene:getSceneRoot())
-					tabToPackedContents[eScene] = packed
-				end
-			end
-		end
-	end
-end
-
----Called after scene properties are updated.
----Re-instances each packed scene with the new default properties.
----@param dependencyPath string
-function MainWindow:performReloadDependency(dependencyPath)
-	for eScene, packed in pairs(tabToPackedContents) do
-		eScene:pushSubroot()
-		print("Reloading", eScene)
-		eScene:changeSceneTo(packed)
-		tabToPackedContents[eScene] = nil
-		eScene:popSubroot()
-	end
-end
 end
 
 return MainWindow

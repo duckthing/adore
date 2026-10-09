@@ -4,6 +4,10 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox.toolboxshortcuts")
 local Adore = require(ADORE_PATH)
 ---@type ShortcutContext
 local ShortcutContext = Adore.Resources("ShortcutContext")
+---@type Toolbox.Actions
+local ToolboxActions = require(ADORE_PATH..".toolbox.toolboxactions")
+---@type Toolbox.Popups
+local ToolboxPopups = require(ADORE_PATH..".toolbox.toolboxpopups")
 
 ---@class Toolbox.ToolboxShortcuts: ShortcutContext
 ---@field super ShortcutContext
@@ -27,68 +31,68 @@ end
 local actions = {
 	newScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:newScene()
+		ToolboxActions.newScene()
 		return true
 	end,
 	saveScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:saveScene()
+		ToolboxActions.saveScene()
 		return true
 	end,
 	saveSceneAs = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:saveSceneAs()
+		ToolboxPopups.popupSaveSceneAs()
 		return true
 	end,
 	loadScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:loadScene()
+		ToolboxPopups.popupLoadScene()
 		return true
 	end,
 	reloadScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:reloadScene()
+		ToolboxActions.reloadScene()
 		return true
 	end,
 	closeScene = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:closeScene()
+		ToolboxActions.closeScene()
 		return true
 	end,
 	togglePause = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:togglePause()
+		ToolboxActions.togglePause()
 		return true
 	end,
 
 	addNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:addNode()
+		ToolboxPopups.popupAddNode()
 		return true
 	end,
 	deleteSelectedNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:deleteSelectedNode()
+		ToolboxActions.deleteSelectedNode()
 		return true
 	end,
 	duplicateSelectedNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:duplicateSelectedNode()
+		ToolboxActions.duplicateSelectedNode()
 		return true
 	end,
 	extendNode = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:extendNode()
+		ToolboxPopups.popupExtendNode()
 		return true
 	end,
 	showLinkScenePopup = function(context, isRepeat)
 		if isGamePrioritized() then return false end
-		mainWindow:showLinkScenePopup()
+		ToolboxPopups.popupLinkScene()
 		return true
 	end,
 
 	toggleFullView = function(context, isRepeat)
-		mainWindow:toggleFull()
+		ToolboxActions.toggleFull()
 		return true
 	end,
 
