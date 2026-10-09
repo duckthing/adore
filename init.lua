@@ -238,9 +238,11 @@ function Adore.getClassDescendants(baseClassName)
 
 	for i = 1, #classNames do
 		local currClassName = classNames[i]
-		local Class = Adore.Any(currClassName)
-		if type(Class) == "table" and Class.is and Class:is(BaseClass) and Class ~= BaseClass then
+		local success, ClassOrErr = pcall(Adore.Any, currClassName)
+		if type(ClassOrErr) == "table" and ClassOrErr.is and ClassOrErr:is(BaseClass) and ClassOrErr ~= BaseClass then
 			descendants[#descendants+1] = currClassName
+		elseif not success then
+			print(("Errored while loading '%s':\n%s"):format(currClassName, ClassOrErr))
 		end
 	end
 
