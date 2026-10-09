@@ -36,10 +36,21 @@ local FormSheet = {}
 local FormSheetMT = {__index = FormSheet}
 
 ---Gets the element associated with the id
+---@generic T: Control
 ---@param id any
----@return Control? value
-function FormSheet:getElement(id)
-	return self.idToElement[id]
+---@param className `T`
+---@return T value
+---@overload fun(sheet: Form.Sheet, id): Control?
+function FormSheet:getElement(id, className)
+	local element = self.idToElement[id]
+	if className then
+		if not (element and element.CLASS_NAME == className) then
+			error(("Element at id '%s' has type '%s', instead of '%s'")
+				:format(id, element and element.CLASS_NAME or type(element), className)
+			)
+		end
+	end
+	return element
 end
 
 ---Gets the value associated with the id
