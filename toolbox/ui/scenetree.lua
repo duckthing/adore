@@ -341,19 +341,19 @@ local function getInsertRequestAtPoint(self, mx, my, droppingNode)
 
 		if percent > 0.75 then
 			-- (0.75..1] AND [0..0.25)
-			-- Insert below this Node
+			-- Decide what to do on the edges of the label
 			if childCount == 0 then
 				-- No children; make it adjacent
 				local parent = node.parent
 				return parent, parent:getIndexOfChild(node) + 1
 			else
-				-- Has children; insert at the first index
+				-- Has children; insert underneath
 				return node, 1
 			end
 		else
 			-- [0.25..0.75)
-			-- Insert at the end of this Node's children
-			return node, childCount + 1
+			-- Over the middle of the label; insert underneath
+			return node, 1
 		end
 	end
 end
