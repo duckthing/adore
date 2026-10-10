@@ -239,6 +239,7 @@ function ToolboxActions.deleteSelectedNode()
 	sceneTree:updateNodes()
 end
 
+local setEachOwner
 do
 ---@param node Node
 ---@param owner Node
@@ -251,6 +252,14 @@ local ignoreSubScenes = function(node, owner)
 		return false
 	end
 	return true
+end
+
+---Sets the owner of all descendants (not the starting Node)
+---@param startNode Node
+---@param newOwner Node?
+function setEachOwner(startNode, newOwner)
+	startNode:traverseDownExcludeSelf(setOwner, ignoreSubScenes, newOwner)
+end
 end
 
 function ToolboxActions.duplicateSelectedNode()
@@ -268,7 +277,7 @@ function ToolboxActions.duplicateSelectedNode()
 		local clone = selectedNode:duplicate()
 
 		clone._owner = sceneRoot
-		clone:traverseDownSelf(setOwner, ignoreSubScenes, sceneRoot)
+		setEachOwner(clone, sceneRoot)
 
 		parent:insertChild(clone, index + 1)
 		srContainer:popSubroot()
@@ -277,7 +286,6 @@ function ToolboxActions.duplicateSelectedNode()
 		sceneTree:updateNodes()
 		sceneTree:focusNode(clone)
 	end
-end
 end
 
 ---Links a scene under a Node, with an optional index
@@ -337,6 +345,47 @@ function ToolboxActions.changeTypeOfNode(node, class)
 	local deferredProperties = ObjectSaver.setPropertiesFromPairs(node, header, body)
 	ObjectSaver.setDeferredProperties(node, deferredProperties, resources)
 	parent:insertChild(node, childIndex)
+end
+
+do
+---Makes a Node the scene root
+---@param newSceneRoot Node?
+function ToolboxActions.makeNodeSceneRoot(newSceneRoot)
+	local srContainer = mw:getSubrootContainer()
+	if not srContainer then return end
+	local oldSceneRoot = srContainer:getSceneRoot()
+	newSceneRoot = newSceneRoot or mw.sceneTree:getPressedNode()
+	if not (newSceneRoot and newSceneRoot._valid and newSceneRoot ~= oldSceneRoot) then
+		-- Selected Node is either not valid or equal to the old scene root; do nothing
+		return
+	end
+	---@cast newSceneRoot Node
+
+	local shouldPush = not srContainer:isPushed()
+	if shouldPush then
+		srContainer:pushSubroot()
+	end
+
+	newSceneRoot:unparent()
+	newSceneRoot:addChild(oldSceneRoot)
+	srContainer.subroot:addChild(newSceneRoot)
+
+	if not srContainer:is(GameScene) then
+		-- It's an EditableScene
+		-- Change the owners, too
+		newSceneRoot._owner = nil
+		newSceneRoot._sceneFilePath, oldSceneRoot._sceneFilePath = oldSceneRoot._sceneFilePath, newSceneRoot._sceneFilePath
+		setEachOwner(newSceneRoot, newSceneRoot)
+	else
+		-- It's a GameScene
+		srContainer.subroot._instancedScene = newSceneRoot
+	end
+	mw.sceneTree:updateNodes()
+
+	if shouldPush then
+		srContainer:popSubroot()
+	end
+end
 end
 
 do

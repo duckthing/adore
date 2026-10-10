@@ -289,38 +289,23 @@ function MainWindow:new(toolbox, subroot)
 		-- Context menu for right-clicking a popup
 		---@type PopupMenu.Item[]
 		local nodeActions = {
-			{label = "Add Node...", func = function()
-				ToolboxPopups.popupAddNode()
-			end},
-			{label = "Link Scene...", func = function()
-				ToolboxPopups.popupLinkScene()
-			end},
+			{label = "Add Node...", func = ToolboxPopups.popupAddNode},
+			{label = "Link Scene...", func = ToolboxPopups.popupLinkScene},
 			{separator = true},
-			{label = "Cut", func = function()
-				ToolboxActions.deleteSelectedNode()
-			end},
+			{label = "Cut", func = ToolboxActions.deleteSelectedNode},
 			{label = "Copy", func = function()
 			end},
-			{label = "Duplicate", func = function()
-				ToolboxActions.duplicateSelectedNode()
-			end},
+			{label = "Duplicate", func = ToolboxActions.duplicateSelectedNode},
 			{separator = true},
-			{label = "Extend...", func = function()
-				ToolboxPopups.popupExtendNode()
-			end},
-			{label = "Change Type...", func = function()
-				ToolboxPopups.popupChangeType()
-			end},
+			{label = "Extend...", func = ToolboxPopups.popupExtendNode},
+			{label = "Change Type...", func = ToolboxPopups.popupChangeType},
 			{separator = true},
 			{label = "Move Up", func = function()
 			end},
 			{label = "Move Down", func = function()
 			end},
-			{label = "Make Scene Root", func = function()
-			end},
-			{label = "Delete", func = function()
-				ToolboxActions.deleteSelectedNode()
-			end},
+			{label = "Make Scene Root", func = ToolboxActions.makeNodeSceneRoot},
+			{label = "Delete", func = ToolboxActions.deleteSelectedNode},
 		}
 
 		-- Call the function contained in the menu

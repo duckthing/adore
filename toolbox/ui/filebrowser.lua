@@ -103,7 +103,7 @@ function FileBrowser:_onItemButtonPressed(button)
 	---@cast obj Object
 	if obj:is(SceneFactory) then
 		---@cast obj SceneFactory
-		self.toolbox.mainWindow:loadSceneFromFactory(obj, path)
+		self.toolbox.mainWindow:getActions().loadSceneFromFactory(obj, path)
 	else
 		self.toolbox.mainWindow.inspector:onNodeFocusChanged(nil, obj, false)
 	end
