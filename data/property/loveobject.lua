@@ -97,13 +97,11 @@ end
 
 getParamMap.PolygonShape = function(obj)
 	---@cast obj love.PolygonShape
-	return {
-		points = {obj:getPoints()}
-	}
+	return {obj:getPoints()}
 end
 
 createObjectMap.PolygonShape = function(params)
-	return love.physics.newPolygonShape(unpack(params.points))
+	return love.physics.newPolygonShape(unpack(params))
 end
 
 getParamMap.CircleShape = function(obj)
