@@ -61,13 +61,13 @@ end
 
 function Vec2P:serialize(obj, propertyName, value)
 	if value then
-		return {x = value.x, y = value.y}
+		return {value.x, value.y}
 	end
 	return nil
 end
 
 function Vec2P:deserialize(obj, propertyName, value)
-	self:set(obj, propertyName, self:sanitize(Vec2(value.x, value.y)))
+	self:set(obj, propertyName, self:sanitize(Vec2(value[1], value[2])))
 end
 
 return Vec2P
