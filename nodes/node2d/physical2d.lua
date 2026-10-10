@@ -111,8 +111,13 @@ function Physical2d:_createBody()
 	---@type Viewport
 	---@diagnostic disable-next-line: assign-type-mismatch
 	local newViewport = self:getViewport()
-
 	local world = newViewport._physicsWorld
+	if not world then
+		-- Missing a love.World in the Viewport
+		print("[Physical2d] Unable to create Body due to a lack of a World")
+		return
+	end
+
 	local newBody = love.physics.newBody(
 		world,
 		0, 0,

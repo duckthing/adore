@@ -102,7 +102,10 @@ end
 
 function Area2d:_createBody()
 	Area2d.super._createBody(self)
-	self.body:setGravityScale(0)
+	local body = self.body
+	if body then
+		body:setGravityScale(0)
+	end
 end
 
 function Area2d:forceDestroy(...)
