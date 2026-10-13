@@ -123,6 +123,8 @@ function Area2d._addDefinition(entry)
 	entry:newBoolean("ignoreDirectParent", false)
 	entry:newSignal("bodyEntered")
 	entry:newSignal("bodyLeft")
+	-- Override what Physical2d overrides
+	entry:newBoolean("_transformRelativeToParent", true, "setRelativeTransform")
 end
 
 return Area2d

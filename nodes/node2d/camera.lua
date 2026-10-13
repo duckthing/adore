@@ -141,7 +141,7 @@ function Camera:onViewportRemoved(oldViewport)
 end
 
 function Camera._addDefinition(entry)
-	entry:newVec2("_zoom", nil, "setZoomVector")
+	entry:newVec2("_zoom", Vec2(1, 1), "setZoomVector")
 	entry:newBoolean("_center", true, "setCentered")
 	entry:newBoolean("_inheritRotation", true, "setInheritRotation")
 end

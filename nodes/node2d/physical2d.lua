@@ -705,7 +705,7 @@ function Physical2d._addDefinition(entry)
 	entry:newBoolean("_transformRelativeToParent", false, "setRelativeTransform")
 
 	-- Disable problematic properties
-	entry:newVec2("_scale", nil, "setScaleVector")
+	entry:newVec2("_scale", Vec2(1, 1), "setScaleVector")
 		:hide()
 end
 
