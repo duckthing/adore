@@ -71,6 +71,7 @@ end
 
 ---Calculates the position and size of the Popup, and shows it
 function Popup:popup()
+	assert(self._inTree, "Popup must be inside the SceneTree before popping up")
 	updateDimensions(self)
 	self:pushModal()
 	self:show()
