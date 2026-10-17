@@ -15,11 +15,20 @@ local HBox = Nodes("HBox")
 local VBox = Nodes("VBox")
 local SceneFactory = Adore.Resources("SceneFactory")
 
-local usingFFI = not not Common("ffilib")
 -- Use the best filesystem
 local filesystem = love.filesystem
 local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
 local LuaPath = Libraries("LuaPath")
+
+---File extensions that are used for objects
+local OBJECT_EXTENSIONS = {
+	lua = true,
+	json = true,
+	toml = true,
+	agf = true,
+}
+local ICON_SIZE = 24
+local USING_FFI = not not Common("ffilib")
 
 ---@class Toolbox.FileBrowser: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.FileBrowser
@@ -35,7 +44,7 @@ function FileBrowser:new(toolbox)
 	Toolbox = toolbox
 	self.toolbox = toolbox
 
-	if not usingFFI then
+	if not USING_FFI then
 		-- TODO: Support non-FFI filesystem
 		local label = Label("Filesystem is only available on desktop")
 		label:setAnchors(0, 0, 1, 1)
@@ -56,7 +65,6 @@ function FileBrowser:new(toolbox)
 		self:openDirectory(text)
 	end)
 
-	local ICON_SIZE = 24
 	do
 		-- The path LineEdit and other actions
 		local hbox = HBox()
@@ -115,14 +123,6 @@ function FileBrowser:_onItemButtonPressed(button)
 	end
 end
 
----File extensions that are used for objects
-local OBJECT_EXTENSIONS = {
-	lua = true,
-	json = true,
-	toml = true,
-	agf = true,
-}
-
 ---Returns the drag data for an item
 ---@param button Button
 ---@return any
@@ -164,14 +164,15 @@ function FileBrowser:openDirectory(dir)
 	self.pathLE:setText(dir)
 
 	-- Clear it and add the "go up" button
-	self.itemVBox:clearChildren(true)
-	self.itemVBox._offsetY = 0
+	local itemVBox = self.itemVBox
+	itemVBox:clearChildren(true)
+	itemVBox._offsetY = 0
 	do
 		local goUpButton = Button("[Go up]")
 			:setAnchors(0, 0, 1, 0)
 			:setTextAlign("left")
 		goUpButton.clicked:connect(self, "goUp")
-		self.itemVBox:addChild(goUpButton)
+		itemVBox:addChild(goUpButton)
 	end
 
 
@@ -184,7 +185,7 @@ function FileBrowser:openDirectory(dir)
 				:setAnchors(0, 0, 1, 0)
 				:setTextAlign("left")
 			button.clicked:connect(self, "_onDirButtonPressed")
-			self.itemVBox:addChild(
+			itemVBox:addChild(
 				button
 			)
 		end
@@ -199,7 +200,7 @@ function FileBrowser:openDirectory(dir)
 				:setTextAlign("left")
 			button.clicked:connect(self, "_onItemButtonPressed")
 			button._getDragData = getItemDragData
-			self.itemVBox:addChild(
+			itemVBox:addChild(
 				button
 			)
 		end

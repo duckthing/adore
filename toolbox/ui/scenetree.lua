@@ -14,13 +14,13 @@ local min, max = math.min, math.max
 local SceneTreeViewer = Nodes("Control"):extend()
 SceneTreeViewer.CLASS_NAME = "SceneTreeViewer"
 
-local font = love.graphics.getFont()
-local fontHeight = font:getHeight()
+local FONT = love.graphics.getFont()
+local FONT_HEIGHT = FONT:getHeight()
 
 local SCROLL_SPEED = -50
-local buttonSize = 21
-local labelYOffset = (buttonSize - fontHeight) * 0.5
-local labelXOffset = labelYOffset
+local BUTTON_HEIGHT = 21
+local LABEL_Y_OFFSET = (BUTTON_HEIGHT - FONT_HEIGHT) * 0.5
+local LABEL_X_OFFSET = LABEL_Y_OFFSET
 
 ---@param toolbox Toolbox
 ---@param container Toolbox.EditableScene
@@ -202,7 +202,7 @@ end
 function SceneTreeViewer:getMaxScroll()
 	local height = self._localContentRect.h
 	local treeLength = self.treeLength
-	return max(0, treeLength * buttonSize - height)
+	return max(0, treeLength * BUTTON_HEIGHT - height)
 end
 
 ---Sets the start node, which is where the scene tree begins
@@ -280,7 +280,7 @@ local function getIndexAtPoint(self, mx, my)
 	end
 
 	local treeLength = self.treeLength
-	local index = ceil((self.scrollY - self._localContentRect.y + my) / buttonSize)
+	local index = ceil((self.scrollY - self._localContentRect.y + my) / BUTTON_HEIGHT)
 
 	if index > 0 and index <= treeLength then
 		return index
@@ -301,7 +301,7 @@ local function getInsertRequestAtPoint(self, mx, my, droppingNode)
 		return
 	end
 
-	local indexFraction = (self.scrollY - self._localContentRect.y + my) / buttonSize
+	local indexFraction = (self.scrollY - self._localContentRect.y + my) / BUTTON_HEIGHT
 	local index = ceil(indexFraction)
 	local node = self:getNodeFromTreeIndex(index)
 
@@ -551,10 +551,10 @@ function SceneTreeViewer:update(dt)
 	end
 end
 
-local selectedColor = {0.4, 0.4, 0.43}
-local pressedColor = {0.15, 0.15, 0.2}
-local normal1Color = {0.2, 0.2, 0.24}
-local normal2Color = {0.19, 0.19, 0.22}
+local SELECTED_COLOR = {0.4, 0.4, 0.43}
+local PRESSED_COLOR = {0.15, 0.15, 0.2}
+local NORMAL1_COLOR = {0.2, 0.2, 0.24}
+local NORMAL2_COLOR = {0.19, 0.19, 0.22}
 
 ---@type {[integer]: number[]}
 local nodeHighlights = {
@@ -570,25 +570,25 @@ function SceneTreeViewer:draw()
 	local x, y, w, h = self._localContentRect:unpack()
 	love.graphics.intersectScissor(x, y, w, h)
 
-	love.graphics.setFont(font)
+	love.graphics.setFont(FONT)
 	local scrollY = self.scrollY
 
 	-- The range we'll render buttons
-	local lowerCull = floor(scrollY / buttonSize) + 1
-	local upperCull = ceil((h + scrollY) / buttonSize)
+	local lowerCull = floor(scrollY / BUTTON_HEIGHT) + 1
+	local upperCull = ceil((h + scrollY) / BUTTON_HEIGHT)
 
 	local hoveredIndex = self.hoveredIndex
 	local focusedIndex = self.focusedIndex
 	local insertIndex = self.insertIndex
 	local pressedIndex = self._pressedIndex
-	nodeHighlights[hoveredIndex] = selectedColor
-	nodeHighlights[focusedIndex] = selectedColor
+	nodeHighlights[hoveredIndex] = SELECTED_COLOR
+	nodeHighlights[focusedIndex] = SELECTED_COLOR
 	if pressedIndex then
 		nodeHighlights[hoveredIndex] = nil
-		nodeHighlights[pressedIndex] = pressedColor
+		nodeHighlights[pressedIndex] = PRESSED_COLOR
 	end
 
-	local yOffset = -scrollY + y + (lowerCull - 1) * buttonSize
+	local yOffset = -scrollY + y + (lowerCull - 1) * BUTTON_HEIGHT
 
 	for nodeIndex = lowerCull, min(self.treeLength, upperCull) do
 		local i = nodeIndex * 3 - 2
@@ -596,11 +596,11 @@ function SceneTreeViewer:draw()
 		local depth, name = tree[i + 1], tree[i + 2]
 		local xOffset = 8 * (depth - 1)
 
-		local rx, ry, rw, rh = x + xOffset, yOffset, w - xOffset, buttonSize
-		love.graphics.setColor(nodeHighlights[nodeIndex] or (nodeIndex % 2 == 0 and normal1Color or normal2Color))
+		local rx, ry, rw, rh = x + xOffset, yOffset, w - xOffset, BUTTON_HEIGHT
+		love.graphics.setColor(nodeHighlights[nodeIndex] or (nodeIndex % 2 == 0 and NORMAL1_COLOR or NORMAL2_COLOR))
 		love.graphics.rectangle("fill", rx, ry, rw, rh)
 		love.graphics.setColor(0.8, 0.8, 0.8)
-		love.graphics.print(name, rx + labelXOffset, ry + labelYOffset)
+		love.graphics.print(name, rx + LABEL_X_OFFSET, ry + LABEL_Y_OFFSET)
 
 		if nodeIndex == insertIndex then
 			local lineX = x + xOffset
@@ -613,14 +613,14 @@ function SceneTreeViewer:draw()
 
 			if self.insertAsChild then
 				lineX = lineX + 8
-				lineY = lineY + buttonSize
+				lineY = lineY + BUTTON_HEIGHT
 			end
 
 			love.graphics.setColor(1, 1, 1)
 			love.graphics.line(lineX, lineY, w, lineY)
 		end
 
-		yOffset = yOffset + buttonSize
+		yOffset = yOffset + BUTTON_HEIGHT
 	end
 
 	tclear(nodeHighlights)
