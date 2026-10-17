@@ -13,6 +13,7 @@ local LineEdit = Nodes("LineEdit")
 local Button = Nodes("Button")
 local HBox = Nodes("HBox")
 local VBox = Nodes("VBox")
+local PopupMenu = Nodes("PopupMenu")
 local SceneFactory = Adore.Resources("SceneFactory")
 
 -- Use the best filesystem
@@ -30,6 +31,35 @@ local OBJECT_EXTENSIONS = {
 local ICON_SIZE = 24
 local USING_FFI = not not Common("ffilib")
 
+-- Context menu for right-clicking a file
+-- (`func` is a string referencing a method)
+---@type PopupMenu.Item[]
+local FILE_ACTIONS = {
+	{label = "Open", func = "openPressedFile"},
+	{label = "Rename...", func = nil},
+	{label = "Move...", func = nil},
+	{separator = true},
+	{label = "Copy", func = nil},
+	{label = "Duplicate", func = nil},
+	{separator = true},
+	{label = "Delete...", func = nil},
+	{separator = true},
+	{label = "Show in File System", func = "showFileInSystem"},
+}
+
+-- Context menu for right-clicking a file
+-- (`func` is a string referencing a method)
+---@type PopupMenu.Item[]
+local DIR_ACTIONS = {
+	{label = "Open", func = "openPressedDirectory"},
+	{label = "Rename...", func = nil},
+	{label = "Move...", func = nil},
+	{separator = true},
+	{label = "Delete...", func = nil},
+	{separator = true},
+	{label = "Show in File System", func = "showFolderInSystem"},
+}
+
 ---@class Toolbox.FileBrowser: Control
 ---@overload fun(toolbox: Toolbox): Toolbox.FileBrowser
 local FileBrowser = Control:extend()
@@ -44,16 +74,7 @@ function FileBrowser:new(toolbox)
 	Toolbox = toolbox
 	self.toolbox = toolbox
 
-	if not USING_FFI then
-		-- TODO: Support non-FFI filesystem
-		local label = Label("Filesystem is only available on desktop")
-		label:setAnchors(0, 0, 1, 1)
-			:setAlign("center")
-			:setJustify("center")
-		self:addChild(label)
-		return
-	end
-
+	-- Path LineEdit, which opens a directory when text is submitted
 	---@type LineEdit
 	local pathLE = LineEdit("/")
 		:setAnchorsAndOffsets(
@@ -66,7 +87,7 @@ function FileBrowser:new(toolbox)
 	end)
 
 	do
-		-- The path LineEdit and other actions
+		-- HBox that contains the LineEdit and reload button
 		local hbox = HBox()
 		hbox:setAnchorsAndOffsets(
 			0, 0, 1, 0,
@@ -84,6 +105,7 @@ function FileBrowser:new(toolbox)
 		self:addChild(hbox)
 	end
 
+	-- The VBox that contains all of the directories and files
 	local itemVBox = VBox()
 		:setAnchorsAndOffsets(
 			0, 0, 1, 1,
@@ -92,9 +114,36 @@ function FileBrowser:new(toolbox)
 		:setClipChildren(true)
 	self.itemVBox = itemVBox
 
-	self:addChild(itemVBox)
+	-- PopupMenu for right-clicking a file
+	local fileContextMenu = PopupMenu(FILE_ACTIONS)
+	fileContextMenu._resizeWithParent = false
+	fileContextMenu.itemSelected:connectCallable(function(_, _, item)
+		-- Call the function contained in the menu
+		local f = item.func
+		if f then self[f](self) end
+	end)
+	self.fileContextMenu = fileContextMenu
+
+	-- PopupMenu for right-clicking a folder
+	local dirContextMenu = PopupMenu(DIR_ACTIONS)
+	dirContextMenu._resizeWithParent = false
+	dirContextMenu.itemSelected:connectCallable(function(_, _, item)
+		-- Call the function contained in the menu
+		local f = item.func
+		if f then self[f](self) end
+	end)
+	self.dirContextMenu = dirContextMenu
 
 	self:openDirectory("/")
+
+	---@type string # The path of the last pressed file
+	self.pressedFile = ""
+	---@type string # The path of the last pressed directory
+	self.pressedDir = ""
+
+	self:addChild(itemVBox)
+	self:addChild(fileContextMenu)
+	self:addChild(dirContextMenu)
 end
 
 ---@param button Button
@@ -102,16 +151,44 @@ function FileBrowser:_onReloadButtonPressed(button)
 	self:openDirectory(self.pathLE._submittedText)
 end
 
----@param button Button
-function FileBrowser:_onDirButtonPressed(button)
-	self:openDirectory(self.pathLE._submittedText..button._text)
+---@param bNode Button
+---@param button integer
+function FileBrowser:_onDirButtonPressed(bNode, button)
+	local path = self.pathLE._submittedText..bNode._text
+	self.pressedDir = path
+
+	if button == 1 then
+		-- Left-click; open the file
+		self:openDirectory(path)
+	elseif button == 2 then
+		-- Right-click; show context menu
+		local dirContextMenu = self.dirContextMenu
+		dirContextMenu:setWorldPosition(love.mouse.getPosition())
+		dirContextMenu:popup()
+	end
 end
 
----@param button Button
-function FileBrowser:_onItemButtonPressed(button)
+---@param bNode Button
+---@param button integer
+function FileBrowser:_onItemButtonPressed(bNode, button)
 	-- Remove the starting slash
-	local path = self.pathLE._submittedText:match("^/(.*)")..button._text
+	local path = self.pathLE._submittedText:match("^/(.*)")..bNode._text
+	self.pressedFile = path
 
+	if button == 1 then
+		-- Left-click; open the file
+		self:openPressedFile()
+	elseif button == 2 then
+		-- Right-click; show context menu
+		local fileContextMenu = self.fileContextMenu
+		fileContextMenu:setWorldPosition(love.mouse.getPosition())
+		fileContextMenu:popup()
+	end
+end
+
+---Opens the file at `self.pressedFile`
+function FileBrowser:openPressedFile()
+	local path = self.pressedFile
 	local success, obj = pcall(ObjectLoader.get, ObjectLoader, path)
 	if not success then print(obj) return end
 	---@cast obj Object
@@ -121,6 +198,23 @@ function FileBrowser:_onItemButtonPressed(button)
 	else
 		self.toolbox.mainWindow.inspector:onNodeFocusChanged(nil, obj, false)
 	end
+end
+
+---Opens the file at `self.pressedFile`
+function FileBrowser:showFileInSystem()
+	local path = love.filesystem.getRealDirectory(self.pressedFile)
+	love.system.openURL("file://"..path)
+end
+
+---Opens the folder at `self.pressedDir`
+function FileBrowser:openPressedDirectory()
+	self:openDirectory(self.pressedDir)
+end
+
+---Opens the folder at `self.pressedDir`
+function FileBrowser:showFolderInSystem()
+	local path = love.filesystem.getRealDirectory(self.pressedDir)
+	love.system.openURL("file://"..path)
 end
 
 ---Returns the drag data for an item
@@ -184,6 +278,7 @@ function FileBrowser:openDirectory(dir)
 			local button = Button(itemPath.."/")
 				:setAnchors(0, 0, 1, 0)
 				:setTextAlign("left")
+			button.buttonFilter = 3
 			button.clicked:connect(self, "_onDirButtonPressed")
 			itemVBox:addChild(
 				button
@@ -198,6 +293,7 @@ function FileBrowser:openDirectory(dir)
 			local button = Button(itemPath)
 				:setAnchors(0, 0, 1, 0)
 				:setTextAlign("left")
+			button.buttonFilter = 3
 			button.clicked:connect(self, "_onItemButtonPressed")
 			button._getDragData = getItemDragData
 			itemVBox:addChild(

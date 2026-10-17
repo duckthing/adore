@@ -272,23 +272,23 @@ function MainWindow:new(toolbox, subroot)
 
 		do
 			-- Create the buttons for the scene tree
-			local treeActions = {
+			local TREE_ACTIONS = {
 				"Add", "popupAddNode",
 				"Link", "popupLinkScene",
 				"Extend", "popupExtendNode",
 			}
 			for i = 1, 5, 2 do
-				local button = Button(treeActions[i])
+				local button = Button(TREE_ACTIONS[i])
 					:setAnchors(0, 0, 0, 1)
 					:setVariant("flat")
-				button.clicked:connect(ToolboxPopups, treeActions[i + 1])
+				button.clicked:connect(ToolboxPopups, TREE_ACTIONS[i + 1])
 				treeActionBar:addChild(button)
 			end
 		end
 
-		-- Context menu for right-clicking a popup
+		-- Context menu for right-clicking a Node
 		---@type PopupMenu.Item[]
-		local nodeActions = {
+		local NODE_ACTIONS = {
 			{label = "Add Node...", func = ToolboxPopups.popupAddNode},
 			{label = "Link Scene...", func = ToolboxPopups.popupLinkScene},
 			{separator = true},
@@ -308,10 +308,11 @@ function MainWindow:new(toolbox, subroot)
 			{label = "Delete", func = ToolboxActions.deleteSelectedNode},
 		}
 
-		-- Call the function contained in the menu
-		local nodeContextMenu = PopupMenu(nodeActions)
+		-- PopupMenu for right-clicking a Node
+		local nodeContextMenu = PopupMenu(NODE_ACTIONS)
 		nodeContextMenu._resizeWithParent = false
 		nodeContextMenu.itemSelected:connectCallable(function(_, _, item)
+			-- Call the function contained in the menu
 			local f = item.func
 			if f then f() end
 		end)

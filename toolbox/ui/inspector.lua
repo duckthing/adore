@@ -3,14 +3,18 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
+local Common = Adore.Common
+local Libraries = Adore.Libraries
+
 local Label = Nodes("Label")
 local MenuButton = Nodes("MenuButton")
 local WindowPopup = Nodes("WindowPopup")
-local FormBuilder = Adore.Common("FormBuilder")
-local ObjectSaver = Adore.Common("ObjectSaver")
-local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
-local fzy = Adore.Libraries("fzy")
+local FormBuilder = Common("FormBuilder")
+local ObjectSaver = Common("ObjectSaver")
+local LuaPath = Libraries("LuaPath")
+local fzy = Libraries("fzy")
 
+local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
 local Previewers = require(ADORE_PATH..".toolbox.ui.inspector.previewers")
 
 ---@class Toolbox.Inspector: Control
@@ -281,7 +285,10 @@ function Inspector:saveResourceAs()
 		local path = pathField._submittedText
 		---@type string
 		local format = sheet:getValue("format").item
-		local success, err = ObjectSaver.saveToFilePath(path, selected, format)
+		local NativeFS = Adore.Libraries("NativeFS")
+		NativeFS.createDirectory(LuaPath:dir_name(path))
+		local file = NativeFS.newFile(path)
+		local success, err = ObjectSaver.saveToFile(file, selected, format)
 		if not success then
 			print(err)
 		else
