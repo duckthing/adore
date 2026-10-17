@@ -69,6 +69,7 @@ function FileBrowser:new(toolbox)
 			:setIcon(Assets.Reload)
 			:setIconExpand(true)
 			:setVariant("flat")
+		reloadButton.clicked:connect(self, "_onReloadButtonPressed")
 
 		hbox:addChild(pathLE)
 		hbox:addChild(reloadButton)
@@ -86,6 +87,11 @@ function FileBrowser:new(toolbox)
 	self:addChild(itemVBox)
 
 	self:openDirectory("/")
+end
+
+---@param button Button
+function FileBrowser:_onReloadButtonPressed(button)
+	self:openDirectory(self.pathLE._submittedText)
 end
 
 ---@param button Button
