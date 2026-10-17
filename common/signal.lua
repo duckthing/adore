@@ -14,6 +14,7 @@ local SignalMT = {__index = Signal,
 	__tostring = function(self)
 		-- As a Class
 		if rawget(self, "CLASS_NAME") then return "Signal" end
+		if not self._valid then return "Signal [destroyed]" end
 
 		-- As a class instance
 		return ("Signal [from %s, with %d connections]")

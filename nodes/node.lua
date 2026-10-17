@@ -314,7 +314,7 @@ function Node:removeChildAtIndex(index, shouldDestroy)
 		child.parent = nil
 		child:onRemovedFromParent(self)
 		if shouldDestroy then
-			child:forceDestroy(true)
+			child:queueDestroy(true)
 		end
 	end
 end
