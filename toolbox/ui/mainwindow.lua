@@ -182,12 +182,19 @@ function MainWindow:new(toolbox, subroot)
 	editor:setAnchors(0, 0, 1, 1)
 	self.editor = editor
 
-	--======== MENU BAR
-	local menuBar = HBox()
+	--======== TOP-LEFT BAR CONTAINER
+	local leftBars = HBox()
 		:setAnchorsAndOffsets(
 			0, 0, 0, 0,
 			4, 4, 4, 32
 		)
+		:setMargin(4)
+		:setResizeToContent(true)
+	self.leftBars = leftBars
+
+	--======== MENU BAR (top-left)
+	local menuBar = HBox()
+		:setAnchors(0, 0, 0, 1)
 		:setMargin(8)
 		:setPadding(8)
 		:setVariant("topbar")
@@ -208,17 +215,13 @@ function MainWindow:new(toolbox, subroot)
 		menuBar:addChild(button)
 	end
 
-	--======== TOOL BAR (middle of screen)
+	--======== TOOL BAR (to the right of the menu bar)
 	local toolBar = HBox()
-		:setAnchorsAndOffsets(
-			0.5, 0, 0.5, 0,
-			0, 4, 0, 32
-		)
+		:setAnchors(0, 0, 0, 1)
 		:setMargin(8)
 		:setPadding(8)
 		:setResizeToContent(true)
 		:setVariant("topbar")
-		:setGrowDirection(nil, 0.5)
 	self.toolbar = toolBar
 
 	--======== GAME BAR
@@ -362,8 +365,9 @@ function MainWindow:new(toolbox, subroot)
 	editor:addChild(rightPanel)
 	editor:addChild(bottomPanel)
 	editor:addChild(gameActionBar)
-	editor:addChild(menuBar)
-	editor:addChild(toolBar)
+	leftBars:addChild(menuBar)
+	leftBars:addChild(toolBar)
+	editor:addChild(leftBars)
 	editor:addChild(gameTabContainer)
 	editor:hide()
 
