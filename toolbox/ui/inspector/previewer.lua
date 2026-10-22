@@ -83,4 +83,8 @@ function Previewer:newValueLabel(object, property, propertyName)
 		:setOffsets(0, 0, 0, 0)
 end
 
+---Updates the values inside of this Previewer
+function Previewer:updateContent()
+end
+
 return Previewer

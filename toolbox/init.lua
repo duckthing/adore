@@ -9,6 +9,7 @@ local Toolbox = {}
 ---@field openEditor boolean? # [Default: `false`] Should Toolbox start with the editor opened?
 ---@field skipRoot boolean? # [Default: `false`] Don't show the original root in the tabs
 ---@field suspendWhenUnfocused boolean? # [Default: `true`] Same as RootNode's `suspendWhenUnfocused`
+---@field lurker table | string | nil # The Lurker module or path, for better hot-reloading support
 
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
@@ -176,13 +177,6 @@ return setmetatable(Toolbox, {
 
 		local defaultCallbacks = originalRoot._defaultCallbacks
 
-		-- Add any overrides we have
-		local overrides = {}
-
-		for k, v in pairs(overrides) do
-			defaultCallbacks[k] = v
-		end
-
 		-- Add the rest
 		for i = 1, #originalRoot.ALL_LOVE_CALLBACKS do
 			local handler = originalRoot.ALL_LOVE_CALLBACKS[i]
@@ -192,10 +186,10 @@ return setmetatable(Toolbox, {
 				-- (ex. `update()` becomes `root:update()`)
 				defaultCallbacks[handler] = function(_, ...)
 					-- Call it on the god root
-					-- The even will get passed to the subroot through a Context
+					-- This will get passed to the subroot through a Context
 					return godRoot[handler](godRoot, ...)
 				end
-			elseif not overrides[handler] then
+			else
 				-- Wrap the existing one, if it wasn't by us
 				defaultCallbacks[handler] = function(_, ...)
 					-- Call it on the god root first
@@ -239,6 +233,7 @@ return setmetatable(Toolbox, {
 		end
 
 		if options then
+			-- Options that are checked after method overrides
 			if options.openEditor then
 				-- Open the editor into full screen
 				self.mainWindow:getActions().toggleFull()
@@ -247,6 +242,12 @@ return setmetatable(Toolbox, {
 			if options.skipRoot then
 				-- Remove the original Root
 				self.mainWindow.gameTabContainer:removeChildAtIndex(1)
+			end
+
+			if options.lurker then
+				-- Prepare Lurker support
+				local LurkerCompat = require(PKG_NAME..".lurkercompat")
+				LurkerCompat(originalRoot, options.lurker)
 			end
 		end
 

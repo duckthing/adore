@@ -11,6 +11,7 @@ local MenuButton = Nodes("MenuButton")
 local WindowPopup = Nodes("WindowPopup")
 local FormBuilder = Common("FormBuilder")
 local ObjectSaver = Common("ObjectSaver")
+local ClassDB = Common("ClassDB")
 local LuaPath = Libraries("LuaPath")
 local fzy = Libraries("fzy")
 
@@ -31,6 +32,13 @@ local FORMAT_OPTIONS = {{label = "json"}, {label = "lua"}, {label = "binary"}}
 local FORBIDDEN_PROPERTY_TYPES = {
 	Signal = true,
 	["string.buffer"] = true,
+}
+---Three dot menu
+---@type PopupMenu.Item[]
+local MENU_ITEMS = {
+	{label = "Force Update", func = "rebuild"},
+	{label = "New Object...", func = "popupNewResource"},
+	{label = "Save as...", func = "popupSaveResourceAs"},
 }
 
 local function getAddr(t)
@@ -62,13 +70,7 @@ function Inspector:new(toolbox, sceneTree)
 		:setFontSize(BOLD_SIZE)
 		:setClipText(true)
 
-	---@type PopupMenu.Item[]
-	local menuItems = {
-		{label = "Reload", func = "reload"},
-		{label = "New Object...", func = "newResource"},
-		{label = "Save as...", func = "saveResourceAs"},
-	}
-	local menuButton = MenuButton("...", nil, menuItems)
+	local menuButton = MenuButton("...", nil, MENU_ITEMS)
 		:setAnchorsAndOffsets(
 			1, 0, 1, 0,
 			-35, 5, -5, 35
@@ -94,6 +96,17 @@ function Inspector:new(toolbox, sceneTree)
 	self:addChild(vbox)
 
 	self.sceneTree.nodeFocused:connect(self, "onNodeFocusChanged")
+	ClassDB.classReloaded:connect(self, "_onClassReloaded")
+end
+
+---Check if we should rebuild
+---@param class Object
+---@param className string
+function Inspector:_onClassReloaded(class, className)
+	local selected = self.selected
+	if selected and (selected == class or selected:is(class)) then
+		self:rebuild()
+	end
 end
 
 ---Fired when a Node is (un)focused
@@ -141,14 +154,21 @@ function Inspector:onNodeFocusChanged(viewer, node, inTree)
 	end)
 end
 
-function Inspector:reload()
+---Rebuilds all Previewers; use in case the class properties change
+function Inspector:rebuild()
 	local selected = self.selected
 	if not selected then return end
 	self.selected = nil
 	self:onNodeFocusChanged(nil, selected, nil)
 end
 
-function Inspector:newResource()
+---Updates the value in each Previewer, rebuilding only when the class changes
+function Inspector:updateContent()
+
+end
+
+---Shows a Popup for creating a new Resource in the Inspector
+function Inspector:popupNewResource()
 	local srContainer = self.toolbox.mainWindow:getSubrootContainer()
 	if not srContainer then return end
 
@@ -235,7 +255,7 @@ function Inspector:newResource()
 end
 
 ---Shows a popup for saving this resource
-function Inspector:saveResourceAs()
+function Inspector:popupSaveResourceAs()
 	local selected = self.selected
 	if not selected then return end
 	-- Create the popup
@@ -284,7 +304,7 @@ function Inspector:saveResourceAs()
 	window.submit = function(...)
 		local path = pathField._submittedText
 		---@type string
-		local format = sheet:getValue("format").item
+		local format = sheet:getValue("format").label
 		local NativeFS = Adore.Libraries("NativeFS")
 		NativeFS.createDirectory(LuaPath:dir_name(path))
 		local file = NativeFS.newFile(path)
