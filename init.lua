@@ -1,6 +1,7 @@
 local PKG_NAME = ...
 ---@class AdoreInit
 local Adore = {}
+---@type string # The module name of Adore's folder
 Adore.PATH = PKG_NAME
 
 -- The following are globals that can be set **before** you load Adore

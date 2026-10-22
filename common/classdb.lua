@@ -1,9 +1,14 @@
 ---@type AdoreInit
 local Adore = require ""
----@class ClassDB
-local ClassDB = {}
+---@type Signal
+local Signal = Adore.Common("Signal")
 ---@type ClassDB.Entry
 local ClassDBEntry = require "data.classdbentry"
+
+---@class ClassDB
+local ClassDB = {}
+---@type Signal # `(Class: Object, className: string)` Fires when hot-reloading occurs
+ClassDB.classReloaded = Signal.new(ClassDB)
 ClassDBEntry._setClassDB(ClassDB)
 
 ---@class ClassDB.Info
@@ -29,7 +34,7 @@ local classIdToEntry = {}
 ClassDB.ClassInfo = classInfoMap
 ClassDB.ClassNameToClass = classNameToClass
 
----(Registers itself and super classes, and) returns the ClassDBEntry used for registering new properties.
+---(Registers itself and super classes, and) returns the ClassDB.Entry used for registering new properties.
 ---Only call this once the class name was set!
 ---@param class Object | string
 ---@return ClassDB.Entry
@@ -76,9 +81,12 @@ function ClassDB.getClassDBEntry(class)
 			classNameToClass[class.CLASS_NAME] = class
 		elseif existingClass ~= class then
 			-- Normally, an existing class means you're attempting a duplicate.
-			-- If `existingClass` equals `class`, it means hot reloading (with Lurker) occured, and can be ignored.
+			-- If `existingClass` equals `class`, it means hot-reloading (with Lurker) occured, and can be ignored.
 			-- If not, and already registered, it's likely a duplicate.
 			error(("Attempted to register similar class '%s' when one already exists; are your class names unique?"):format(class.CLASS_NAME))
+		else
+			-- Hot-reloading occured
+			ClassDB.classReloaded:fire(existingClass, class.CLASS_NAME)
 		end
 	end
 	return classIdToEntry[class.CLASS_ID]
