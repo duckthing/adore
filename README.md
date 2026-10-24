@@ -81,6 +81,7 @@ Adore also includes **Toolbox**, an optional, work-in-progress editor.
 * Author scenes and save to any supported format
 * Add Nodes or link scenes anywhere in the tree
 * Edit properties in the inspector
+	* Hot-reload properties (see [Hot-reloading with Lurker](https://github.com/duckthing/adore/wiki/Hot%E2%80%90reloading-with-Lurker))
 * Open any scene to debug, including SceneFunctions written in Lua
 * Start a game from any scene
 * Catch errors as they happen
