@@ -142,12 +142,12 @@ end
 
 -- There are two ways to use scenes from a script:
 -- 1. Return the function
---		* This doesn't tag the source file
+--	* This doesn't tag the source file
 return mySceneFunction
 
 -- 2. Return a new SceneFactory
---		* Protection against infinite loops
---		* Don't forget the three dots; they tag the source file!
+--	* Protection against infinite loops
+--	* Don't forget the three dots; they tag the source file!
 return SceneFactory(mySceneFunction, ...)
 
 -- Somewhere else...
@@ -161,8 +161,8 @@ root:changeSceneTo(level)
 local ObjectLoader = Loader.getCollection("ObjectLoader")
 
 -- 2. Get the asset from its path
---		* The second parameter, "SceneFactory", is for type checking
---		* Packed/TableScene inherits from SceneFactory
+--	* The second parameter, "SceneFactory", is for type checking
+--	* Packed/TableScene inherits from SceneFactory
 local level = ObjectLoader:get("scenes/level2.json", "SceneFactory")
 ```
 You may want some way to get input now. Use a new `GameContext`.
