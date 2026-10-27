@@ -281,7 +281,7 @@ local AdoreBuilderMT = {__index = Adore}
 local function createBuilder()
 	local builder = setmetatable({
 		list = {},
-		---@type Adore.ProjectConfig
+		---@type ProjectConfig
 		projectConfig = nil,
 		---@type boolean # If we should write the Project Config
 		shouldWriteConfig = false,
@@ -291,19 +291,25 @@ local function createBuilder()
 end
 
 do
----@type {[string]: fun(contents: string): Adore.ProjectConfig}
+---@type {[string]: fun(contents: string): ProjectConfig}
 local configReaders = {
 	json = function(contents)
 		local JSON = Adore.Libraries("JSON")
-		local config, err = JSON.decode(contents)
-		if not config then
+		local options, err = JSON.decode(contents)
+		if not options then
 			error(("Errored while reading config: %s"):format(err))
 		end
+
+		local config = Adore.Resources("ProjectConfig")()
+		config:getClassDBEntry():setPropertyValues(config, options)
 		return config
 	end,
 	toml = function(contents)
 		local TinyTOML = Adore.Libraries("TinyTOML")
-		local config = TinyTOML.parse(contents, {load_from_string = true})
+		local options = TinyTOML.parse(contents, {load_from_string = true})
+
+		local config = Adore.Resources("ProjectConfig")()
+		config:getClassDBEntry():setPropertyValues(config, options)
 		return config
 	end
 }
@@ -328,7 +334,7 @@ function Adore:config(path)
 		error(("Invalid config extension '%s'"):format(extension))
 	end
 
-	---@type Adore.ProjectConfig
+	---@type ProjectConfig
 	local projectConfig
 	local shouldWrite = false
 
@@ -343,7 +349,7 @@ function Adore:config(path)
 		projectConfig = reader(contents)
 	else
 		-- Create the default config (and write it to disk later)
-		---@type Adore.ProjectConfig
+		---@type ProjectConfig
 		local ProjectConfig = require(PKG_NAME..".data.projectconfig")
 		projectConfig = ProjectConfig()
 		shouldWrite = true

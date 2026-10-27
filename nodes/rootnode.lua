@@ -80,7 +80,7 @@ function Root:new(rootOptions, defaultTheme)
 	---@type boolean # `true` if this RootNode is not embedded inside of Toolbox
 	self.firstRoot = not rootExistsAlready
 	rootExistsAlready = true
-	---@type Adore.ProjectConfig? # The configuration file this RootNode was created from
+	---@type ProjectConfig? # The configuration file this RootNode was created from
 	self._projectConfig = nil
 
 	self.name = "root"
@@ -1636,40 +1636,10 @@ function Root:addMissingCallbacks()
 	end
 end
 
-do
----@type {[string]: fun(config: Adore.ProjectConfig): string?}
-local configWriters = {
-	json = function(config)
-		local JSON = Adore.Libraries("JSON")
-		return JSON.encodePretty(config)
-	end,
-	toml = function(config)
-		local TinyTOML = Adore.Libraries("TinyTOML")
-		return TinyTOML.encode(config)
-	end
-}
-
 ---Writes the configuration to disk, if it exists
 function Root:writeConfiguration()
 	local config = self._projectConfig
-	if not config then return end
-	local path, extension = config.path, config.extension
-	if not (path and extension) then return end
-	local LuaPath = Adore.Libraries("LuaPath")
-
-	-- Get the encoded data
-	local writer = configWriters[extension]
-	local encoded = writer(config)
-	if not encoded then
-		error("Failed to encode data for config")
-	end
-
-	-- Create the directories and write them
-	local NativeFS = Adore.Libraries("NativeFS")
-	NativeFS.createDirectory(LuaPath:dir_name(path))
-	assert(NativeFS.write(path, encoded), "Failed to write config")
-	print(("[Adore.Root] Wrote configuration to '%s'"):format(path))
-end
+	if config then config:writeToFile() end
 end
 
 return Root

@@ -74,6 +74,8 @@ local resourcePaths = {
 	["Animation.Library"] = "data.animation.animationlibrary",
 	---@type NinePatch
 	NinePatch = "data.ninepatch",
+	---@type ProjectConfig
+	ProjectConfig = "data.projectconfig",
 }
 Resources = LazyRequire(resourcePaths)
 end
