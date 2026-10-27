@@ -19,6 +19,10 @@ function AssetP:add(a, b)
 	return a
 end
 
+function AssetP:isValid(val)
+	return type(val) == "string"
+end
+
 function AssetP:serialize(obj, propertyName, value, resources)
 	if value then
 		local collection = Loader.getCollection(self.collectionName)

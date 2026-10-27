@@ -22,12 +22,16 @@ function String:sanitize(val)
 	return val
 end
 
-function String:isValid(val)
+function String:shouldSanitize(val)
 	if #val > self.maxLength then return false end
 	local v = self.validator
 	if v and not v(val) then return false end
 
 	return true
+end
+
+function String:isValid(val)
+	return type(val) == "string"
 end
 
 return String

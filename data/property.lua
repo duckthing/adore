@@ -93,6 +93,17 @@ function Property:sanitize(val)
 	return val
 end
 
+---Returns `true` if `val` should be sanitized before usage
+---@param val any
+---@return boolean shouldSanitize
+function Property:shouldSanitize(val)
+	return true
+end
+
+---Returns `true` if `val` is the expected type for this Property.
+---The value may need to be sanitized before usage.
+---@param val any
+---@return boolean isValid
 function Property:isValid(val)
 	return true
 end

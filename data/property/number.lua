@@ -34,8 +34,12 @@ function Number:sanitize(num)
 	return final
 end
 
-function Number:isValid(num)
+function Number:shouldSanitize(num)
 	return num == self:sanitize(num)
+end
+
+function Number:isValid(val)
+	return type(val) == "number"
 end
 
 function Number:stepTowards(from, to, amount)
