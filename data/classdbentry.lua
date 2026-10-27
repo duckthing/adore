@@ -50,6 +50,18 @@ function ClassDBEntry.new(class, info)
 	return entry
 end
 
+---Sets the properties of an `Object` from a map of property names to their values
+---@param object Object
+---@param values {[string]: any}
+function ClassDBEntry:setPropertyValues(object, values)
+	for propertyName, value in pairs(values) do
+		local property = self:getProperty(propertyName, true)
+		if property and property:isValid(value) then
+			property:set(object, propertyName, property:sanitize(value))
+		end
+	end
+end
+
 ---Returns `true` if any inherited classes allow deserializing.
 function ClassDBEntry:canDeserialize()
 	local info = self._info
