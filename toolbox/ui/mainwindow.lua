@@ -3,27 +3,14 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
-local Common = Adore.Common
-local Resources = Adore.Resources
 
-local ClassDB = Common("ClassDB")
-local ObjectSaver = Common("ObjectSaver")
-local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
-local TableScene = Resources("TableScene")
-local tclear = Common("Structures").tableClear
-
-local Node = Nodes("Node")
 local Control = Nodes("Control")
 local TabContainer = Nodes("TabContainer")
 local HBox = Nodes("HBox")
 local Button = Nodes("Button")
 local TextureButton = Nodes("TextureButton")
-local WindowPopup = Nodes("WindowPopup")
 local MenuButton = Nodes("MenuButton")
 local PopupMenu = Nodes("PopupMenu")
-local FormBuilder = Common("FormBuilder")
-local fzy = Adore.Libraries("fzy")
-local LuaPath = Adore.Libraries("LuaPath")
 
 local SceneTreeViewer = require(ADORE_PATH..".toolbox.ui.scenetree")
 local Inspector = require(ADORE_PATH..".toolbox.ui.inspector")
@@ -34,7 +21,6 @@ local Assets = require(ADORE_PATH..".toolbox.assets")
 local EditableScene = require(ADORE_PATH..".toolbox.editablescene")
 ---@type Toolbox.GameScene
 local GameScene = require(ADORE_PATH..".toolbox.gamescene")
-local Templates = require(ADORE_PATH..".toolbox.scripttemplates")
 ---@type Toolbox.Tool
 local Tool = require(ADORE_PATH..".toolbox.tool")
 ---@type Toolbox.Popups

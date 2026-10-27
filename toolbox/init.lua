@@ -11,8 +11,6 @@ local Toolbox = {}
 ---@field suspendWhenUnfocused boolean? # [Default: `true`] Same as RootNode's `suspendWhenUnfocused`
 ---@field lurker table | string | nil # The Lurker module or path, for better hot-reloading support
 
----@type AdoreInit
-local Adore = require(ADORE_PATH)
 local MainWindow = require(PKG_NAME..".ui.mainwindow")
 
 ---@type Node
