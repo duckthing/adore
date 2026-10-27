@@ -44,6 +44,7 @@ end
 function Previewer:attemptSet(...)
 	local toolbox = Previewer.Toolbox
 	local srContainer = toolbox:getSubrootContainer()
+	if not srContainer then return end
 	if srContainer:isPushed() then
 		-- Pushed from outside; don't pop
 		self:onInput(...)

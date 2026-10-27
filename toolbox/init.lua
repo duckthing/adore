@@ -19,7 +19,7 @@ local Node = nil
 Toolbox.godRoot = nil
 ---@type Toolbox.MainWindow
 Toolbox.mainWindow = nil
----@type Adore.ProjectConfig?
+---@type ProjectConfig?
 Toolbox.projectConfig = nil
 
 ---An array of every path in this project

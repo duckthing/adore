@@ -83,6 +83,10 @@ local menuActions = {
 				if not (srContainer and srContainer.cameraActive) then return end
 				srContainer.camera:setPosition(0, 0):setZoom(1, 1)
 			end},
+			{label = "Show Project Config", func = function(window)
+				---@cast window Toolbox.MainWindow
+				window.inspector:onNodeFocusChanged(nil, window.toolbox.projectConfig, nil)
+			end},
 			{label = "Toggle Physics Draw", func = function(window)
 				---@cast window Toolbox.MainWindow
 				local srContainer = window:getSubrootContainer()
