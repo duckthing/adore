@@ -56,7 +56,7 @@ end
 function ClassDBEntry:setPropertyValues(object, values)
 	for propertyName, value in pairs(values) do
 		local property = self:getProperty(propertyName, true)
-		if property and property:isValid(value) then
+		if property and not property.isConstant and property:isValid(value) then
 			property:set(object, propertyName, property:sanitize(value))
 		end
 	end
