@@ -68,8 +68,8 @@ function SceneTreeViewer:new(toolbox, container)
 	self.insertUnderIndex = 0
 	self.insertAsChild = false
 
-	---@type integer # The tree index the mouse is pressing down on
-	self._pressedIndex = 0
+	---@type integer? # The tree index the mouse is pressing down on
+	self._pressedIndex = nil
 
 	---@type Signal # Fired when a Node is pressed, with arguments (self, pressedNode, mouseButton, isTouch, pressCount)
 	self.nodePressed = self:newSignal()
