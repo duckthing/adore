@@ -234,8 +234,15 @@ Maybe your scene isn't behaving. Load the editor (`Toolbox`) and press the backt
 -- main.lua
 function love.load()
 	local root = Adore
-		-- Insert this before `:build`
+		-- Insert these lines before `:build`
+		-- Order is important!
+
+		-- [Recommended] Used by Toolbox for editor data like custom classes
+		:config("project.toml")
+		-- [Required] Loads Toolbox
 		:with(require "adore.toolbox")
+
+		-- Now, let's build the root
 		:build(...)
 	--...
 end
