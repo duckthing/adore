@@ -48,6 +48,8 @@ local Properties = {
 	LoveObject = require "data.property.loveobject",
 	---@type Property.Enum
 	Enum = require "data.property.enum",
+	---@type Property.Method
+	Method = require "data.property.method",
 
 	---@type Property.Dynamic
 	Dynamic = require "data.property.dynamic",

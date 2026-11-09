@@ -63,6 +63,7 @@ function ProjectConfig:writeToFile()
 end
 
 function ProjectConfig._addDefinition(entry)
+	entry:newMethod("writeToFile", "Save")
 	entry:newString("path", "project.toml")
 	entry:newString("extension", "toml")
 	entry:newMap(

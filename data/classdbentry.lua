@@ -410,6 +410,15 @@ function ClassDBEntry:newAssetPath(name, collectionName, defaultValue, setter)
 	return self
 end
 
+---Adds a Property.Method
+---@param methodName string # The name of the method (used like `Class:methodName()`)
+---@param label string? # The human-readable name
+---@return self
+function ClassDBEntry:newMethod(methodName, label)
+	self:insertProperty(Properties.Method(self._class, methodName, label))
+	return self
+end
+
 ---Adds a Property.Dynamic; used internally, you might want something else
 ---@param name string
 ---@param propertyGetter Property.Dynamic.Getter # Gets the desired Property on every access
