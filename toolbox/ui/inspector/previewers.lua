@@ -16,6 +16,7 @@ local Previewers = {
 	Enum = require(PREVIEWER_PATH..".enumpreviewer"),
 	AssetPath = require(PREVIEWER_PATH..".assetpathpreviewer"),
 	LoveObject = require(PREVIEWER_PATH..".loveobjectpreviewer"),
+	Method = require(PREVIEWER_PATH..".methodpreviewer"),
 }
 
 return Previewers
