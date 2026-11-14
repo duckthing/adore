@@ -335,15 +335,26 @@ function ToolboxActions.changeTypeOfNode(node, class)
 		print(("Node '%s' does not have a parent"):format(tostring(node)))
 		return
 	end
+
+	-- Get the child index (for re-inserting at the same index)
 	local childIndex = parent:getIndexOfChild(node)
 
+	-- Serialize the changed properties
 	local resources = {}
 	local header, body = ObjectSaver.getPropertyPairs(node, resources, false)
 	node:forceDestroy()
+
+	-- Change the type and re-initialize it
+	local children = node.children
 	setmetatable(node, class)
 	class.new(node)
+	node.children = children -- Because `Node:new()` overwrites it
+
+	-- Deserialize the former properties
 	local deferredProperties = ObjectSaver.setPropertiesFromPairs(node, header, body)
 	ObjectSaver.setDeferredProperties(node, deferredProperties, resources)
+
+	-- Re-insert under the parent
 	parent:insertChild(node, childIndex)
 end
 

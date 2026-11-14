@@ -301,7 +301,7 @@ function ToolboxPopups.popupExtendNode()
 		{id = "template", type = "dropdown", items = SCRIPT_OPTIONS},
 		{type = "body", text = "File Path"},
 		{id = "newClassPath", type = "textfield", value =
-			("src/nodes/%s.lua"):format(defaultNewClassName:lower())},
+			("nodes/%s.lua"):format(defaultNewClassName:lower())},
 	}
 
 	local vbox, sheet = FormBuilder.build(form)
