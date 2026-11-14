@@ -220,7 +220,8 @@ function Physical2d:_eParentGlobalTransformUpdated(parentGlobalTransform)
 end
 
 function Physical2d:update(dt)
-	if self.body:isAwake() then
+	local body = self.body
+	if body and body:isAwake() then
 		-- TODO: _transformRelativeToParent inside of Physical2d
 		-- If the parent does NOT move, and the Physical2d does, it would NOT tell the Node2ds below it.
 		-- If the parent does move, it tells the Node2ds below twice.
@@ -229,7 +230,7 @@ function Physical2d:update(dt)
 
 		if not self._transformRelativeToParent then
 			-- Transform INDEPENDENT, not related to the parent
-			local x, y, angle = self.body:getTransform()
+			local x, y, angle = body:getTransform()
 			self._position.x, self._position.y, self._rotation =
 				x, y, angle
 
