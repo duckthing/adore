@@ -9,6 +9,10 @@ local Previewers = {
 	integer = require(PREVIEWER_PATH..".numberpreviewer"),
 	string = require(PREVIEWER_PATH..".stringpreviewer"),
 
+	table = require(PREVIEWER_PATH..".tablepreviewer"),
+	struct = require(PREVIEWER_PATH..".tablepreviewer"),
+	map = require(PREVIEWER_PATH..".tablepreviewer"),
+
 	Vec2 = require(PREVIEWER_PATH..".vec2previewer"),
 	Color = require(PREVIEWER_PATH..".colorpreviewer"),
 	NodeRef = require(PREVIEWER_PATH..".noderefpreviewer"),
