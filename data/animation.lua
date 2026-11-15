@@ -61,7 +61,7 @@ function Animation._addDefinition(entry)
 	entry:newNumber("duration", 0, 0)
 	entry:newArray(
 		"tracks",
-		entry:newObject("value", "AnimationTrack"):popProperty()
+		entry:skip():newObject("value", "AnimationTrack"):last()
 	)
 end
 

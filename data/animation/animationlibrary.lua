@@ -20,8 +20,8 @@ end
 function AnimLibrary._addDefinition(entry)
 	entry:newString("name", "AnimationLibrary")
 	entry:newMap("animations",
-		entry:newString("name"):popProperty(),
-		entry:newObject("anim", "Animation"):popProperty()
+		entry:skip():newString("name"):last(),
+		entry:skip():newObject("anim", "Animation"):last()
 	)
 end
 

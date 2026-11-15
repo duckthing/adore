@@ -361,4 +361,11 @@ GameContext.HANDLERS = {
 	popped = true,
 }
 
+---Overridden by Toolbox
+function GameContext:showEditorPopup() end
+
+function GameContext._addDefinition(entry)
+	entry:newMethod("showEditorPopup", "Edit")
+end
+
 return GameContext

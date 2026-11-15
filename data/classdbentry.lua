@@ -33,6 +33,7 @@ function ClassDBEntry.new(class, info)
 		---@diagnostic disable-next-line: assign-type-mismatch
 		_lastProperty = false,
 		_lastPropertyName = "",
+		_skippingProperty = false,
 	}
 	setmetatable(entry, ClassDBEntryMT)
 
@@ -148,37 +149,37 @@ function ClassDBEntry:insertProperty(property)
 	self._lastProperty = property
 	self._lastPropertyName = propertyName
 
-	info.nameToProperty[propertyName] = property
-	info.propertyList[#info.propertyList+1] = property
+	if not self._skippingProperty then
+		-- Insert this into the definition
+		info.nameToProperty[propertyName] = property
+		info.propertyList[#info.propertyList+1] = property
+	else
+		-- We are skipping this one
+		self._skippingProperty = false
+	end
 	return self
 end
 
----Removes the last created Property
----@return Property
-function ClassDBEntry:popProperty()
-	local info = self._info
-
-	local property = self:getInsertedProperty()
-	self._lastProperty = nil
-	info.propertyList[#info.propertyList] = nil
-
-	info.nameToProperty[self._lastPropertyName] = nil
-	self._lastPropertyName = nil
-	return property
+---Ignores inserting the next Property.
+---You can get the Property with `:last()`.
+---@return self
+function ClassDBEntry:skip()
+	self._skippingProperty = true
+	return self
 end
 
 ---Moves the last inserted Property into the header.
 ---This will make it available for reading in the header before parsing the rest of a serialized Object.
 ---@return self
 function ClassDBEntry:moveToHeader()
-	self:getInsertedProperty().isHeader = true
+	self:last().isHeader = true
 	return self
 end
 
 ---Makes the last inserted Property constant; set operations will be avoided.
 ---@return self
 function ClassDBEntry:makeConstant()
-	self:getInsertedProperty().isConstant = true
+	self:last().isConstant = true
 	return self
 end
 
@@ -186,7 +187,7 @@ end
 ---This is only useful if you make an editor tool; it will still appear when iterating and serializing.
 ---@return self
 function ClassDBEntry:hide()
-	self:getInsertedProperty().visible = false
+	self:last().visible = false
 	return self
 end
 
@@ -194,7 +195,7 @@ end
 ---@param value any
 ---@return self
 function ClassDBEntry:withDefault(value)
-	self:getInsertedProperty().defaultValue = value
+	self:last().defaultValue = value
 	return self
 end
 
@@ -202,7 +203,7 @@ end
 ---@param methodName string
 ---@return self
 function ClassDBEntry:setter(methodName)
-	self:getInsertedProperty():withSetter(methodName)
+	self:last():withSetter(methodName)
 	return self
 end
 
@@ -434,7 +435,7 @@ end
 ---This only works AFTER inserting a property:
 ---`entry:addProperty(...):getInsertedProperty()`
 ---@return Property
-function ClassDBEntry:getInsertedProperty()
+function ClassDBEntry:last()
 	local last = self._lastProperty
 	if not last then
 		error("Attempted to get the last inserted property without inserting any properties")

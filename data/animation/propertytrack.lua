@@ -61,9 +61,9 @@ function PTrack._addDefinition(entry)
 	entry:newString("baseClass", "Object")
 	entry:newArray(
 		"keyframes",
-		entry:newStruct("value", {
-			time = entry:newNumber("time"):popProperty(),
-			value = entry:newDynamic(
+		entry:skip():newStruct("value", {
+			time = entry:skip():newNumber("time"):last(),
+			value = entry:skip():newDynamic(
 				"value",
 				function(self, obj, propertyName, value, ...)
 					---@type PropertyTrack
@@ -78,8 +78,8 @@ function PTrack._addDefinition(entry)
 						end
 					end
 				end
-			):popProperty()
-		}):popProperty()
+			):last()
+		}):last()
 	)
 end
 

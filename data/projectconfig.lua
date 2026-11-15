@@ -68,8 +68,8 @@ function ProjectConfig._addDefinition(entry)
 	entry:newString("extension", "toml")
 	entry:newMap(
 		"userPaths",
-		entry:newString("className"):popProperty(),
-		entry:newString("modname"):popProperty()
+		entry:skip():newString("className"):last(),
+		entry:skip():newString("modname"):last()
 	)
 	entry:newString("defaultScenePath")
 end
