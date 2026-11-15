@@ -8,6 +8,8 @@ Table.DEFER_MODE = "shared"
 function Table:new(class, property, defaultValue, setter)
 	Table.super.new(self, class, property, defaultValue or class[property])
 	if setter then self:withSetter(setter) end
+	---@type boolean # [Default: `true`] If the table can be `nil`
+	self.allowNil = true
 end
 
 function Table:newValue()
@@ -19,11 +21,22 @@ function Table:add(a, b)
 end
 
 function Table:sanitize(val)
-	return (self:isValid(val) and val) or {}
+	if self:isValid(val) then
+		return val
+	end
+	return {}
 end
 
 function Table:isValid(val)
-	return type(val) == "table"
+	local valType = type(val)
+	if valType == "table" then
+		-- It's a table so it should work
+		return true
+	elseif valType == "nil" and self.allowNil then
+		-- Property can be nil
+		return true
+	end
+	return false
 end
 
 function Table:serialize(obj, propertyName, value, resources)

@@ -410,4 +410,10 @@ Context.HANDLERS = {
 	popped = true,
 }
 
+function Context._addDefinition(entry)
+	entry:newString("name")
+	entry:newNumber("_priority", 0, nil, nil, nil, "setPriority")
+	entry:newBoolean("sinkHandledInput")
+end
+
 return Context
