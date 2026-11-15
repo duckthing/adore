@@ -284,6 +284,11 @@ function TableP:editTable()
 
 			if success then
 				key = errOrVal
+				if key == nil then
+					-- Disallow `nil` keys
+					print("Keys cannot be nil")
+					return
+				end
 			else
 				-- Errored casting to the type
 				print(errOrVal)
