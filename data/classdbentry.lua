@@ -14,6 +14,7 @@ local _arr = {false, false, false}
 ---@field _info ClassDB.Info
 ---@field _lastProperty Property?
 ---@field _lastPropertyName string?
+---@field _lastProperties integer
 local ClassDBEntry = {}
 local ClassDBEntryMT = {
 	__index = ClassDBEntry,
@@ -33,7 +34,7 @@ function ClassDBEntry.new(class, info)
 		---@diagnostic disable-next-line: assign-type-mismatch
 		_lastProperty = false,
 		_lastPropertyName = "",
-		_skippingProperty = false,
+		_skippingProperties = 0,
 	}
 	setmetatable(entry, ClassDBEntryMT)
 
@@ -149,22 +150,22 @@ function ClassDBEntry:insertProperty(property)
 	self._lastProperty = property
 	self._lastPropertyName = propertyName
 
-	if not self._skippingProperty then
+	if self._skippingProperties == 0 then
 		-- Insert this into the definition
 		info.nameToProperty[propertyName] = property
 		info.propertyList[#info.propertyList+1] = property
 	else
 		-- We are skipping this one
-		self._skippingProperty = false
+		self._skippingProperties = self._skippingProperties - 1
 	end
 	return self
 end
 
----Ignores inserting the next Property.
+---Ignores inserting the next Property. Calling this again skips another Property.
 ---You can get the Property with `:last()`.
 ---@return self
 function ClassDBEntry:skip()
-	self._skippingProperty = true
+	self._skippingProperties = self._skippingProperties + 1
 	return self
 end
 

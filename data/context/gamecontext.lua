@@ -24,9 +24,12 @@ GameContext.CLASS_NAME = "GameContext"
 ---@field gamepadButtons {[love.GamepadButton]: string}? # A map of gamepad buttons to actions
 ---@field useScancode boolean? # Scancodes are keyboard layout independent, while keys are not (default: `true`)
 
----@param options GameContext.Options
+local EMPTY_ARR = {}
+
+---@param options GameContext.Options?
 function GameContext:new(options)
 	GameContext.super.new(self)
+	options = options or EMPTY_ARR
 
 	---@type {[string]: number} # A map of actions, 0..1, that can be combined together
 	self.actionValues = {}
@@ -366,6 +369,44 @@ function GameContext:showEditorPopup() end
 
 function GameContext._addDefinition(entry)
 	entry:newMethod("showEditorPopup", "Edit")
+	entry:newMap(
+		"actionValues",
+		entry:skip():newString("actionName"):last(),
+		entry:skip():newNumber("value"):last()
+	)
+	entry:newMap(
+		"pairs",
+		entry:skip():newString("pairName"):last(),
+		entry:skip():newArray(
+			"actionList",
+			entry:skip():newString("actions"):last()
+		):last()
+	)
+
+	entry:newMap(
+		"scancodes",
+		entry:skip():newString("scancode"):last(),
+		entry:skip():newString("actionName"):last()
+	)
+	entry:newMap(
+		"mouseButtons",
+		entry:skip():newInteger("mouseButton"):last(),
+		entry:skip():newString("actionName"):last()
+	)
+	entry:newMap(
+		"gamepadAxes",
+		entry:skip():newString("gamepadAxis"):last(),
+		entry:skip():newString("actionName"):last()
+	)
+	entry:newMap(
+		"gamepadButtons",
+		entry:skip():newString("gamepadButton"):last(),
+		entry:skip():newString("actionName"):last()
+	)
+
+	entry:newNumber("deadzone", 0.15, 0, 1)
+	entry:newBoolean("releaseWhenPopped", true)
+	entry:newBoolean("useScancode")
 end
 
 return GameContext
