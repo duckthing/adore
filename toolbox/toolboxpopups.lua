@@ -617,6 +617,7 @@ local function generateActionList(vbox, gameContext)
 				0, 0, 1, 1,
 				0, 0, -60, 0
 			)
+			:setJustify("center")
 		local deleteButton = Button("Delete")
 			:setAnchorsAndOffsets(
 				1, 0, 1, 1,
