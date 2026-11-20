@@ -4,12 +4,22 @@ local ADORE_PATH = PKG_NAME:match("^(.-)%.toolbox")
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
 local Common = Adore.Common
+local Resources = Adore.Resources
 local Libraries = Adore.Libraries
 
 local ObjectLoader = Adore.Loader.getCollection("ObjectLoader")
 
 local Node = Nodes("Node")
 local WindowPopup = Nodes("WindowPopup")
+local Button = Nodes("Button")
+local Label = Nodes("Label")
+local VBox = Nodes("VBox")
+local HBox = Nodes("HBox")
+local DropdownButton = Nodes("DropdownButton")
+local LineEdit = Nodes("LineEdit")
+local TabContainer = Nodes("TabContainer")
+local Control = Nodes("Control")
+
 local FormBuilder = Common("FormBuilder")
 local fzy = Libraries("fzy")
 local LuaPath = Libraries("LuaPath")
@@ -572,4 +582,123 @@ function ToolboxPopups.popupChangeType()
 	classField:grabFocus(false)
 end
 
+do
+local function removeValueFromMap(t, value)
+	for k, v in pairs(t) do
+		if v == value then
+			t[k] = nil
+		end
+	end
+end
+
+---@param actionName string
+---@param gameContext GameContext
+local function removeAction(actionName, gameContext)
+	gameContext.actionValues[actionName] = nil
+	gameContext.actionPressed[actionName] = nil
+	gameContext.actionReleased[actionName] = nil
+	removeValueFromMap(gameContext.scancodes, actionName)
+	removeValueFromMap(gameContext.mouseButtons, actionName)
+	removeValueFromMap(gameContext.gamepadAxes, actionName)
+	removeValueFromMap(gameContext.gamepadButtons, actionName)
+end
+
+---@param vbox VBox
+---@param gameContext GameContext
+local function generateActionList(vbox, gameContext)
+	for action, _ in pairs(gameContext.actionValues) do
+		local actionControl = Control()
+			:setAnchorsAndOffsets(
+				0, 0, 1, 0,
+				0, 0, 0, 20
+			)
+		local actionLabel = Label(action)
+			:setAnchorsAndOffsets(
+				0, 0, 1, 1,
+				0, 0, -60, 0
+			)
+		local deleteButton = Button("Delete")
+			:setAnchorsAndOffsets(
+				1, 0, 1, 1,
+				-60, 0, 0, 0
+			)
+		deleteButton.clicked:connectCallable(function(...)
+			removeAction(action, gameContext)
+			vbox:clearChildren(true)
+			generateActionList(vbox, gameContext)
+		end)
+
+		actionControl:addChild(actionLabel)
+		actionControl:addChild(deleteButton)
+		vbox:addChild(actionControl)
+	end
+end
+
+---Shows a fancy editor for editing a `GameContext`
+---@param gameContext GameContext
+function ToolboxPopups.popupGameContextEditor(gameContext)
+	local window = WindowPopup()
+		:setOffsets(0, 0, 500, 400)
+	window._resizeWithParent = false
+	window:getTitleLabel():setText(("Edit %s..."):format(tostring(gameContext)))
+
+	local tabContainer = TabContainer()
+		:setAnchors(0, 0, 1, 1)
+
+	do
+		-- Action editor tab
+		local actionTab = Control()
+			:setAnchors(0, 0, 1, 1)
+		actionTab.name = "Actions"
+
+		-- The action list
+		local actionVBox = VBox()
+			:setAnchorsAndOffsets(
+				0, 0, 1, 1,
+				0, 20, 0, 0
+			)
+		generateActionList(actionVBox, gameContext)
+
+		-- New action LineEdit
+		local newActionLE = LineEdit()
+			:setAnchorsAndOffsets(
+				0, 0, 1, 0,
+				0, 0, -60, 20
+			)
+			:setPlaceholderText("New action...")
+			:setSubmitOnFocusLost(false)
+		local newActionAdd = Button("Add")
+			:setAnchorsAndOffsets(
+				1, 0, 1, 0,
+				-60, 0, 0, 20
+			)
+
+		newActionAdd.clicked:connect(newActionLE, "submit")
+		---@param actionName string
+		newActionLE.textSubmitted:connectCallable(function(_, actionName)
+			if actionName == "" then return end
+			gameContext.actionValues[actionName] = 0
+			actionVBox:clearChildren(true)
+			generateActionList(actionVBox, gameContext)
+		end)
+
+		actionTab:addChild(newActionLE)
+		actionTab:addChild(newActionAdd)
+		actionTab:addChild(actionVBox)
+		tabContainer:addChild(actionTab)
+	end
+
+	-- Add children to the popup
+	window:addChild(tabContainer)
+
+	-- Connect window events
+	window:addAction("Cancel", "close")
+
+	-- Show the popup
+	mw:addChild(window)
+	window:popupCentered()
+end
+end
+
+Resources("GameContext").showEditorPopup = ToolboxPopups.popupGameContextEditor
 return ToolboxPopups
