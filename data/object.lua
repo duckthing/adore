@@ -48,19 +48,8 @@ Object.implement = SimpleObject.implement
 Object.is = SimpleObject.is
 Object.__call = SimpleObject.__call
 
----Called after this Object is serialized, but before its buffer data is finalized. (Header and body is already inserted).
----Put binary data into the buffer here.
----@param buffer string.buffer
----@param header table
----@param body table
-function Object:_afterSerialized(buffer, header, body)
-end
-
----Called after this Object is deserialized; you can read anything inserted by `_afterSerialized()` here.
----@param buffer string.buffer
----@param header table
----@param body table
-function Object:_afterDeserialized(buffer, header, body)
+---Called after this `Object` is deserialized
+function Object:_justDeserialized()
 end
 
 ---Returns the ClassDB.Entry for this class.

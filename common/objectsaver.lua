@@ -196,7 +196,6 @@ function ObjectSaver.serializeObjectToBuffer(object, buffer, resources)
 			property:packBuffer(obj, propertyName, buffer, resources)
 		end
 	end)
-	object:_afterSerialized(buffer, header, body)
 
 	return resources
 end
@@ -313,7 +312,7 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 	end
 
 	local deferredData = ObjectSaver.setPropertiesFromPairs(obj, header, body, binaryBuffer)
-	obj:_afterDeserialized(binaryBuffer, header, body)
+	obj:_justDeserialized()
 	return nil, obj, deferredData
 end
 
@@ -437,8 +436,6 @@ function ObjectSaver.serializeObjectToArray(object, array, resources)
 	array[#array+1] = header
 	array[#array+1] = body
 
-	object:_afterSerialized(array, header, body)
-
 	return resources
 end
 
@@ -550,6 +547,7 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 
 	-- Deserialize everything and put it into the object, if the property isn't a constant and not binary
 	local deferredData = ObjectSaver.setPropertiesFromPairs(obj, header, body, binaryBuffer)
+	obj:_justDeserialized()
 	return nil, obj, deferredData
 end
 
