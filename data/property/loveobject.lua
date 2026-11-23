@@ -19,16 +19,16 @@ function LObject:new(class, property, baseClass, defaultValue, setter)
 	if setter then self:withSetter(setter) end
 end
 
-function LObject:newValue()
-	return nil
-end
+function LObject:newValue() end
 
 function LObject:add(a, b)
 	return a
 end
 
 function LObject:sanitize(val)
-	return (self:isValid(val) and val) or nil
+	if self:isValid(val) then
+		return val
+	end
 end
 
 function LObject:isValid(val)

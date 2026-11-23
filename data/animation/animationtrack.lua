@@ -65,8 +65,6 @@ function AnimationTrack:getNextKeyframe(time, startingIndex)
 			return nextKeyframe, i
 		end
 	end
-
-	return nil, nil
 end
 
 ---Returns the KeyFrame that occurs just before `time` (from `startingIndex`, or 1)
@@ -116,9 +114,7 @@ function AnimationTrack:getKeyframePairs(time, startingIndex)
 	if lastIndex ~= 0 then
 		return keyframes[lastIndex], nil, lastIndex, nil
 	end
-
 	-- No KeyFrames exist
-	return nil
 end
 
 ---Similar to `AnimationTrack:getKeyframePairs`, but iterates backwards.

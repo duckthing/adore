@@ -9,9 +9,7 @@ function Signal:new(class, property)
 	Signal.super.new(self, class, property)
 end
 
-function Signal:newValue()
-	return nil
-end
+function Signal:newValue() end
 
 function Signal:isValid(val)
 	return type(val) == "table"
@@ -47,28 +45,28 @@ end
 
 function Signal:serialize(obj, propertyName, value)
 	-- Can only save signals under Nodes that are persistent; don't save
-	if not (obj.IS_NODE and obj._adorePersist) then return nil end
+	if not (obj.IS_NODE and obj._adorePersist) then return end
 	---@cast obj Node
 
 	---@type Signal
 	local signal = value or obj[propertyName]
 
 	-- Invalid Signal; don't save
-	if not signal:checkValidity() then return nil end
+	if not signal:checkValidity() then return end
 
 	---@type Signal.Serialized[]
 	local validConnections = {}
 	local connections = signal.connections
 
 	-- No connections; don't save
-	if not connections then return nil end
+	if not connections then return end
 
 	for i = 1, #connections do
 		serializeConnection(validConnections, connections[i], obj)
 	end
 
 	-- No valid connections; don't save
-	if #validConnections == 0 then return nil end
+	if #validConnections == 0 then return end
 
 	-- Do save
 	return validConnections
@@ -77,7 +75,7 @@ end
 ---@param connections Signal.Serialized[]?
 function Signal:deserialize(obj, propertyName, connections)
 	-- Can only save Signals under Nodes; don't save
-	if not obj.IS_NODE then return nil end
+	if not obj.IS_NODE then return end
 	---@cast obj Node
 
 	---@type Signal
@@ -182,7 +180,9 @@ local function getSubtractedConnections(signalA, comparable)
 		serializeConnection(serializedConnections, conns[i], node)
 	end
 
-	return (#serializedConnections > 0 and serializedConnections) or nil
+	if #serializedConnections > 0 then
+		return serializedConnections
+	end
 end
 
 ---@class Property.Signal.Comparable
@@ -244,14 +244,14 @@ end
 ---@param resources any[]
 ---@param customDefault Signal
 function Signal:serializeDiff(obj, propertyName, value, resources, customDefault)
-	if not (obj.IS_NODE and obj._adorePersist) then return nil end
+	if not (obj.IS_NODE and obj._adorePersist) then return end
 	---@cast obj Node
 
 	---@type Signal
 	local signal = value or obj[propertyName]
 
 	-- Invalid Signal; don't save
-	if not signal:checkValidity() then return nil end
+	if not signal:checkValidity() then return end
 
 	return getSubtractedConnections(signal, customDefault)
 end

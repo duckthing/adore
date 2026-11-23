@@ -185,9 +185,10 @@ function Node:shallowBubble(eventName, ...)
 	local parent = self.parent
 	if parent then
 		local method = parent[eventName]
-		return (method and method(parent, ...)) or nil
+		if method then
+			return method(parent, ...)
+		end
 	end
-	return nil
 end
 
 ---Creates a new Signal bound to this Node and returns it
@@ -295,12 +296,11 @@ end
 ---@param child Node?
 ---@return integer? index
 function Node:getIndexOfChild(child)
-	if not child or child.parent ~= self then return nil end
+	if not child or child.parent ~= self then return end
 	local children = self.children
 	for i = 1, #children do
 		if children[i] == child then return i end
 	end
-	return nil
 end
 
 ---Removes the child at the specified index from this Node
@@ -351,7 +351,7 @@ end
 ---@return Node?
 function Node:getNodeByName(...)
 	local total = select("#", ...)
-	if total == 0 then return nil end
+	if total == 0 then return end
 
 	local currNode = self
 	for i = 1, total do
@@ -380,7 +380,7 @@ function Node:getNodeByName(...)
 		if foundChild then
 			currNode = foundChild
 		else
-			return nil
+			return
 		end
 	end
 
@@ -609,8 +609,6 @@ function Node:getDeepestNode(check, ...)
 
 	if currNode ~= self then
 		return currNode
-	else
-		return nil
 	end
 end
 
@@ -861,8 +859,6 @@ function Node:findFirstNodeOfType(type)
 			return children[i]
 		end
 	end
-
-	return nil
 end
 
 ---Gets the first Node that matches a class name.
@@ -875,8 +871,6 @@ function Node:findFirstNodeOfClassName(name)
 			return children[i]
 		end
 	end
-
-	return nil
 end
 
 ---Returns a Tween created under the Root and bound to this Node. The Tween updates while the game is unpaused.

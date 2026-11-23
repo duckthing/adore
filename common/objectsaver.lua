@@ -247,38 +247,38 @@ function ObjectSaver.deserializeObjectFromBuffer(binaryBuffer, header, body, req
 
 		if not RequestedClass then
 			-- The passed parameters request a class that doesn't exist
-			return ("Requested class parameter '%s' does not exist"):format(requestedClassName), nil
+			return ("Requested class parameter '%s' does not exist"):format(requestedClassName)
 		end
 	end
 
 	if not header.CLASS_NAME then
 		-- There's no CLASS_NAME field in the header
-		return "Missing class name in header", nil
+		return "Missing class name in header"
 	end
 
 	---@type Object
 	local TargetClass = Adore.Any(header.CLASS_NAME) or ClassDB.ClassNameToClass[header.CLASS_NAME]
 	if not TargetClass then
 		-- The table has a class that doesn't exist
-		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME), nil
+		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME)
 	end
 
 	if canInherit then
 		-- Check if the requested class is inheriting from the target class
 		if not ClassDB.doesClassInherit(RequestedClass, TargetClass) then
-			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
+			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass)
 		end
 	else
 		-- Check if the requested class matches the target class
 		if header.CLASS_NAME ~= requestedClassName then
-			return ("Serialized object '%s' does not match class name '%s'"):format(header.CLASS_NAME, requestedClassName), nil
+			return ("Serialized object '%s' does not match class name '%s'"):format(header.CLASS_NAME, requestedClassName)
 		end
 	end
 
 	-- Check if the entry allows deserialization
 	local entry = TargetClass:getClassDBEntry()
 	if not entry:canDeserialize() then
-		return ("Serialized object class '%s' is requesting a class that disallows deserialization"):format(header.CLASS_NAME), nil
+		return ("Serialized object class '%s' is requesting a class that disallows deserialization"):format(header.CLASS_NAME)
 	end
 
 	---@type Object # The object where all the properties will get set
@@ -344,8 +344,8 @@ function ObjectSaver.deserializeResourcesFromBuffer(buffer)
 				end
 			end
 
-			-- Return the buffer and resource list
-			return resources, nil
+			-- Return the resource list
+			return resources
 		else
 			-- Return the error
 			return nil, ("Decoded resource list was of incorrect type '%s'"):format(resType)
@@ -379,12 +379,12 @@ function ObjectSaver.deserializeFromBuffer(buffer, requestedClassName, canInheri
 		if not success then
 			-- Errored while decoding
 			---@cast headerOrErr string
-			return headerOrErr, nil, nil
+			return headerOrErr
 		end
 
 		if type(headerOrErr) ~= "table" then
 			-- Wrong type
-			return ("Expected header of type 'table', got '%s'"):format(type(headerOrErr)), nil
+			return ("Expected header of type 'table', got '%s'"):format(type(headerOrErr))
 		end
 
 		-- All good
@@ -400,12 +400,12 @@ function ObjectSaver.deserializeFromBuffer(buffer, requestedClassName, canInheri
 		if not success then
 			-- Errored while decoding
 			---@cast bodyOrErr string
-			return bodyOrErr, nil, nil
+			return bodyOrErr
 		end
 
 		if type(bodyOrErr) ~= "table" then
 			-- Wrong type
-			return ("Expected body of type 'table', got '%s'"):format(type(bodyOrErr)), nil
+			return ("Expected body of type 'table', got '%s'"):format(type(bodyOrErr))
 		end
 
 		-- All good
@@ -464,9 +464,9 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 	do
 		-- Check the types of these parameters
 		local headerType = type(header)
-		if headerType ~= "table" then return ("Expected header of type 'table', got %s"):format(headerType), nil end
+		if headerType ~= "table" then return ("Expected header of type 'table', got %s"):format(headerType) end
 		local bodyType = type(body)
-		if bodyType ~= "table" then return ("Expected body of type 'table', got %s"):format(bodyType), nil end
+		if bodyType ~= "table" then return ("Expected body of type 'table', got %s"):format(bodyType) end
 	end
 
 	local RequestedClass
@@ -481,38 +481,38 @@ function ObjectSaver.deserializeObjectFromArray(header, body, requestedClassName
 
 		if not RequestedClass then
 			-- The passed parameters request a class that doesn't exist
-			return ("Requested class parameter '%s' does not exist"):format(requestedClassName), nil
+			return ("Requested class parameter '%s' does not exist"):format(requestedClassName)
 		end
 	end
 
 	if not header.CLASS_NAME then
 		-- There's no CLASS_NAME field in the header
-		return "Missing class name in header", nil
+		return "Missing class name in header"
 	end
 
 	---@type Object
 	local TargetClass = ClassDB.ClassNameToClass[header.CLASS_NAME] or Adore.Any(header.CLASS_NAME)
 	if not TargetClass then
 		-- The table has a class that doesn't exist
-		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME), nil
+		return ("Serialized object's class '%s' does not exist"):format(header.CLASS_NAME)
 	end
 
 	if canInherit then
 		-- Check if the requested class is inheriting from the target class
 		if not ClassDB.doesClassInherit(RequestedClass, TargetClass) then
-			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass), nil
+			return ("Serialized object '%s' does not inherit from '%s'"):format(TargetClass, RequestedClass)
 		end
 	else
 		-- Check if the requested class matches the target class
 		if header.CLASS_NAME ~= requestedClassName then
-			return ("Serialized object '%s' does not match class name '%s'"):format(header.CLASS_NAME, requestedClassName), nil
+			return ("Serialized object '%s' does not match class name '%s'"):format(header.CLASS_NAME, requestedClassName)
 		end
 	end
 
 	-- Check if the entry allows deserialization
 	local entry = TargetClass:getClassDBEntry()
 	if not entry:canDeserialize() then
-		return ("Serialized object class '%s' is requesting a class that disallows deserialization"):format(header.CLASS_NAME), nil
+		return ("Serialized object class '%s' is requesting a class that disallows deserialization"):format(header.CLASS_NAME)
 	end
 
 	---@type Object # The object where all the properties will get set

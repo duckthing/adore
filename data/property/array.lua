@@ -67,7 +67,7 @@ function Array:deserialize(obj, propertyName, resourceId, resources, ...)
 end
 
 function Array:getReference(obj, propertyName, valueArr, resources, ...)
-	if not valueArr then return nil end
+	if not valueArr then return end
 
 	local valueProperty = self.valueProperty
 

@@ -108,7 +108,6 @@ function Stack.pop(t)
 		rawset(t, index, nil)
 		return value
 	end
-	return nil
 end
 
 ---Returns the value at the top of a Stack.
@@ -354,9 +353,7 @@ function TreeIter:traverseDownExcludeSelf(node, forEach, currNodeValidator, ...)
 		local result = self:traverseDownSelf(child, forEach, currNodeValidator, ...)
 		if result then return result end
 	end
-
 	-- Not the result
-	return nil
 end
 
 ---Goes downward the Scene Tree through ourselves and all descendents, and returns if the value returned by `forEach` is not nil.
@@ -382,9 +379,7 @@ function TreeIter:traverseDownSelf(node, forEach, currNodeValidator, ...)
 		local result = self:traverseDownSelf(child, forEach, currNodeValidator, ...)
 		if result then return result end
 	end
-
 	-- Not the result
-	return nil
 end
 
 ---Goes downward the Scene Tree through ourselves, all descendents, and later neighbors's descendents, and returns if the value returned by `forEach` is not nil.
@@ -419,9 +414,7 @@ function TreeIter:traverseDownwards(node, forEach, currNodeValidator, ...)
 		if not currNodeValidator(parent, ...) then return end
 		currNode = parent
 	end
-
 	-- Not the result
-	return nil
 end
 
 ---Goes through ourselves and up through the Scene Tree, and returns if the value returned by `forEach` is not nil.
@@ -459,9 +452,7 @@ function TreeIter:traverseUpwards(node, forEach, currNodeValidator, ...)
 			forEach, currNodeValidator, ...)
 		end
 	end
-
 	-- Not the result
-	return nil
 end
 
 ---Creates a new `TreeIter`

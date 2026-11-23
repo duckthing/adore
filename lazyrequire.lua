@@ -43,7 +43,7 @@ local LazyRequireMT = {
 
 		if not path then
 			-- Path doesn't exist here, so we don't try to load anything
-			return nil
+			return
 		end
 
 		local oldRequire = require

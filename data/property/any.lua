@@ -17,7 +17,6 @@ function Any:serialize(obj, propertyName, value, resources)
 	if serializable[val] then
 		return val
 	end
-	return nil
 end
 
 return Any

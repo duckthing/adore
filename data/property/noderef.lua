@@ -23,9 +23,7 @@ function NodeRef:new(class, propertyName, baseClass, setter)
 	if setter then self:withSetter(setter) end
 end
 
-function NodeRef:newValue()
-	return nil
-end
+function NodeRef:newValue() end
 
 ---@param obj Object
 ---@param propertyName string
@@ -34,20 +32,18 @@ end
 function NodeRef:serialize(obj, propertyName, node)
 	-- Can only save NodeRefs under Nodes; don't serialize
 	---@cast obj Node
-	if not (obj.IS_NODE and obj._valid) then return nil end
+	if not (obj.IS_NODE and obj._valid) then return end
 
-	-- Invalid/destroyed Node or wrong class; don't save
-	if not (node and node.IS_NODE and node._valid and node._adorePersist and Property.ClassDB.doesClassInherit(self.baseClass, node.CLASS_NAME)) then
-		return nil
+	-- Invalid/destroyed Nodes or wrong class should not be saved
+	if node and node.IS_NODE and node._valid and node._adorePersist and Property.ClassDB.doesClassInherit(self.baseClass, node.CLASS_NAME) then
+		return obj:getRelativePathToOther(node)
 	end
-
-	return obj:getRelativePathToOther(node)
 end
 
 function NodeRef:deserialize(obj, propertyName, nodePath)
 	-- Can only save NodeRefs under Nodes; don't deserialize
 	---@cast obj Node
-	if not (obj.IS_NODE and obj._valid) then return nil end
+	if not (obj.IS_NODE and obj._valid) then return end
 
 	local foundNode, _ = obj:getNodeFromPath(nodePath, true, false)
 	if foundNode and Property.ClassDB.doesClassInherit(self.baseClass, foundNode.CLASS_NAME) then

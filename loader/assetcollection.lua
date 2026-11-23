@@ -244,7 +244,6 @@ function AssetCollection:getCacheInfo(path)
 		end
 	end
 	-- No info
-	return nil
 end
 
 ---Sets the cache info for the filepath
@@ -334,7 +333,6 @@ function AssetCollection:has(path)
 		-- Returns the existing ID
 		return self.assets[id], id
 	end
-	return nil, nil
 end
 
 ---Reloads an asset from its path

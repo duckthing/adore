@@ -63,7 +63,6 @@ function Vec2P:serialize(obj, propertyName, value)
 	if value then
 		return {value.x, value.y}
 	end
-	return nil
 end
 
 function Vec2P:deserialize(obj, propertyName, value)

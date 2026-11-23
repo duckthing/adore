@@ -1264,9 +1264,7 @@ function Control:getCanvasLayerUsed()
 
 		currNode = currNode.parent
 	end
-
 	-- Not found
-	return nil
 end
 
 ---Called when the parent force refreshes this Control.
@@ -1423,7 +1421,7 @@ function Control:uiSelectNext()
 	if existing and existing:canFocus(true) then
 		return true, existing
 	end
-	return false, nil
+	return false
 end
 
 ---When requested to select the 'previous' Control, what are we selecting?
@@ -1434,7 +1432,7 @@ function Control:uiSelectPrevious()
 	if existing and existing:canFocus(true) then
 		return true, existing
 	end
-	return false, nil
+	return false
 end
 
 ---When requested to select the 'above' Control, what are we selecting?
@@ -1445,7 +1443,7 @@ function Control:uiSelectUp()
 	if existing and existing:canFocus(true) then
 		return true, existing
 	end
-	return false, nil
+	return false
 end
 
 ---When requested to select the 'below' Control, what are we selecting?
@@ -1456,7 +1454,7 @@ function Control:uiSelectDown()
 	if existing and existing:canFocus(true) then
 		return true, existing
 	end
-	return false, nil
+	return false
 end
 
 ---When requested to select the 'left' Control, what are we selecting?
@@ -1467,7 +1465,7 @@ function Control:uiSelectLeft()
 	if existing and existing:canFocus(true) then
 		return true, existing
 	end
-	return false, nil
+	return false
 end
 
 ---When requested to select the 'right' Control, what are we selecting?
@@ -1478,7 +1476,7 @@ function Control:uiSelectRight()
 	if existing and existing:canFocus(true) then
 		return true, existing
 	end
-	return false, nil
+	return false
 end
 
 function Control:addChild(child)

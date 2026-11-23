@@ -74,7 +74,7 @@ function Map:deserialize(obj, propertyName, resourceId, resources, ...)
 end
 
 function Map:getReference(obj, propertyName, value, resources, ...)
-	if not value then return nil end
+	if not value then return end
 
 	local keyProperty, valueProperty = self.keyProperty, self.valueProperty
 	local keys = {}

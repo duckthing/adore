@@ -456,7 +456,6 @@ function Root:getFocusedControl()
 			focused:releaseFocus()
 		end
 	end
-	return nil
 end
 
 ---Unfocuses the currently focused control. Like pressing Escape.
@@ -576,7 +575,12 @@ function Root:uiSelectPrevious()
 		for control, _ in pairs(self._controlTopLevelLayers) do
 			local result = control
 				:getDeepestNode()
-				:traverseUpwards(function(node) return (node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) and node) or nil end, isControl)
+				:traverseUpwards(function(node)
+					---@cast node Control
+					if node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) then
+						return node
+					end
+				end, isControl)
 			if result then
 				result:grabFocus(false)
 				return true
@@ -598,7 +602,12 @@ function Root:uiSelectPrevious()
 		if not result then
 			-- Go upwards from the old focus
 			result = oldFocused
-				:traverseUpwards(function(node) return (node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) and node) or nil end, isControl)
+				:traverseUpwards(function(node)
+					---@cast node Control
+					if node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) then
+						return node
+					end
+				end, isControl)
 		end
 
 		if not result then
@@ -607,7 +616,12 @@ function Root:uiSelectPrevious()
 			if oldFocused._topLevelNode.parent then
 				result = oldFocused._topLevelNode.parent
 					:getDeepestNode()
-					:traverseUpwards(function(node) return (node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) and node) or nil end, isControl)
+					:traverseUpwards(function(node)
+						---@cast node Control
+						if node ~= oldFocused and node:canFocus(false) and node:canReceiveInput(false) then
+							return node
+						end
+					end, isControl)
 			end
 		end
 

@@ -45,7 +45,6 @@ local function ensureValidFocused(root)
 	if focused and focused:isVisibleInTree() then
 		return focused
 	end
-	return nil
 end
 
 ---@alias CoreUIContext.Action fun(context: CoreUIContext, isRepeat: boolean?): boolean?

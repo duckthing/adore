@@ -21,7 +21,7 @@ ClassDBEntry._setClassDB(ClassDB)
 local ClassInfo = {}
 local ClassInfoMT = {__index = function(self, k)
 	local super = rawget(self, "super")
-	return (super and super[k]) or nil
+	if super then return super[k] end
 end}
 
 ---@type {[integer]: ClassDB.Info}

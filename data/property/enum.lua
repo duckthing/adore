@@ -38,7 +38,6 @@ function Enum:sanitize(val)
 		-- Getting the value map is dynamic; we can't check it
 		return val
 	end
-	return nil
 end
 
 function Enum:isValid(val)

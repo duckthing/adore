@@ -64,7 +64,6 @@ function Rect2P:serialize(obj, propertyName, value)
 	if value then
 		return {value.x, value.y, value.w, value.h}
 	end
-	return nil
 end
 
 function Rect2P:deserialize(obj, propertyName, value)

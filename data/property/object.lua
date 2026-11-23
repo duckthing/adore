@@ -52,9 +52,7 @@ function Object:new(class, property, baseClass, setter)
 	if setter then self:withSetter(setter) end
 end
 
-function Object:newValue()
-	return nil
-end
+function Object:newValue() end
 
 function Object:sanitize(val)
 	-- Can't sanitize an Object
@@ -64,7 +62,7 @@ end
 function Object:serialize(obj, propertyName, value, resources)
 	if not value._adorePersist then
 		-- Only serialize persistent Objects
-		return nil
+		return
 	end
 
 	local index, ref = self:getSharedMatch(obj, propertyName, value, resources)
@@ -148,9 +146,7 @@ function Object:getSharedMatch(obj, propertyName, value, resources)
 			return i, resReference
 		end
 	end
-
 	-- No match, DON'T return a new reference
-	return nil, nil
 end
 
 function Object:getReference(obj, propertyName, value, resources)
