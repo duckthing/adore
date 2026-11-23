@@ -36,8 +36,6 @@ function SubrootC:pointToWindow(mx, my)
 
 
 		return lx, ly, scaleX, scaleY
-	else
-		return nil, nil
 	end
 end
 

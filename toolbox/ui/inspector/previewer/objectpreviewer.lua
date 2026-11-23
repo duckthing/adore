@@ -156,7 +156,7 @@ local constructors = {
 			---@type Toolbox
 			local Toolbox = require(ADORE_PATH..".toolbox")
 			local srContainer = Toolbox.mainWindow:getSubrootContainer()
-			if not srContainer then return nil end
+			if not srContainer then return end
 
 			local Viewport = Adore.Resources("Viewport")
 			local parentViewport = srContainer.subroot._viewport

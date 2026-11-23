@@ -35,7 +35,7 @@ local allowedTypes = {
 		end
 		return false, "Could not cast into a boolean"
 	end},
-	{label = "nil", caster = function() return true, nil end},
+	{label = "nil", caster = function() return true end},
 }
 
 ---@class Previewer.Table: Previewer

@@ -374,7 +374,6 @@ function MainWindow:getSubrootContainer()
 		---@cast selectedTab Toolbox.EditableScene
 		return selectedTab
 	end
-	return nil
 end
 
 ---Returns the actions this MainWindow can do

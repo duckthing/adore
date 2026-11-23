@@ -194,7 +194,9 @@ end
 ---@return Node?
 function SceneTreeViewer:getPressedNode()
 	local pressed = self.focusedNode
-	return (pressed and pressed._valid and pressed) or nil
+	if pressed and pressed._valid then
+		return pressed
+	end
 end
 
 ---Returns how far we can scroll, with the current Control height and tree length
@@ -239,7 +241,8 @@ end
 ---@return Node?
 function SceneTreeViewer:getNodeFromTreeIndex(index)
 	if index and index ~= 0 then
-		return (index ~= 0 and self.tree[index * 3 - 2]) or nil
+		local node = self.tree[index * 3 - 2]
+		if node then return node end
 	end
 end
 
