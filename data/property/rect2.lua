@@ -62,13 +62,13 @@ end
 
 function Rect2P:serialize(obj, propertyName, value)
 	if value then
-		return {x = value.x, y = value.y, w = value.w, h = value.h}
+		return {value.x, value.y, value.w, value.h}
 	end
 	return nil
 end
 
 function Rect2P:deserialize(obj, propertyName, value)
-	self:set(obj, propertyName, self:sanitize(Rect2(value.x, value.y, value.w, value.h)))
+	self:set(obj, propertyName, self:sanitize(Rect2(value[1], value[2], value[3], value[4])))
 end
 
 return Rect2P
