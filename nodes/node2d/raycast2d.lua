@@ -20,9 +20,9 @@ function Raycast2d:new(x, y, rotation, distance)
 
 	---@type number # How far into the ray the last hit was. -1 means there was no hit.
 	self._fraction = -1
-	---@type Signal
+	---@type Signal<Raycast2d, Physical2d> # Fires when a body overlaps with this Raycast2d, with <Raycast2d, otherBody>
 	self.bodyEntered = self:newSignal()
-	---@type Signal
+	---@type Signal<Raycast2d, Physical2d> # Fires when a body stops overlapping with this Raycast2d, with <Raycast2d, otherBody>
 	self.bodyLeft = self:newSignal()
 	---@type Physical2d?
 	self.collidingObject = nil
@@ -131,17 +131,17 @@ function Raycast2d:_raycastPerform(world, startX, startY, endX, endY)
 
 	if not hitObject and oldObject then
 		-- Object left the raycast
-		self.bodyLeft:fire(oldObject)
+		self.bodyLeft:fire(self, oldObject)
 		self.collidingObject = nil
 	elseif hitObject ~= oldObject then
 		-- New object entered the raycast
 		if oldObject then
 			-- There was something different last update
-			self.bodyLeft:fire(oldObject)
+			self.bodyLeft:fire(self, oldObject)
 		end
 
 		self.collidingObject = hitObject
-		self.bodyEntered:fire(hitObject)
+		self.bodyEntered:fire(self, hitObject)
 	end
 end
 

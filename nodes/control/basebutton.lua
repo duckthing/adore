@@ -29,11 +29,11 @@ function BaseButton:new()
 	---@type boolean # If the button should not be pressable or focusable
 	self._disabled = false
 
-	---@type Signal # Triggered whenever the button is pressed, NOT RELEASED.
+	---@type Signal<BaseButton, integer> # Triggered whenever the button is pressed, NOT RELEASED.
 	self.pressed = self:newSignal()
-	---@type Signal # Triggered whenever the button is released.
+	---@type Signal<BaseButton, integer> # Triggered whenever the button is released.
 	self.released = self:newSignal()
-	---@type Signal # Triggered whenever the button is pressed and then released with the pointer over it.
+	---@type Signal<BaseButton, integer> # Triggered whenever the button is pressed and then released with the pointer over it.
 	self.clicked = self:newSignal()
 end
 

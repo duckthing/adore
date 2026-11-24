@@ -75,7 +75,7 @@ Control._hovered = false
 Control.INHERITS_CONTROL = {Control}
 ---@type Control[] # An array of whatever's been inherited from the current class (not just Control)
 Control.INHERITED_BY = {}
----@type Signal # Triggered whenever there's a new Control class created
+---@type Signal<Control> # Triggered whenever there's a new Control class created
 Control.onNewControlInherited = Control:newSignal()
 
 ---@type Control.InputFilter # Can this Control and its children receive any input?

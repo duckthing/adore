@@ -1,4 +1,16 @@
----@class Signal
+---@class Signal<A, B, C, D, E>
+---@field fire fun(self: Signal)
+---@field fire fun(self: Signal, a: A)
+---@field fire fun(self: Signal, a: A, b: B)
+---@field fire fun(self: Signal, a: A, b: B, c: C)
+---@field fire fun(self: Signal, a: A, b: B, c: C, d: D)
+---@field fire fun(self: Signal, a: A, b: B, c: C, d: D, e: E)
+---@field connectCallable fun(self: Signal, callable: (fun()), oneShot: boolean?): Signal.SimpleConnection
+---@field connectCallable fun(self: Signal, callable: (fun(a: A)), oneShot: boolean?): Signal.SimpleConnection
+---@field connectCallable fun(self: Signal, callable: (fun(a: A, b: B)), oneShot: boolean?): Signal.SimpleConnection
+---@field connectCallable fun(self: Signal, callable: (fun(a: A, b: B, c: C)), oneShot: boolean?): Signal.SimpleConnection
+---@field connectCallable fun(self: Signal, callable: (fun(a: A, b: B, c: C, d: D)), oneShot: boolean?): Signal.SimpleConnection
+---@field connectCallable fun(self: Signal, callable: (fun(a: A, b: B, c: C, d: D, e: E)), oneShot: boolean?): Signal.SimpleConnection
 ---Signals are events that can be triggered when necessary. They are valid as long as the source `Node` is valid.
 ---Signal Connections are created by connecting a `Node` to a Signal, and are also only valid if the Signal's source
 ---`Node` and the Connection's source `Node` are valid.
@@ -87,7 +99,8 @@ end
 ---* Validation (automatic disconnections on invalid nodes)
 ---* Serialization (connected functions will not get saved into scenes)
 ---Use `:connect` instead.
----@param callable fun(...): boolean?
+---@param self Signal<A, B, C, D, E>
+---@param callable fun(a: A, b: B, c: C, d: D, e: E): boolean?
 ---@param oneShot boolean?
 ---@return Signal.SimpleConnection
 function Signal:connectCallable(callable, oneShot)

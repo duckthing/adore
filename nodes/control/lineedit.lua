@@ -75,11 +75,11 @@ function LineEdit:new(text)
 	---@type love.Text # The drawn placeholder text batch
 	self._placeholderTextBatch = love.graphics.newText(self._font[self._fontSize], self._placeholderText)
 
-	---@type Signal # Fires on text submission, with (LineEdit, submittedText, formerSubmission)
+	---@type Signal<LineEdit, string, string> # Fires on text submission, with <LineEdit, submittedText, formerSubmission>
 	self.textSubmitted = self:newSignal()
-	---@type Signal # Fires on text change, with (LineEdit, text)
+	---@type Signal<LineEdit, string> # Fires on text change, with <LineEdit, text>
 	self.textChanged = self:newSignal()
-	---@type Signal # Fires on text input cancellation, with (LineEdit, cancelledText, revertedToText)
+	---@type Signal<LineEdit, string, string> # Fires on text input cancellation, with <LineEdit, cancelledText, revertedToText>
 	self.textCancelled = self:newSignal()
 end
 

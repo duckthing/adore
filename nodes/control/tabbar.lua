@@ -28,7 +28,7 @@ function TabBar:new()
 	---@type love.Text
 	self._textBatch = love.graphics.newText(love.graphics.getFont())
 
-	---@type Signal # Fires on tab de/selection
+	---@type Signal<TabBar, integer, TabBar.TabInfo?> # Fires on tab de/selection, with <TabBar, tabIndex, selectedTab>
 	self.tabSelected = self:newSignal()
 end
 

@@ -23,9 +23,9 @@ function Area2d:new(x, y)
 
 	---@type Physical2d[] # An array of all Physical2d objects overlapping with this Area2d
 	self.overlappingObjects = {}
-	---@type Signal
+	---@type Signal<Area2d, Physical2d> # Fires when a body overlaps with this Area2d, with <Area2d, otherBody>
 	self.bodyEntered = self:newSignal()
-	---@type Signal
+	---@type Signal<Area2d, Physical2d> # Fires when a body stops overlapping with this Area2d, with <Area2d, otherBody>
 	self.bodyLeft = self:newSignal()
 end
 
@@ -78,7 +78,7 @@ function Area2d:beginContact(this, other, contact)
 	end
 
 	arr[#arr+1] = otherObj
-	self.bodyEntered:fire(otherObj)
+	self.bodyEntered:fire(self, otherObj)
 end
 
 function Area2d:endContact(this, other, contact)
@@ -92,7 +92,7 @@ function Area2d:endContact(this, other, contact)
 		if arr[i] == otherObj then
 			-- Found it, remove it from the list
 			table.remove(arr, i)
-			self.bodyLeft:fire(otherObj)
+			self.bodyLeft:fire(self, otherObj)
 			return
 		end
 	end

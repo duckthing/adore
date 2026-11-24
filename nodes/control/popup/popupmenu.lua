@@ -36,7 +36,7 @@ function PopupMenu:new(items)
 	---@type boolean # If something is 'pressed' on this PopupMenu, but not selected yet
 	self._pressed = false
 
-	---@type Signal # Fired when an item is selected, with (PopupMenu, itemIndex, item)
+	---@type Signal<PopupMenu, integer, PopupMenu.Item> # Fired when an item is selected, with <PopupMenu, itemIndex, item>
 	self.itemSelected = self:newSignal()
 
 	self:setItems(items or {})

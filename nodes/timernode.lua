@@ -21,7 +21,7 @@ function Timer:new(duration, autoStart, oneShot)
 	---@type boolean # If we should stop after the timer ends
 	self.oneShot = oneShot or false
 
-	---@type Signal # Called when the Timer completes one lap; passes itself
+	---@type Signal<TimerNode> # Called when the Timer completes one lap, with <Timer>
 	self.completed = self:newSignal()
 end
 

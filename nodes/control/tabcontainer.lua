@@ -39,6 +39,7 @@ function TabContainer:new()
 	self._internalTabBar.tabSelected:connect(self, "_onTabSelected")
 	self:addChild(self._internalTabBar)
 
+	---@type Signal<TabContainer, integer, TabBar.TabInfo?> # Fires on tab de/selection, with <TabContainer, tabIndex, selectedTab>
 	self.tabSelected = self:newSignal()
 end
 
