@@ -71,11 +71,11 @@ function SceneTreeViewer:new(toolbox, container)
 	---@type integer? # The tree index the mouse is pressing down on
 	self._pressedIndex = nil
 
-	---@type Signal # Fired when a Node is pressed, with arguments (self, pressedNode, mouseButton, isTouch, pressCount)
+	---@type Signal<Toolbox.SceneTree, Node?, integer, boolean, integer> # Fired when a Node is pressed, with arguments <self, pressedNode, mouseButton, isTouch, pressCount>
 	self.nodePressed = self:newSignal()
-	---@type Signal # Fired when a Node is released, with arguments (self, releasedNode, mouseButton)
+	---@type Signal<Toolbox.SceneTree, Node?, integer> # Fired when a Node is released, with arguments <self, releasedNode, mouseButton>
 	self.nodeReleased = self:newSignal()
-	---@type Signal # Fired when a Node is (un)focused, with (self, focusedNode, inTree)
+	---@type Signal<Toolbox.SceneTree, Node?, boolean> # Fired when a Node is (un)focused, with <self, focusedNode, inTree>
 	self.nodeFocused = self:newSignal()
 end
 
