@@ -170,7 +170,6 @@ end
 ---Shows a Popup for creating a new Resource in the Inspector
 function Inspector:popupNewResource()
 	local srContainer = self.toolbox.mainWindow:getSubrootContainer()
-	if not srContainer then return end
 
 	-- Create the popup
 	local window = WindowPopup()
@@ -234,11 +233,27 @@ function Inspector:popupNewResource()
 			end
 
 			-- Create the resource and focus on it
-			srContainer:pushSubroot()
+			local shouldPush = srContainer and not srContainer:isPushed() or false
+			---@cast srContainer Toolbox.EditableScene
+			if shouldPush then
+				srContainer:pushSubroot()
+			end
+
 			---@type Object?
 			local newObject
-			srContainer:handleInsideSubroot(function() newObject = ClassOrErr() end)
-			srContainer:popSubroot()
+
+			if srContainer then
+				-- Create inside the subroot
+				srContainer:handleInsideSubroot(function() newObject = ClassOrErr() end)
+				if shouldPush then
+					srContainer:popSubroot()
+				end
+			else
+				-- Create outside of the subroot
+				print("[Toolbox.Inspector] Creating an Object outside of a scene may behave oddly")
+				newObject = ClassOrErr()
+			end
+
 			if newObject then
 				self:onNodeFocusChanged(nil, newObject, nil)
 				window:close()
