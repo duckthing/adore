@@ -108,10 +108,20 @@ function Property:isValid(val)
 	return true
 end
 
+---Creates a new value of `from` that is `amount` closer to `to`
+---@param from any
+---@param to any
+---@param amount number
+---@return any
 function Property:stepTowards(from, to, amount)
 	return from
 end
 
+---Creates a new value that is interpolated between `start` to `final` by `percent`
+---@param start any
+---@param final any
+---@param percent number
+---@return any
 function Property:lerp(start, final, percent)
 	if percent >= 1 then
 		return final
@@ -119,10 +129,12 @@ function Property:lerp(start, final, percent)
 	return start
 end
 
+---Checks if the given value is equal to the default Property value
 function Property:isDefault(v)
 	return self:areEqual(self.defaultValue, v)
 end
 
+---Checks if the two values are equal
 function Property:areEqual(a, b)
 	return a == b
 end
@@ -243,66 +255,27 @@ end
 function Property.unpackBufferResource(buffer, reference, resources)
 end
 
----Skips the setter for the next call; mainly used internally
--- TODO: Replace with a stack
-function Property:skipSetter()
-	if self.setter then
-		self.oldSetter = self.setter
-		self.setter = nil
-	end
-end
-
----Used in case there is a setter method
----@param self Property.Boolean
+do
+local t = {v = false}
+---Creates a separate value similar to the current value and returns it
+---* Won't get updated when the original value is changed
+---* Use with `Property:isComparableEqual()`
 ---@param obj Object
----@param property string # Unused, using setter instead
----@param value number
-local function useNormalSetter(self, obj, property, value)
-	if not self.setter then
-		obj[property] = self:sanitize(value)
-		self.setter = self.oldSetter
-	else
-		obj[self.setter](obj, self:sanitize(value))
-	end
+---@param propertyName string
+---@return any
+function Property:newComparable(obj, propertyName)
+	t.v = nil
+	self:rawSet(t, "v", self:get(obj, propertyName))
+	return t.v
+end
 end
 
----Sets the value and then calls the method
----@param self Property.Boolean
----@param obj Object
----@param property string # Unused, using setter instead
----@param value number
-local function usePostSetter(self, obj, property, value)
-	if not self.setter then
-		obj[property] = self:sanitize(value)
-		self.setter = self.oldSetter
-	else
-		obj[property] = self:sanitize(value)
-		obj[self.setter](obj)
-	end
-end
-
-
----Uses this setter method (name) when attempting to set this property
----@param setterName string
-function Property:withSetter(setterName)
-	if setterName:match("^%%") then
-		-- Use post setter
-		self.setter = setterName:match("^%%(.*)")
-		self.set = usePostSetter
-	else
-		-- Not special
-		self.setter = setterName
-		self.set = useNormalSetter
-	end
-end
-
----Makes this Property unpokable
----@generic T: Property
----@param self T
----@return T
-function Property:makeUnpokable()
-	self.canPoke = false
-	return self
+---Compares a real value against a comparable created by `Property:newComparable()`
+---@param realValue any
+---@param comparable any
+---@return boolean
+function Property:isComparableEqual(realValue, comparable)
+	return self:areEqual(realValue, comparable)
 end
 
 ---Creates a proxy that refers to `superProperty`'s returned object as its own passed object.
@@ -349,27 +322,86 @@ function Property:asProxy(superProperty)
 	return proxy
 end
 
-do
-local t = {v = false}
----Creates a separate value similar to the current value and returns it
----* Won't get updated when the original value is changed
----* Use with `Property:isComparableEqual()`
----@param obj Object
----@param propertyName string
----@return any
-function Property:newComparable(obj, propertyName)
-	t.v = nil
-	self:rawSet(t, "v", self:get(obj, propertyName))
-	return t.v
-end
+---Skips the setter for the next call; mainly used internally
+-- TODO: Replace with a stack
+function Property:skipSetter()
+	if self.setter then
+		self.oldSetter = self.setter
+		self.setter = nil
+	end
 end
 
----Compares a real value against a comparable created by `Property:newComparable()`
----@param realValue any
----@param comparable any
----@return boolean
-function Property:isComparableEqual(realValue, comparable)
-	return self:areEqual(realValue, comparable)
+---Used in case there is a setter method
+---@param self Property.Boolean
+---@param obj Object
+---@param propertyName string # Unused, using setter instead
+---@param value number
+local function useNormalSetter(self, obj, propertyName, value)
+	if not self.setter then
+		obj[propertyName] = self:sanitize(value)
+		self.setter = self.oldSetter
+	else
+		obj[self.setter](obj, self:sanitize(value))
+	end
+end
+
+---Sets the value and then calls the method
+---@param self Property.Boolean
+---@param obj Object
+---@param propertyName string # Unused, using setter instead
+---@param value number
+local function usePostSetter(self, obj, propertyName, value)
+	if not self.setter then
+		obj[propertyName] = self:sanitize(value)
+		self.setter = self.oldSetter
+	else
+		obj[propertyName] = self:sanitize(value)
+		obj[self.setter](obj)
+	end
+end
+
+---Calls the setter method on the `Object` when attempting to set a value
+---* Prefix `setterName` with a percent symbol `%` to:
+---  * Set the property first...
+---  * ...and then call the method with no parameters
+---@param setterName string
+function Property:withSetter(setterName)
+	if setterName:match("^%%") then
+		-- % character at start of setterName
+		-- Use post-setter (set the value directly and call the method with no parameters)
+		self.setter = setterName:match("^%%(.*)")
+		self.set = usePostSetter
+	else
+		-- No post-setter (call the method with the new value as a parameter)
+		self.setter = setterName
+		self.set = useNormalSetter
+	end
+end
+
+---Used in case there is a setter method
+---@param self Property.Boolean
+---@param obj Object
+---@param propertyName string # Unused, using setter instead
+---@return any
+local function useGetter(self, obj, propertyName)
+	return obj[self.getter](obj)
+end
+
+---Calls the getter method on the `Object` when attempting to get a value
+---@param getterName string
+function Property:withGetter(getterName)
+	self.getter = getterName
+	self.get = useGetter
+end
+
+---Makes this Property unpokable
+---* "Poking" means triggering the setter, which can help with updating values
+---@generic T: Property
+---@param self T
+---@return T
+function Property:makeUnpokable()
+	self.canPoke = false
+	return self
 end
 
 function Property:__tostring()

@@ -200,11 +200,19 @@ function ClassDBEntry:withDefault(value)
 	return self
 end
 
----Makes the Property use the setter (method name).
+---Makes the Property use the setter (by referring to an Object's method name).
 ---@param methodName string
 ---@return self
-function ClassDBEntry:setter(methodName)
+function ClassDBEntry:withSetter(methodName)
 	self:last():withSetter(methodName)
+	return self
+end
+
+---Makes the Property use the getter (by referring to an Object's method name).
+---@param methodName string
+---@return self
+function ClassDBEntry:withGetter(methodName)
+	self:last():withGetter(methodName)
 	return self
 end
 
