@@ -3,8 +3,8 @@ local ADORE_PATH = PKG_NAME:match("^(.*)%.toolbox")
 ---@type AdoreInit
 local Adore = require(ADORE_PATH)
 local Nodes = Adore.Nodes
-local FormBuilder = Adore.Common("FormBuilder")
 
+local Control = Nodes("Control")
 local Previewer = require(ADORE_PATH..".toolbox.ui.inspector.previewer")
 local Button = Nodes("Button")
 local Label = Nodes("Label")
@@ -35,6 +35,7 @@ local allowedTypes = {
 		end
 		return false, "Could not cast into a boolean"
 	end},
+	{label = "table", caster = function() return true, {} end},
 	{label = "nil", caster = function() return true end},
 }
 
@@ -110,7 +111,7 @@ function TableP:newValueLabel(object, property, propertyName, inspector)
 		:setAnchors(1, 0, 1, 1)
 		:setOffsets(-150, 0, -20, 0)
 		:setClipText(true)
-	button.clicked:connect(self, "editTable")
+	button.clicked:connect(self, "editTableBasic")
 
 	button.previewer = self
 	button._canDropData = buttonCanDropData
@@ -160,50 +161,102 @@ end
 ---(Re)builds the key-pair labels
 ---@param pairVBox VBox
 ---@param t table
-local function buildPairs(pairVBox, t)
+---@param name string?
+---@param previewer Previewer.Table
+local function buildPairs(pairVBox, t, name, previewer)
+	-- TODO: Add drag/drop for reusing values, including tables
 	for k, v in pairs(t) do
-		local hbox = HBox()
+		local hbox = Control()
 			:setAnchorsAndOffsets(
 				0, 0, 1, 0,
 				0, 0, 0, 20
 			)
 
-		local keyTypeLabel = Label(type(k))
+		-- KEY
+		local keyType = type(k)
+		local keyTypeLabel = Label(keyType)
 			:setAnchorsAndOffsets(
 				0, 0, 0, 1,
 				0, 0, 60, 0
 			)
-		local keyLabel = Label(tostring(k))
-			:setAnchorsAndOffsets(
-				0, 0, 0.5, 1,
-				60, 0, 0, 0
-			)
+			:setJustify("center")
+			:setAlign("center")
 
-		local valueTypeLabel = Label(type(v))
+		local keyElement
+		if keyType ~= "table" then
+			-- Show the normal Label
+			keyElement = Label(tostring(k))
+				:setAnchorsAndOffsets(
+					0, 0, 0.5, 1,
+					60, 0, 0, 0
+				)
+				:setJustify("center")
+		else
+			-- Show the sub-table Button
+			keyElement = Button(((next(k) ~= nil and "{...} (%s)") or "{} (%s)"):format(tostring(k)))
+						:setAnchorsAndOffsets(
+					0, 0, 0.5, 1,
+					60, 0, 0, 0
+						)
+			keyElement.clicked:connectCallable(function()
+				previewer:editTable(k, ("%s [Key: %s]"):format(name, tostring(k)))
+			end)
+		end
+
+
+		-- VALUE
+		local valueType = type(v)
+		local valueTypeLabel = Label(valueType)
 			:setAnchorsAndOffsets(
 				0.5, 0, 0.5, 1,
 				0, 0, 60, 0
 			)
-		local valueLabel = Label(tostring(v))
-			:setAnchorsAndOffsets(
-				0.5, 0, 1, 1,
-				60, 0, 0, 0
-			)
+			:setAlign("center")
+			:setJustify("center")
+
+		local valueElement
+		if valueType ~= "table" then
+			-- Show the normal Label
+			valueElement = Label(tostring(v))
+						:setAnchorsAndOffsets(
+							0.5, 0, 1, 1,
+							60, 0, 0, 0
+						)
+						:setJustify("center")
+		else
+			-- Show the sub-table Button
+			valueElement = Button(((next(v) ~= nil and "{...} (%s)") or "{} (%s)"):format(tostring(v)))
+						:setAnchorsAndOffsets(
+							0.5, 0, 1, 1,
+							60, 0, 0, 0
+						)
+			valueElement.clicked:connectCallable(function()
+				previewer:editTable(v, ("%s[%s]"):format(name, tostring(k)))
+			end)
+		end
 
 		hbox:addChild(keyTypeLabel)
-		hbox:addChild(keyLabel)
+		hbox:addChild(keyElement)
 		hbox:addChild(valueTypeLabel)
-		hbox:addChild(valueLabel)
+		hbox:addChild(valueElement)
 		pairVBox:addChild(hbox)
 	end
 end
 
+function TableP:editTableBasic() self:editTable() end
+
 ---Shows a dialog to edit this table
-function TableP:editTable()
+---@param t table? # The table to edit; it usually gets it from the Object
+---@param name string? # The name of the table
+function TableP:editTable(t, name)
 	local object, property, propertyName =
 		self.object, self.property, self.propertyName
 
-	local t = property:get(self.object, propertyName)
+	if not t then
+		-- Get from the property
+		t = property:get(self.object, propertyName)
+		name = propertyName
+	end
 	if not t then
 		-- Create a default table
 		self:attemptSet({})
@@ -217,7 +270,7 @@ function TableP:editTable()
 		0, 1, 0, 1,
 		-300, -200, 300, 200
 	)
-	window:getTitleLabel():setText(("Edit '%s' (table)"):format(propertyName))
+	window:getTitleLabel():setText(("Edit '%s' (table)"):format(name))
 	window:addAction("Close", "close")
 
 	-- The contents of the table
@@ -228,7 +281,7 @@ function TableP:editTable()
 		)
 
 	-- Insert the key-value pairs
-	buildPairs(pairVBox, t)
+	buildPairs(pairVBox, t, name, self)
 
 	-- Build the "edit HBox" which allows editing table contents
 	local editHBox = HBox()
@@ -306,10 +359,9 @@ function TableP:editTable()
 				return
 			end
 
-			t = property:get(object, propertyName)
 			t[key] = value
 			pairVBox:clearChildren(true)
-			buildPairs(pairVBox, t)
+			buildPairs(pairVBox, t, name, self)
 		end)
 	end
 
